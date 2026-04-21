@@ -1,7 +1,12 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { isAdmin } from './lib/admin';
+
+// INDEPENDENT ADMIN CHECK (No external imports to prevent Edge Runtime crashes)
+const ADMIN_EMAILS = [
+  'minhtaneditor@gmail.com',
+  // You can add more emails here or via environment variables
+].filter(Boolean);
 
 export async function middleware(req: NextRequest) {
   let res = NextResponse.next({
@@ -13,7 +18,7 @@ export async function middleware(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // RESILIENCE CHECK: If keys are missing or placeholders, skip auth logic to prevent 500 error
+  // RESILIENCE CHECK: If keys are missing or placeholders, skip auth logic entirely
   if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
     return res;
   }
@@ -53,29 +58,28 @@ export async function middleware(req: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession();
 
-    // ADMIN LOCKDOWN: Only authorized emails can access /admin
-    const isAdminPath = req.nextUrl.pathname.startsWith('/admin');
-    if (isAdminPath) {
-      if (!session || !isAdmin(session.user.email)) {
+    const path = req.nextUrl.pathname;
+
+    // ADMIN PROTECTION
+    if (path.startsWith('/admin')) {
+      if (!session || !session.user.email || !ADMIN_EMAILS.includes(session.user.email)) {
         return NextResponse.redirect(new URL('/auth', req.url));
       }
     }
 
-    // If session exists and user is trying to access auth pages, redirect to dashboard
-    if (session && req.nextUrl.pathname.startsWith('/auth')) {
+    // AUTH REDIRECT (If logged in, don't go to /auth)
+    if (session && path.startsWith('/auth')) {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
 
-    // If no session and trying to access protected routes, redirect to auth
-    if (!session && (
-      req.nextUrl.pathname.startsWith('/dashboard') || 
-      req.nextUrl.pathname.startsWith('/courses/lesson')
-    )) {
+    // PROTECTED ROUTES
+    if (!session && (path.startsWith('/dashboard') || path.startsWith('/courses/lesson'))) {
       return NextResponse.redirect(new URL('/auth', req.url));
     }
+
   } catch (error) {
-    console.error("Middleware Auth Error:", error);
-    return res;
+    console.error("Middleware Edge Error:", error);
+    return res; // Fallback to public access on failure
   }
 
   return res;
