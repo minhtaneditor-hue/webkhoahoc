@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/utils/supabase';
 import { 
   BarChart3, 
   Users, 
@@ -52,7 +53,36 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const ADMIN_EMAILS = [
+        'minhtaneditor@gmail.com',
+        'tan@tanlab.vn',
+      ].filter(Boolean);
+
+      if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
+        router.push('/auth?redirect=' + pathname);
+        return;
+      }
+      
+      setIsAuthorized(true);
+    }
+    checkAuth();
+  }, [router, pathname]);
+
+  if (isAuthorized === null) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white font-black italic uppercase tracking-[0.5em] animate-pulse">
+        Verifying Security Protocol...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex">

@@ -16,7 +16,8 @@ import {
   Globe, 
   DollarSign,
   GripVertical,
-  CheckCircle2
+  CheckCircle2,
+  Users
 } from 'lucide-react';
 
 const mockCourses = [
