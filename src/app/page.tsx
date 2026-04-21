@@ -1,5 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
-import { useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import Link from 'next/link';
+import { supabase } from '@/utils/supabase';
+import BentoCard from '@/components/BentoCard';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import SaaSDRMHero from '@/components/SaaSDRMHero';
+
+import { 
+  ArrowRight,
+  Users,
+  Terminal,
+  Play,
+  Award,
+  Video,
+  ChevronRight,
+  CheckCircle2,
+  Layers,
+  HelpCircle,
+  ShieldCheck,
+  Zap,
+  Star
+} from 'lucide-react';
 
 export default function Home() {
   const [settings, setSettings] = useState<Record<string, string>>({});
