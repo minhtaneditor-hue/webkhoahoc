@@ -118,20 +118,20 @@ export default function Home() {
   };
 
   const partners = [
-    { name: "Phú Long", logo: "/asset/doi_tac/logo-phu-long.jpg.webp" },
-    { name: "Viglacera", logo: "/asset/doi_tac/viglacera-edited-1748248760146.webp" },
-    { name: "Suntory Pepsico", logo: "/asset/doi_tac/logo.png" },
-    { name: "HTV", logo: "/asset/doi_tac/unnamed.png" },
-    { name: "Vietjet", logo: "/asset/doi_tac/channels4_profile.jpg" }
+    { name: "Phú Long", logo: "/asset/doi_tac/partner_phulong.webp" },
+    { name: "Viglacera", logo: "/asset/doi_tac/partner_viglacera.webp" },
+    { name: "Suntory Pepsico", logo: "/asset/doi_tac/partner_pepsico.png" },
+    { name: "HTV", logo: "/asset/doi_tac/partner_htv.png" },
+    { name: "Vietjet", logo: "/asset/doi_tac/partner_vietjet.jpg" }
   ];
 
   const projects = [
-    { title: "2 Ngày 1 Đêm", category: "TV Show Integration", image: "/asset/du_an_tieu_bieu/544ea4rx_1920x1080-2n1d3d4949a0757e8a42510797a7441b3256_1267_712.webp" },
-    { title: "Anh Trai Say Hi Movie", category: "Cinematic Production", image: "/asset/du_an_tieu_bieu/AnhTraiSayHiOpening.jpg" },
-    { title: "Anh Trai Say Hi - Las Vegas", category: "Global Event Coverage", image: "/asset/du_an_tieu_bieu/ATSH_logo_HTV2.webp" },
-    { title: "Nghệ Thuật Truyền Hình", category: "Digital Content", image: "/asset/du_an_tieu_bieu/NHTH.jpg" },
-    { title: "Mái Ấm Tình Thương", category: "Documentary", image: "/asset/du_an_tieu_bieu/MATN_logo_HTV7.webp" },
-    { title: "Ký Ức Vui Vẻ", category: "TV Production", image: "/asset/du_an_tieu_bieu/Ky_uc_vui_ve_VTV.png" }
+    { title: "2 Ngày 1 Đêm", category: "TV Show Integration", image: "/asset/du_an_tieu_bieu/project_2n1d.webp" },
+    { title: "Anh Trai Say Hi Movie", category: "Cinematic Production", image: "/asset/du_an_tieu_bieu/project_atsh_movie.jpg" },
+    { title: "Anh Trai Say Hi - Las Vegas", category: "Global Event Coverage", image: "/asset/du_an_tieu_bieu/project_atsh_vegas.webp" },
+    { title: "Nghệ Thuật Truyền Hình", category: "Digital Content", image: "/asset/du_an_tieu_bieu/project_nhth.jpg" },
+    { title: "Mái Ấm Tình Thương", category: "Documentary", image: "/asset/du_an_tieu_bieu/project_matn.webp" },
+    { title: "Ký Ức Vui Vẻ", category: "TV Production", image: "/asset/du_an_tieu_bieu/project_kuvv.png" }
   ];
 
   const bonuses = [
@@ -148,7 +148,7 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen text-slate-900 selection:bg-accent-secondary/10 relative overflow-visible">
+    <main className="min-h-screen text-slate-900 selection:bg-accent-secondary/10 relative overflow-visible bg-white">
       <Navbar />
 
       {/* Hero Section */}
@@ -238,11 +238,11 @@ export default function Home() {
       </section>
 
       {/* STACKING CONTAINER */}
-      <div ref={containerRef} className="relative">
+      <div ref={containerRef} className="relative z-[10] bg-white">
         
         {/* Featured Projects Section (Stack 1) */}
         <StackSection index={0} total={5} scrollYProgress={scrollYProgress}>
-          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white">
+          <section className="max-w-7xl mx-auto px-6 py-32 bg-white rounded-[4rem]">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
               <div className="max-w-2xl">
                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[11px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
@@ -282,7 +282,7 @@ export default function Home() {
 
         {/* Courses Bento Grid (Stack 2) */}
         <StackSection index={1} total={5} scrollYProgress={scrollYProgress}>
-          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white">
+          <section className="max-w-7xl mx-auto px-6 py-32 bg-white rounded-[4rem]">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-20">
                  <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow">Lộ trình <span className="text-slate-300">Tài sản</span></h2>
@@ -307,7 +307,7 @@ export default function Home() {
                     </div>
                     <button 
                       onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
-                      className="mt-6 p-5 rounded-2xl bg-accent-secondary text-white font-black text-xs uppercase tracking-widest hover:shadow-2xl hover:shadow-accent-secondary/30 transition-all"
+                      className="mt-6 p-5 rounded-2xl bg-accent-secondary text-white font-black text-xs uppercase tracking-widest hover:shadow-2xl hover:shadow-accent-secondary/30 transition-all font-mono"
                     >
                        VÀO HỌC NGAY
                     </button>
@@ -324,7 +324,7 @@ export default function Home() {
 
         {/* Bonus Stack (Stack 3) */}
         <StackSection index={2} total={5} scrollYProgress={scrollYProgress}>
-          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white">
+          <section className="max-w-7xl mx-auto px-6 py-32 bg-white rounded-[4rem]">
             <div className="max-w-5xl mx-auto">
               <div className="text-center mb-20">
                  <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">QUÀ TẶNG <span className="text-accent-secondary">ĐẶC QUYỀN</span></h2>
@@ -349,7 +349,7 @@ export default function Home() {
 
         {/* FAQ Section (Stack 4) */}
         <StackSection index={3} total={5} scrollYProgress={scrollYProgress}>
-          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white">
+          <section className="max-w-7xl mx-auto px-6 py-32 bg-white rounded-[4rem]">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-center mb-16 flex flex-col items-center gap-4 italic italic-glow">
                  <HelpCircle className="text-accent-secondary" size={32} />
@@ -382,12 +382,12 @@ export default function Home() {
         <StackSection index={4} total={5} scrollYProgress={scrollYProgress}>
           <section className="max-w-4xl mx-auto p-16 rounded-[4rem] bg-white text-center">
             <div className="relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent-primary/5 to-accent-secondary/5 opacity-50" />
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent-primary/5 to-accent-secondary/5 opacity-50 -z-10" />
               <h2 className="text-5xl md:text-7xl font-black mb-8 italic italic-glow uppercase"> READY TO <span className="text-slate-300">DEPLOY?</span></h2>
               <p className="text-lg text-slate-500 mb-12 leading-relaxed font-bold uppercase italic tracking-tight">Chiếc điện thoại của bạn đang chờ để được bứt phá tiềm năng.</p>
               <button 
                     onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
-                    className="btn-premium px-16 py-6 rounded-full font-black text-sm tracking-widest shadow-3xl mx-auto"
+                    className="btn-premium px-16 py-6 rounded-full font-black text-sm tracking-widest shadow-3xl mx-auto block"
                   >
                     GIA NHẬP TANLAB NGAY &rarr;
               </button>
@@ -397,8 +397,11 @@ export default function Home() {
 
       </div>
 
+      {/* Space to allow scrolling after last section */}
+      <div className="h-[20vh]" />
+
       {/* Footer Area */}
-      <footer className="relative z-[20] bg-white border-t border-slate-100">
+      <footer className="relative z-[100] bg-white border-t border-slate-100">
         <Footer />
       </footer>
 
@@ -410,8 +413,8 @@ function StackSection({ children, index, total, scrollYProgress }: { children: R
   const start = index / total;
   const end = (index + 1) / total;
   
-  // High authority scale down as requested "scale nhỏ nhỏ lại"
-  const scale = useTransform(scrollYProgress, [start, end], [1, 0.85]);
+  // High authority scale down (Wow effect)
+  const scale = useTransform(scrollYProgress, [start, end], [1, 0.75]);
   const opacity = useTransform(scrollYProgress, [start, end], [1, 0.4]);
 
   return (
@@ -419,12 +422,12 @@ function StackSection({ children, index, total, scrollYProgress }: { children: R
       style={{ 
         scale, 
         opacity,
-        top: `calc(100px + ${index * 40}px)`, // Premium offset for stacking visibility
+        top: `calc(80px + ${index * 40}px)`, // Precise offset for visible headers
         zIndex: index + 10
       }} 
-      className="sticky top-0 w-full min-h-[80vh] flex items-center justify-center py-10 px-6"
+      className="sticky top-0 w-full min-h-[90vh] flex items-center justify-center py-20 px-6 backdrop-blur-sm"
     >
-      <div className="w-full max-w-7xl mx-auto bg-white rounded-[4rem] shadow-[0_60px_120px_rgba(0,0,0,0.15)] border border-slate-100/50 overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto bg-white rounded-[4rem] shadow-[0_60px_120px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
         {children}
       </div>
     </motion.div>
