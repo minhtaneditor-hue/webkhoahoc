@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   ArrowUpRight, 
@@ -11,7 +12,9 @@ import {
   TrendingUp,
   Clock,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Zap,
+  Flame
 } from 'lucide-react';
 
 const stats = [
