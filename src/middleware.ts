@@ -2,10 +2,10 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// INDEPENDENT ADMIN CHECK (No external imports to prevent Edge Runtime crashes)
+// INDEPENDENT ADMIN CHECK (Self-contained for Edge consistency)
 const ADMIN_EMAILS = [
   'minhtaneditor@gmail.com',
-  // You can add more emails here or via environment variables
+  'tan@tanlab.vn',
 ].filter(Boolean);
 
 export async function middleware(req: NextRequest) {
@@ -15,13 +15,8 @@ export async function middleware(req: NextRequest) {
     },
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // RESILIENCE CHECK: If keys are missing or placeholders, skip auth logic entirely
-  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
-    return res;
-  }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
   try {
     const supabase = createServerClient(
@@ -60,26 +55,26 @@ export async function middleware(req: NextRequest) {
 
     const path = req.nextUrl.pathname;
 
-    // ADMIN PROTECTION
+    // ADMIN PROTECTION: Lockdown /admin for verified emails
     if (path.startsWith('/admin')) {
       if (!session || !session.user.email || !ADMIN_EMAILS.includes(session.user.email)) {
         return NextResponse.redirect(new URL('/auth', req.url));
       }
     }
 
-    // AUTH REDIRECT (If logged in, don't go to /auth)
+    // AUTH REDIRECT: Logged in users bypass login page
     if (session && path.startsWith('/auth')) {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
 
-    // PROTECTED ROUTES
+    // PROTECTED ROUTES: Lockdown Dashboard & Lessons
     if (!session && (path.startsWith('/dashboard') || path.startsWith('/courses/lesson'))) {
       return NextResponse.redirect(new URL('/auth', req.url));
     }
 
   } catch (error) {
-    console.error("Middleware Edge Error:", error);
-    return res; // Fallback to public access on failure
+    console.error("Critical Middleware Error:", error);
+    return res;
   }
 
   return res;
