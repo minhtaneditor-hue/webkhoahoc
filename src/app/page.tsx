@@ -232,10 +232,10 @@ export default function Home() {
            {projects.map((project, i) => (
              <Link key={i} href="/work" className="group block relative aspect-[4/3] rounded-[3rem] overflow-hidden border border-slate-100 bg-white hover:border-accent-secondary/20 shadow-xl transition-all duration-700">
                 <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
-                <div className="absolute bottom-8 left-8 z-20 text-white transition-all opacity-0 group-hover:opacity-100">
-                   <p className="text-[9px] font-black uppercase tracking-widest mb-1 opacity-80">{project.category}</p>
-                   <h4 className="text-sm font-black italic uppercase tracking-tight leading-none">{project.title}</h4>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80" />
+                <div className="absolute bottom-6 left-6 z-20 text-white">
+                   <p className="text-[8px] font-black uppercase tracking-widest mb-1 opacity-60">{project.category}</p>
+                   <h4 className="text-[10px] font-black italic uppercase tracking-tight leading-none">{project.title}</h4>
                 </div>
              </Link>
            ))}
