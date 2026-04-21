@@ -66,7 +66,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className={`fixed top-9 left-0 w-full z-[100] transition-all duration-500 ${isScrolled ? 'py-4 px-10 bg-white/80 backdrop-blur-2xl shadow-xl' : 'py-8 px-10 bg-transparent'}`}>
+    <nav className={`fixed top-[37px] left-0 w-full z-[100] transition-all duration-500 ${isScrolled ? 'py-4 px-10 bg-white/80 backdrop-blur-2xl shadow-xl' : 'py-8 px-10 bg-transparent'}`}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">

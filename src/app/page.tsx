@@ -103,9 +103,9 @@ export default function Home() {
   ];
 
   const stats = [
-    { label: "Artwork", value: "27k+" },
-    { label: "Academy", value: "99%" },
-    { label: "Project", value: "12k+" }
+    { label: "Học viên", value: "1000+" },
+    { label: "Độ hài lòng", value: "99%" },
+    { label: "Dự án", value: "upto 1000" }
   ];
 
   const bonuses = [
@@ -157,7 +157,7 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* NFT Style Stats Block */}
+              {/* NFT Style Stats Block - Updated with Mixed Avatars */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-12 pt-8 border-t border-slate-100">
                 {stats.map((stat, i) => (
                    <div key={i} className="flex flex-col items-center md:items-start gap-1">
@@ -166,11 +166,17 @@ export default function Home() {
                    </div>
                 ))}
                 <div className="flex flex-col items-center md:items-start gap-2">
-                   <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Trusted By</p>
+                   <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Xác nhận bởi:</p>
                    <div className="flex -space-x-3">
-                      {[1,2,3,4,5].map(i => (
-                        <div key={i} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-slate-100 ring-2 ring-gold/5">
-                           <img src={`https://i.pravatar.cc/100?u=${i}`} alt="user" className="w-full h-full object-cover" />
+                      {/* Mixed Avatars: 3 Students + 2 Brands */}
+                      {[1,2,3].map(i => (
+                        <div key={`s-${i}`} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-slate-100 ring-2 ring-gold/5 shadow-md">
+                           <img src={`https://i.pravatar.cc/100?u=student-${i}`} alt="student" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                      {[partners[0], partners[3]].map((brand, i) => (
+                        <div key={`b-${i}`} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-white ring-2 ring-gold/5 shadow-md p-1.5 flex items-center justify-center">
+                           <img src={brand.logo} alt="brand" className="w-full h-full object-contain" />
                         </div>
                       ))}
                    </div>
@@ -185,7 +191,7 @@ export default function Home() {
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
             className="relative"
           >
-            <div className="w-full aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden relative group shadow-2xl">
+            <div className="w-full aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden relative group shadow-2xl border border-slate-100">
                 <img 
                   src="/asset/avatar/hero_expert.jpg" 
                   alt="Video Advisor"
