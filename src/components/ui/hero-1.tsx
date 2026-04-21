@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Paperclip, Sparkles, X } from "lucide-react";
+import { Paperclip, Sparkles, X, MessageSquare, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -11,102 +11,91 @@ interface Hero1Props {
 
 const Hero1 = ({ onClose }: Hero1Props) => {
   return (
-    <div className="min-h-screen bg-[#0c0414] text-white flex flex-col relative overflow-hidden">
-      {/* Close Button - Added for Chat Integration */}
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col relative overflow-hidden">
+      {/* Close Button */}
       {onClose && (
         <button 
           onClick={onClose}
-          className="absolute top-6 right-24 z-[100] p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
+          className="absolute top-6 right-8 md:right-24 z-[100] p-3 rounded-2xl bg-white border border-slate-100 hover:bg-slate-50 transition-all cursor-pointer shadow-xl"
         >
-          <X className="w-5 h-5 text-white/50" />
+          <X className="w-5 h-5 text-slate-400" />
         </button>
       )}
 
-      {/* Gradient */}
-      <div className="flex gap-[10rem] rotate-[-20deg] absolute top-[-40rem] right-[-30rem] z-[0] blur-[4rem] skew-[-40deg] opacity-50 pointer-events-none">
-        <div className="w-[10rem] h-[20rem] bg-gradient-to-r from-white to-blue-300"></div>
-        <div className="w-[10rem] h-[20rem] bg-gradient-to-r from-white to-blue-300"></div>
-        <div className="w-[10rem] h-[20rem] bg-gradient-to-r from-white to-blue-300"></div>
-      </div>
-      <div className="flex gap-[10rem] rotate-[-20deg] absolute top-[-50rem] right-[-50rem] z-[0] blur-[4rem] skew-[-40deg] opacity-50 pointer-events-none">
-        <div className="w-[10rem] h-[20rem] bg-gradient-to-r from-white to-blue-300"></div>
-        <div className="w-[10rem] h-[20rem] bg-gradient-to-r from-white to-blue-300"></div>
-        <div className="w-[10rem] h-[20rem] bg-gradient-to-r from-white to-blue-300"></div>
-      </div>
-      <div className="flex gap-[10rem] rotate-[-20deg] absolute top-[-60rem] right-[-60rem] z-[0] blur-[4rem] skew-[-40deg] opacity-50 pointer-events-none">
-        <div className="w-[10rem] h-[30rem] bg-gradient-to-r from-white to-blue-300"></div>
-        <div className="w-[10rem] h-[30rem] bg-gradient-to-r from-white to-blue-300"></div>
-        <div className="w-[10rem] h-[30rem] bg-gradient-to-r from-white to-blue-300"></div>
-      </div>
+      {/* Decorative Gradients */}
+      <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent-secondary/5 blur-[120px] rounded-full -z-0" />
+      <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-accent-primary/5 blur-[120px] rounded-full -z-0" />
 
-      <header className="flex justify-between items-center p-6 relative z-10">
-        <div className="flex items-center gap-2">
-          <Image src="http://hextaui.com/logo.svg" width={30} height={30} alt="Logo" />
-          <div className="font-bold text-md">HextaAI</div>
+      <header className="flex justify-between items-center p-8 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-accent-secondary flex items-center justify-center text-white">
+            <span className="font-black text-xs">T</span>
+          </div>
+          <div className="font-black text-lg tracking-tighter uppercase">Tanlab AI</div>
         </div>
         <button 
           onClick={onClose}
-          className="bg-white text-black hover:bg-gray-200 rounded-full px-4 py-2 text-sm cursor-pointer font-semibold transition-colors"
+          className="bg-slate-900 text-white hover:bg-accent-secondary rounded-full px-6 py-2 text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all shadow-xl"
         >
-          {onClose ? "Return to Learning" : "Get Started"}
+          {onClose ? "Quay lại học" : "Bắt đầu ngay"}
         </button>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 text-center relative z-10">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center relative z-10 pb-20">
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-4xl mx-auto space-y-6"
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="max-w-4xl mx-auto space-y-10"
         >
-          <div className="flex-1 flex justify-center">
-            <div className="bg-[#1c1528] rounded-full px-4 py-2 flex items-center gap-2 w-fit mx-4">
-              <span className="text-xs flex items-center gap-2">
-                <span className="bg-black p-1 rounded-full">🥳</span>
-                Introducing Magic Components
+          <div className="flex justify-center">
+            <div className="bg-white border border-slate-100 shadow-xl rounded-full px-5 py-2 flex items-center gap-3 w-fit">
+              <span className="text-[11px] font-bold flex items-center gap-2 text-slate-400 uppercase tracking-widest leading-none">
+                <span className="bg-accent-secondary/10 p-1 rounded-full text-accent-secondary"><Zap size={12}/></span>
+                Giới thiệu trợ lý Tanlab v2.0
               </span>
             </div>
           </div>
-          {/* Headline */}
-          <h1 className="text-5xl font-bold leading-tight">
-            Build Stunning websites effortslessly
+
+          <h1 className="text-5xl md:text-7xl font-black leading-[0.9] tracking-tighter uppercase italic italic-glow">
+            Kiến tạo tương lai <br />
+            <span className="text-slate-300">không giới hạn</span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-md opacity-70">
-            HextaAI can create amazing websites with few lines of prompt.
+          <p className="max-w-xl mx-auto text-slate-500 font-bold italic uppercase tracking-tight text-lg">
+            Tanlab AI giúp bạn bẻ khóa mọi bài toán về Marketing Automation và Video Strategy chỉ với vài dòng lệnh.
           </p>
 
           {/* Search bar */}
           <div className="relative max-w-2xl mx-auto w-full group">
-            <div className="bg-[#1c1528] border border-white/5 group-focus-within:border-purple-500/50 rounded-full p-4 flex items-center shadow-2xl transition-all">
-              <button className="p-2 rounded-full hover:bg-[#2a1f3d] transition-all">
-                <Paperclip className="w-5 h-5 text-gray-400" />
-              </button>
-              <button className="p-2 rounded-full hover:bg-[#2a1f3d] transition-all">
-                <Sparkles className="w-5 h-5 text-purple-400" />
+            <div className="bg-white border border-slate-100 group-focus-within:border-accent-secondary/30 rounded-3xl p-5 flex items-center shadow-2xl transition-all">
+              <button className="p-3 rounded-2xl hover:bg-slate-50 transition-all text-slate-300">
+                <Paperclip className="w-5 h-5" />
               </button>
               <input
                 type="text"
-                placeholder="How HextaAI can help you today?"
-                className="bg-transparent flex-1 outline-none text-gray-300 pl-4 text-lg"
+                placeholder="Tanlab AI có thể giúp gì cho bạn hôm nay?"
+                className="bg-transparent flex-1 outline-none text-slate-600 pl-4 text-lg font-medium"
               />
+              <button className="p-3 rounded-2xl bg-accent-secondary text-white shadow-xl hover:scale-105 active:scale-95 transition-all">
+                <Sparkles className="w-5 h-5" />
+              </button>
             </div>
           </div>
 
           {/* Suggestion pills */}
-          <div className="flex flex-wrap justify-center gap-2 mt-12 max-w-2xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-3 mt-12 max-w-2xl mx-auto">
             {[
-              "Launch a blog with Astro",
-              "Develop an app using NativeScript",
-              "Build documentation with Vitepress",
-              "Generate UI with shadcn",
-              "Generate UI with HextaUI"
+              "Lộ trình xây kênh 21 ngày",
+              "Cách viết kịch bản viral",
+              "Tối ưu hóa phễu bán hàng",
+              "Hệ thống Tanlab DRM",
+              "Liên hệ Mentor Minh Tấn"
             ].map((text) => (
               <button 
                 key={text}
-                className="bg-[#1c1528] hover:bg-[#2a1f3d] border border-white/5 rounded-full px-4 py-2 text-xs transition-all hover:scale-105 active:scale-95"
+                className="bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:scale-105 active:scale-95 shadow-sm"
               >
                 {text}
               </button>

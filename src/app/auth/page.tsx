@@ -11,9 +11,11 @@ import {
   ChevronLeft,
   Terminal,
   ShieldCheck,
-  Zap
+  Zap,
+  Fingerprint
 } from 'lucide-react';
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
 
 function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
@@ -34,7 +36,7 @@ function AuthForm() {
 
     try {
       if (!isLogin) {
-        // Elite Password Policy Enforcement
+        // Tanlab Password Policy Enforcement
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
         if (!passwordRegex.test(password)) {
           throw new Error("Mật khẩu phải tối thiểu 8 ký tự, bao gồm số, chữ thường và ít nhất 1 chữ hoa.");
@@ -65,61 +67,36 @@ function AuthForm() {
     }
   };
 
-  const handleMagicLink = async () => {
-    if (!email) {
-      setError("Vui lòng nhập Email để nhận Magic Link");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-
-    try {
-      const { error } = await supabase.auth.signInWithOtp({ 
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
-        }
-      });
-      if (error) throw error;
-      setSuccess(true);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="w-full max-w-md relative z-10">
-      <Link href="/" className="inline-flex items-center gap-2 text-text-muted hover:text-white transition-colors mb-8 group">
-        <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-        Back to Terminal
+    <div className="w-full max-w-md relative z-10 pt-20">
+      <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors mb-10 group px-2 font-black uppercase text-[10px] tracking-widest">
+        <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+        QUAY LẠI CỔNG CHÍNH
       </Link>
 
       <div className="auth-card">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 text-accent-primary text-xs font-bold mb-4">
-            <Terminal size={14} />
-            MISSION CONTROL AUTH
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[10px] font-black mb-6 uppercase tracking-widest border border-accent-secondary/10">
+            <Fingerprint size={14} />
+            TRÌNH XÁC THỰC TANLAB
           </div>
-          <h1 className="text-3xl font-black mb-2">
-            {isLogin ? (success ? 'Xác thực Email' : 'Đăng nhập') : 'Khởi tạo Admin'}
+          <h1 className="text-4xl font-black mb-3 italic tracking-tighter uppercase text-slate-900 leading-none">
+            {isLogin ? 'ĐĂNG NHẬP' : 'KHỞI TẠO'}
           </h1>
-          <p className="text-text-muted text-sm">
-            {isLogin ? 'Truy cập trung tâm điều hành của bạn.' : 'Thiết lập mật khẩu quản trị tối cao.'}
+          <p className="text-slate-400 text-sm font-medium italic">
+            {isLogin ? 'Truy cập trung tâm điều hành của bạn.' : 'Thiết lập mật khẩu truy cập hệ thống.'}
           </p>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Email Command</label>
+        <form onSubmit={handleAuth} className="space-y-8">
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] ml-2">ĐỊA CHỈ EMAIL</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+              <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
               <input 
                 type="email" 
-                placeholder="name@example.com"
-                className="glass-input pl-12"
+                placeholder="partner@tanlab.com"
+                className="glass-input pl-14"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -127,14 +104,14 @@ function AuthForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Access Key</label>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] ml-2">MẬT MÃ TRUY CẬP</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+              <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
               <input 
                 type="password" 
                 placeholder="••••••••"
-                className="glass-input pl-12"
+                className="glass-input pl-14"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -143,43 +120,38 @@ function AuthForm() {
           </div>
 
           {error && (
-            <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs text-center font-bold">
+            <div className="p-5 rounded-2xl bg-accent-secondary/5 border border-accent-secondary/10 text-accent-secondary text-[11px] text-center font-black uppercase tracking-widest leading-relaxed">
               {error}
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-4 mt-4">
+          <div className="grid grid-cols-1 gap-4 mt-6">
             <button 
               type="submit" 
               disabled={loading}
-              className="btn-premium py-5 rounded-full flex items-center justify-center gap-3"
+              className="btn-premium py-6 rounded-3xl flex items-center justify-center gap-4 shadow-2xl"
             >
               {loading ? <Loader2 className="animate-spin" size={20} /> : <ArrowRight size={20} />}
-              {isLogin ? 'Đăng nhập hệ thống' : 'Khởi tạo tài khoản Admin'}
+              <span className="tracking-[0.2em]">{isLogin ? 'TIẾN VÀO HỆ THỐNG' : 'HOÀN TẤT THIẾT LẬP'}</span>
             </button>
             <button 
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-center text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-accent-secondary py-2 transition-colors"
+              className="text-center text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-accent-secondary py-4 transition-colors"
             >
-              {isLogin ? "Bạn muốn thiết lập mật khẩu mới? Chọn Đăng ký" : "Quay lại Đăng nhập"}
+              {isLogin ? "BẠN LÀ THÀNH VIÊN MỚI? ĐĂNG KÝ NGAY" : "ĐÃ CÓ TÀI KHOẢN? QUAY LẠI ĐĂNG NHẬP"}
             </button>
           </div>
         </form>
 
-        <p className="mt-8 text-center text-xs text-text-muted leading-relaxed">
-          Chúng tôi sẽ gửi một đường link đăng nhập an toàn vào Email của bạn. <br />
-          Không cần mật khẩu. Không cần ghi nhớ.
-        </p>
-
-        <div className="mt-10 pt-6 border-t border-white/5 grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2 text-[10px] text-text-muted">
-            <ShieldCheck size={14} className="text-green-500" />
-            End-to-end Encrypted
+        <div className="mt-12 pt-8 border-t border-slate-50 grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-2 text-[10px] font-black text-slate-200 uppercase tracking-widest">
+            <ShieldCheck size={14} className="text-accent-secondary" />
+            ENCRYPTED
           </div>
-          <div className="flex items-center gap-2 text-[10px] text-text-muted justify-end">
-            <Zap size={14} className="text-accent-secondary" />
-            Instant Activation
+          <div className="flex items-center gap-2 text-[10px] font-black text-slate-200 justify-end uppercase tracking-widest">
+            <Zap size={14} className="text-accent-primary" />
+            V21.0 CORE
           </div>
         </div>
       </div>
@@ -189,10 +161,12 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-[#0a0a0c] relative overflow-hidden">
+    <main className="min-h-screen flex items-center justify-center p-6 bg-white relative overflow-hidden">
+      <Navbar />
+      
       {/* Background Decor */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-primary/10 blur-[120px] rounded-full" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-secondary/10 blur-[120px] rounded-full" />
+      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-primary/5 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-accent-secondary/5 blur-[120px] rounded-full" />
       
       <Suspense fallback={<Loader2 className="animate-spin text-accent-secondary" />}>
         <AuthForm />

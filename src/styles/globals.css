@@ -1,48 +1,42 @@
 @import "tailwindcss";
 
-/* --- APPLE LUX DESIGN SYSTEM (Tailwind 4 Standard) --- */
+/* --- TANLAB PREMIUM DESIGN SYSTEM (Tailwind 4 Standard) --- */
 @theme {
   --color-gold: #f5bc1b;
-  --color-gold-glow: rgba(245, 188, 27, 0.4);
+  --color-gold-glow: rgba(245, 188, 27, 0.2);
   --color-crimson: #e32636;
-  --color-crimson-glow: rgba(227, 38, 54, 0.4);
+  --color-crimson-glow: rgba(227, 38, 54, 0.2);
   
   --color-accent-primary: var(--color-gold);
   --color-accent-secondary: var(--color-crimson);
-  --color-text-main: #f5f5f5;
-  --color-text-muted: #888888;
+  --color-text-main: #0f172a;
+  --color-text-muted: #64748b;
   
-  /* SaaS DRM Brand Colors (Aligned with Main Theme) */
+  /* SaaS DRM Brand Colors */
   --color-saas-primary: var(--color-crimson);
-  --color-saas-secondary: #1a1a1a;
+  --color-saas-secondary: #f1f5f9;
   --color-saas-accent: var(--color-gold);
-  --color-saas-bg-pill: rgba(227, 38, 54, 0.2);
-  --color-saas-border-pill: rgba(245, 188, 27, 0.3);
-
-  /* SaaS DRM Fonts */
-  --font-family-manrope: var(--font-manrope), sans-serif;
-  --font-family-cabin: var(--font-cabin), sans-serif;
-  --font-family-instrument: var(--font-instrument-serif), serif;
-  --font-family-inter: var(--font-inter), sans-serif;
+  --color-saas-bg-pill: rgba(227, 38, 54, 0.05);
+  --color-saas-border-pill: rgba(245, 188, 27, 0.1);
 
   /* Apple-style Geometry */
   --radius-bento: 48px;
 }
 
 :root {
-  --background: #050507;
-  --foreground: #ffffff;
-  --glass-bg: rgba(20, 20, 25, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --lux-shadow: 0 30px 60px rgba(0,0,0,0.8);
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --lux-shadow: 0 30px 60px rgba(0,0,0,0.05);
 }
 
 /* Functional Minimalism: Liquid Glass */
 @utility glass-effect {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(32px);
-  box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.01);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.03);
 }
 
 @utility btn-premium {
@@ -56,23 +50,27 @@
   font-size: 12px;
   transition-property: all;
   transition-duration: 700ms;
-  box-shadow: 0 15px 40px rgba(227, 38, 54, 0.3);
+  box-shadow: 0 15px 40px rgba(227, 38, 54, 0.2);
   padding: 1.25rem 2.5rem;
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 50px rgba(227, 38, 54, 0.3);
+  }
 }
 
 @utility lux-border-gold {
-  border: 1px solid rgba(245, 188, 27, 0.1);
-  background-color: rgba(10, 10, 12, 0.8);
+  border: 1px solid rgba(245, 188, 27, 0.2);
+  background-color: white;
   backdrop-filter: blur(24px);
   border-radius: 3rem;
   transition-property: all;
   transition-duration: 700ms;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(245, 188, 27, 0.05);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.05), inset 0 0 40px rgba(245, 188, 27, 0.02);
 }
 
 @utility nav-blur {
@@ -84,9 +82,9 @@
   padding: 1rem 1.5rem;
   transition-property: all;
   transition-duration: 500ms;
-  background-color: rgba(5, 5, 7, 0.4);
+  background-color: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 @utility underline-accent {
@@ -104,38 +102,58 @@
 }
 
 @utility auth-card {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(40px);
-  border-radius: 2.5rem;
-  padding: 2.5rem;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  border-radius: 3rem;
+  padding: 3.5rem;
+  box-shadow: 0 50px 100px rgba(0,0,0,0.08);
+}
+
+@utility glass-input {
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  transition: all 0.3s ease;
+  outline: none;
+  &::placeholder {
+    color: #94a3b8;
+  }
+  &:focus {
+    background-color: white;
+    border-color: var(--color-crimson);
+    box-shadow: 0 0 0 4px rgba(227, 38, 54, 0.1);
+  }
 }
 
 /* Base Styles */
 body {
-  background-color: #050507;
-  color: white;
-  font-family: 'Montserrat', sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-h1 { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 900; letter-spacing: -0.04em; line-height: 0.95; margin-bottom: 2rem; text-transform: uppercase; }
-h2 { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 3rem; text-transform: uppercase; }
-h3 { font-size: clamp(1.2rem, 3vw, 1.8rem); font-weight: 900; text-transform: uppercase; }
+h1 { font-family: 'Montserrat', sans-serif; font-size: clamp(2.5rem, 8vw, 5.5rem); font-weight: 900; letter-spacing: -0.04em; line-height: 0.95; margin-bottom: 2rem; text-transform: uppercase; }
+h2 { font-family: 'Montserrat', sans-serif; font-size: clamp(1.8rem, 5vw, 3.2rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 3rem; text-transform: uppercase; }
+h3 { font-family: 'Montserrat', sans-serif; font-size: clamp(1.2rem, 3vw, 2rem); font-weight: 900; text-transform: uppercase; }
 
-/* Custom Animations */
-@keyframes glow-pulse {
-  0% { opacity: 0.3; }
-  50% { opacity: 0.6; }
-  100% { opacity: 0.3; }
+.italic-glow {
+  font-style: italic;
+  background: linear-gradient(to right, #0f172a, var(--color-crimson));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 1px rgba(0,0,0,0.1));
 }
 
-.glow-overlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle, rgba(245, 188, 27, 0.05), transparent);
-  pointer-events: none;
-  animation: glow-pulse 4s ease-in-out infinite;
-}
+/* Custom Utilities */
+.text-text-muted { color: #64748b; }
+.bg-accent-primary { background-color: var(--color-gold); }
+.bg-accent-secondary { background-color: var(--color-crimson); }
+.text-accent-primary { color: var(--color-gold); }
+.text-accent-secondary { color: var(--color-crimson); }

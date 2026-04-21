@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import { 
   ChevronDown, 
-  User, 
+  User as UserIcon, 
   LayoutDashboard, 
   LogOut, 
   Menu, 
@@ -13,6 +13,7 @@ import {
   BookOpen,
   ShoppingBag,
   Briefcase,
+  Users,
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,15 +46,15 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Trang chủ', href: '/' },
-    { name: 'Academy', href: '/academy' },
-    { name: 'Học viên', href: '/students' },
+    { name: 'Khóa học', href: '/courses' },
+    { name: 'Về chúng tôi', href: '/about' },
   ];
 
   const communityLinks = [
+    { name: 'Học viên', href: '/students', icon: <Users size={14} /> },
     { name: 'Blog', href: '/blog', icon: <BookOpen size={14} /> },
     { name: 'Dự án', href: '/work', icon: <Briefcase size={14} /> },
     { name: 'Cửa hàng', href: '/shop', icon: <ShoppingBag size={14} /> },
-    { name: 'Về chúng tôi', href: '/about', icon: <Info size={14} /> },
   ];
 
   return (
@@ -61,11 +62,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-accent-primary flex items-center justify-center text-white shadow-[0_0_20px_rgba(227,38,54,0.4)] group-hover:scale-110 transition-transform">
-             <span className="font-black text-xl italic">MT</span>
+          <div className="w-10 h-10 rounded-xl bg-accent-secondary flex items-center justify-center text-white shadow-[0_10px_20px_rgba(227,38,54,0.2)] group-hover:scale-110 transition-transform">
+             <span className="font-black text-xl italic uppercase">T</span>
           </div>
-          <span className="font-black tracking-tighter text-xl uppercase group-hover:text-accent-primary transition-colors">
-            {settings['branding_name'] || 'MINH TAN ACADEMY'}
+          <span className="font-black tracking-tighter text-2xl uppercase group-hover:text-accent-secondary transition-colors text-slate-900">
+            {settings['branding_name'] === 'MINH TAN ACADEMY' ? 'TANLAB' : (settings['branding_name'] || 'TANLAB')}
           </span>
         </Link>
 
@@ -75,7 +76,7 @@ export default function Navbar() {
             <Link 
               key={link.name} 
               href={link.href} 
-              className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-white transition-colors"
+              className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors"
             >
               {link.name}
             </Link>
@@ -87,7 +88,7 @@ export default function Navbar() {
             onMouseEnter={() => setIsDropdownOpen(true)}
             onMouseLeave={() => setIsDropdownOpen(false)}
           >
-            <button className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-white transition-colors flex items-center gap-2">
+            <button className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors flex items-center gap-2">
               Cộng đồng <ChevronDown size={12} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
@@ -97,17 +98,17 @@ export default function Navbar() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full left-0 mt-4 w-56 bg-[#121214] border border-white/5 rounded-2xl p-4 shadow-2xl backdrop-blur-xl"
+                  className="absolute top-full left-0 mt-4 w-56 bg-white border border-slate-100 rounded-2xl p-4 shadow-2xl"
                 >
                   <div className="grid grid-cols-1 gap-2">
                     {communityLinks.map((link) => (
                       <Link 
                         key={link.name} 
                         href={link.href}
-                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all group"
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-all group"
                       >
-                         <div className="text-white/20 group-hover:text-accent-primary transition-colors">{link.icon}</div>
-                         <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted group-hover:text-white">{link.name}</span>
+                         <div className="text-slate-300 group-hover:text-accent-secondary transition-colors">{link.icon}</div>
+                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-slate-900">{link.name}</span>
                       </Link>
                     ))}
                   </div>
@@ -117,23 +118,23 @@ export default function Navbar() {
           </div>
 
           {/* Auth State */}
-          <div className="flex items-center gap-6 ml-6 border-l border-white/10 pl-10">
+          <div className="flex items-center gap-6 ml-6 border-l border-slate-100 pl-10">
             {user ? (
               <div className="flex items-center gap-6">
-                <Link href="/dashboard" className="p-2 rounded-full hover:bg-white/5 text-white/60 hover:text-white transition-all"><LayoutDashboard size={18} /></Link>
+                <Link href="/dashboard" className="p-2 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-900 transition-all"><LayoutDashboard size={18} /></Link>
                 {isAdmin(user.email) && (
-                  <Link href="/admin" className="px-6 py-2 rounded-full bg-accent-primary/10 border border-accent-secondary/40 text-[10px] font-black uppercase tracking-widest text-accent-secondary">Admin</Link>
+                  <Link href="/admin" className="px-6 py-2 rounded-full bg-accent-secondary/5 border border-accent-secondary/10 text-[10px] font-black uppercase tracking-widest text-accent-secondary hover:bg-accent-secondary hover:text-white transition-all">Admin Hub</Link>
                 )}
-                <button onClick={handleLogout} className="text-white/40 hover:text-white transition-all"><LogOut size={18} /></button>
+                <button onClick={handleLogout} className="text-slate-400 hover:text-slate-900 transition-all"><LogOut size={18} /></button>
               </div>
             ) : (
-              <Link href="/auth" className="px-8 py-3 rounded-full bg-accent-primary text-black text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-[0_0_20px_rgba(227,38,54,0.4)] transition-all">Gia nhập</Link>
+              <Link href="/auth" className="px-8 py-3 rounded-full bg-accent-secondary text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_10px_20px_rgba(227,38,54,0.2)] hover:shadow-[0_15px_30px_rgba(227,38,54,0.3)] hover:-translate-y-0.5 transition-all">Gia nhập</Link>
             )}
           </div>
         </div>
 
         {/* Mobile Toggle */}
-        <button className="md:hidden text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        <button className="md:hidden text-slate-900" onClick={() => setIsMenuOpen(!isMenuOpen)}>
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -145,17 +146,17 @@ export default function Navbar() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="fixed inset-0 top-[88px] bg-black z-40 p-10 md:hidden overflow-y-auto"
+            className="fixed inset-0 top-[88px] bg-white z-40 p-10 md:hidden overflow-y-auto"
           >
             <div className="flex flex-col gap-10">
                {navLinks.map((link) => (
-                 <Link key={link.name} href={link.href} className="text-3xl font-black italic uppercase tracking-tighter" onClick={() => setIsMenuOpen(false)}>{link.name}</Link>
+                 <Link key={link.name} href={link.href} className="text-3xl font-black italic uppercase tracking-tighter text-slate-900" onClick={() => setIsMenuOpen(false)}>{link.name}</Link>
                ))}
-               <div className="pt-10 border-t border-white/5">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-6 font-mono tracking-widest">Community Hub</p>
+               <div className="pt-10 border-t border-slate-100">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 mb-6 tracking-widest">Community Hub</p>
                   <div className="grid grid-cols-1 gap-6">
                     {communityLinks.map((link) => (
-                      <Link key={link.name} href={link.href} className="text-xl font-bold italic uppercase flex items-center gap-4" onClick={() => setIsMenuOpen(false)}>
+                      <Link key={link.name} href={link.href} className="text-xl font-bold italic uppercase flex items-center gap-4 text-slate-600 hover:text-slate-900" onClick={() => setIsMenuOpen(false)}>
                         <span className="text-accent-secondary">{link.icon}</span> {link.name}
                       </Link>
                     ))}

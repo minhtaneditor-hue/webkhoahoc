@@ -34,20 +34,18 @@ export const BentoCard: React.FC<BentoCardProps> = ({
       transition={{ type: "spring", stiffness: 250, damping: 25 }}
       className={`lux-border-gold p-10 relative overflow-hidden group ${sizeClasses[size]} ${className}`}
     >
-      <div className="glow-overlay" />
-      
       <div className="flex flex-col h-full gap-6 relative z-10">
         <div className="flex items-center gap-4">
           {icon && (
-            <div className="w-14 h-14 rounded-3xl bg-accent-primary/10 flex items-center justify-center text-accent-primary group-hover:rotate-6 transition-transform duration-500">
+            <div className="w-14 h-14 rounded-3xl bg-accent-secondary/5 flex items-center justify-center text-accent-secondary group-hover:rotate-6 transition-transform duration-500">
               {icon}
             </div>
           )}
-          <h3 className="text-2xl font-black tracking-tight text-white">{title}</h3>
+          <h3 className="text-2xl font-black tracking-tight text-slate-900 italic uppercase">{title}</h3>
         </div>
         
         {description && (
-          <p className="text-text-muted text-sm leading-relaxed max-w-sm">
+          <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-sm italic">
             {description}
           </p>
         )}

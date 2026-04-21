@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { supabase } from '@/utils/supabase';
 import BentoCard from '@/components/BentoCard';
 import Navbar from '@/components/Navbar';
@@ -18,10 +18,12 @@ import {
   ChevronRight,
   CheckCircle2,
   Layers,
-  HelpCircle
+  HelpCircle,
+  ShieldCheck,
+  Zap,
+  Star
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { isAdmin } from '@/lib/admin';
 
 export default function Home() {
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -47,7 +49,7 @@ export default function Home() {
     init();
   }, []);
 
-  if (loadingContent) return <div className="min-h-screen bg-black flex items-center justify-center text-primary font-black tracking-widest animate-pulse">SYNCHRONIZING TERMINAL...</div>;
+  if (loadingContent) return <div className="min-h-screen bg-white flex items-center justify-center text-accent-secondary font-black tracking-widest animate-pulse">TANLAB TERMINAL LOADING...</div>;
 
   const featuredCourse = courses.find(c => c.id === 'd290f1ee-6c54-4b01-90e6-d701748f0851') || courses[0];
 
@@ -77,24 +79,44 @@ export default function Home() {
     }
   };
 
+  const partners = [
+    { name: "Phú Long", logo: "/asset/doi tac/logo-phu-long.jpg.webp" },
+    { name: "Viglacera", logo: "/asset/doi tac/viglacera-edited-1748248760146.webp" },
+    { name: "Suntory Pepsico", logo: "/asset/doi tac/logo.png" },
+    { name: "HTV", logo: "/asset/doi tac/unnamed.png" },
+    { name: "Vietjet", logo: "/asset/doi tac/channels4_profile.jpg" }
+  ];
+
+  const projects = [
+    { title: "2 Ngày 1 Đêm", category: "TV Show Integration", image: "/asset/du an tieu bieu/544ea4rx_1920x1080-2n1d3d4949a0757e8a42510797a7441b3256_1267_712.webp" },
+    { title: "Anh Trai Say Hi Movie", category: "Cinematic Production", image: "/asset/du an tieu bieu/AnhTraiSayHiOpening.jpg" },
+    { title: "Anh Trai Say Hi - Las Vegas", category: "Global Event Coverage", image: "/asset/du an tieu bieu/ATSH_logo_HTV2.webp" },
+    { title: "Nghệ Thuật Truyền Hình", category: "Digital Content", image: "/asset/du an tieu bieu/NHTH.jpg" },
+    { title: "Mái Ấm Tình Thương", category: "Documentary", image: "/asset/du an tieu bieu/MATN_logo_HTV7.webp" },
+    { title: "Ký Ức Vui Vẻ", category: "TV Production", image: "/asset/du an tieu bieu/Ky_uc_vui_ve_VTV.png" }
+  ];
+
   const bonuses = [
-    { title: "Kèm cặp 1:1 từ số 0", desc: "Hỗ trợ trực tiếp qua Zalo/Group để bạn không bị lạc lõng.", icon: <Users size={20} /> },
-    { title: "Kho kịch bản viral", desc: "100+ mẫu nội dung đã được chứng minh hiệu quả.", icon: <Terminal size={20} /> },
-    { title: "Âm thanh bản quyền", desc: "Bộ sưu tập nhạc nền xu hướng giúp video lên xu hướng.", icon: <Play size={20} /> },
-    { title: "Template thiết kế", desc: "Mẫu ảnh bìa, hiệu ứng chữ độc quyền của Minh Tấn.", icon: <Award size={20} /> }
+    { title: "Kèm cặp 1:1 trọn đời", desc: "Hỗ trợ trực tiếp qua Zalo/Group để bạn không đơn độc trên hành trình.", icon: <Users size={20} /> },
+    { title: "Kho kịch bản Triệu View", desc: "100+ mẫu nội dung đã được chứng minh hiệu quả thực tế.", icon: <Terminal size={20} /> },
+    { title: "Âm thanh Bản quyền", desc: "Bộ sưu tập nhạc nền xu hướng giúp video bứt phá thuật toán.", icon: <Play size={20} /> },
+    { title: "Template Thiết kế độc quyền", desc: "Mẫu ảnh bìa, hiệu ứng chữ chuyên nghiệp từ Minh Tấn.", icon: <Award size={20} /> }
   ];
 
   const faqs = [
-    { q: "Điện thoại cũ có học được không?", a: "Được! Tôi sẽ hướng dẫn bạn cách dùng ánh sáng để che đi khuyết điểm của máy." },
-    { q: "Tôi nhát, không dám lên hình?", a: "Có chiến thuật Voice-over và bối cảnh giúp bạn vẫn ra video mà không cần lộ mặt nếu muốn." },
-    { q: "Học xong chưa ra tiền thì sao?", a: "Tôi cam kết hỗ trợ 1-1 cho đến khi bạn nắm vững quy trình tạo ra phễu bán hàng." }
+    { q: "Điện thoại cũ có làm được không?", a: "Hoàn toàn được! Tôi sẽ dạy bạn cách làm chủ ánh sáng và góc quay để che đi khuyết điểm của thiết bị." },
+    { q: "Tôi ngại lên hình thì phải làm sao?", a: "Có chiến lược Voice-over và bối cảnh sáng tạo giúp bạn vẫn ra video triệu view mà không cần lộ mặt." },
+    { q: "Học xong chưa ra tiền thì sao?", a: "Tôi cam kết hỗ trợ 1-1 cho đến khi bạn xây dựng thành công phễu bán hàng tự động đầu tiên." }
   ];
 
   return (
-    <main className="min-h-screen bg-[#050507] text-white selection:bg-accent-secondary/30">
+    <main className="min-h-screen bg-[#f8fafc] text-slate-900 selection:bg-accent-secondary/10">
+      <Navbar />
+
       {/* Hero Section */}
-      <section className="relative pt-48 pb-32 px-6 overflow-hidden min-h-[90vh] flex items-center">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_70%_30%,rgba(227,38,54,0.12),transparent)] pointer-events-none" />
+      <section className="relative pt-48 pb-32 px-6 overflow-hidden min-h-[95vh] flex items-center bg-white">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_70%_30%,rgba(227,38,54,0.03),transparent)] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
         
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-20 items-center relative z-10">
           <motion.div 
@@ -102,26 +124,26 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             className="text-left"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] font-black text-white/40 mb-10 tracking-[0.3em]">
-              ACADEMY ELITE // v21.0 DEPLOYMENT
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-100 bg-slate-50/50 text-[11px] font-black text-slate-400 mb-10 tracking-[0.3em] uppercase">
+              <Zap size={14} className="text-accent-secondary" /> Tri thức là sức mạnh
             </div>
             
-            <h1 className="leading-[0.9] md:leading-[0.85] text-5xl md:text-7xl font-black mb-8 italic uppercase italic-glow">
-              {settings['hero_title'] || 'Khai Phá'}<br />
-              <span className="text-accent-primary">Tư Duy</span><br />
-              <span className="text-white/40">Sáng Tạo</span>
+            <h1 className="leading-[0.9] text-6xl md:text-8xl font-black mb-8 italic italic-glow">
+              VIDEO LÀ<br />
+              <span className="text-slate-900">TÀI SẢN</span>
             </h1>
             
-            <p className="text-xl text-text-muted mb-12 max-w-lg leading-relaxed font-medium">
-              {settings['hero_description'] || 'Kiến tạo cỗ máy thu nhập thụ động chỉ với smartphone và chiến lược nội dung chuyên nghiệp.'}
+            <p className="text-xl text-slate-500 mb-12 max-w-lg leading-relaxed font-bold uppercase tracking-tight">
+              BIẾN ĐIỆN THOẠI THÀNH TÀI SẢN<br />
+              <span className="text-sm font-medium normal-case tracking-normal text-slate-400">Kiến tạo cỗ máy thu nhập thụ động chỉ với smartphone và chiến lược nội dung viral.</span>
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6">
-              <Link href="/academy" className="btn-premium flex items-center justify-center gap-4 group">
-                VÀO HỌC VIỆN <ChevronRight className="group-hover:translate-x-2 transition-transform" />
+              <Link href="/courses" className="btn-premium flex items-center justify-center gap-4 group">
+                VÀO HỌC NGAY <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
               </Link>
-              <Link href="/work" className="px-10 py-5 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest hover:bg-white/10 transition-all">
-                DỰ ÁN ELITE
+              <Link href="/courses" className="px-10 py-5 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all">
+                KHÓA HỌC
               </Link>
             </div>
           </motion.div>
@@ -132,140 +154,145 @@ export default function Home() {
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
             className="relative"
           >
-            <div className="w-full aspect-[4/5] md:aspect-square lux-border-gold overflow-hidden relative group">
+            <div className="w-full aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden relative group shadow-2xl">
                 <img 
                   src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&q=80&w=1200" 
-                  alt="Professional Cinematography"
-                  className="w-full h-full object-cover grayscale brightness-75 group-hover:scale-105 transition-transform duration-[3000ms] ease-out"
+                  alt="Video Advisor"
+                  className="w-full h-full object-cover grayscale brightness-110 group-hover:scale-105 transition-transform duration-[3000ms] ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-transparent to-transparent opacity-60" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent" />
                 <div className="absolute bottom-12 left-12">
-                   <p className="text-[10px] font-black tracking-[0.5em] text-accent-primary uppercase mb-3">Lead Mentor</p>
-                   <p className="text-5xl font-black tracking-tighter">MINH TÂN</p>
+                   <p className="text-[11px] font-black tracking-[0.5em] text-accent-secondary uppercase mb-3">Video Advisor</p>
+                   <p className="text-5xl font-black tracking-tighter text-slate-900 italic">MINH TẤN</p>
                 </div>
             </div>
-            {/* Minimal Stat Badge */}
+            {/* Stat Badge */}
             <motion.div 
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="absolute -top-12 -right-8 p-10 glass-effect rounded-[3rem] hidden lg:block border-white/10"
+              className="absolute -top-12 -right-8 p-10 bg-white shadow-2xl rounded-[3rem] hidden lg:block border border-slate-100"
             >
-               <p className="text-5xl font-black text-accent-primary mb-1">99%</p>
-               <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Hài lòng</p>
+               <p className="text-5xl font-black text-accent-secondary mb-1">99%</p>
+               <p className="text-[11px] font-black uppercase tracking-widest text-slate-300">Học viên hài lòng</p>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Brand Authority Section */}
-      <section className="py-24 border-y border-white/5 bg-white/[0.01]">
+      {/* Partners Section */}
+      <section className="py-24 border-y border-slate-100 bg-white">
          <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mb-4 font-mono">Trusted by Global Giants</p>
-               <h3 className="text-2xl font-black italic tracking-tighter uppercase whitespace-pre-line group">
-                  ĐỐI TÁC CHIẾN LƯỢC & <span className="text-accent-primary">THƯƠNG HIỆU ĐÃ HỢP TÁC</span>
+               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mb-4 font-mono">Trusted by Global Giants</p>
+               <h3 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">
+                  ĐỐI TÁC CHIẾN LƯỢC & <span className="text-accent-secondary">THƯƠNG HIỆU HỢP TÁC</span>
                </h3>
             </div>
-            <div className="flex flex-wrap justify-center items-center gap-16 md:gap-24 opacity-30 grayscale hover:grayscale-0 transition-all duration-700">
-               {['SONY', 'CANON', 'HONDA', 'ADOBE', 'DJI'].map((brand) => (
-                 <div key={brand} className="text-2xl md:text-4xl font-black tracking-[0.4em] italic hover:text-accent-primary hover:opacity-100 transition-all cursor-default">
-                    {brand}
+            <div className="flex flex-wrap justify-center items-center gap-16 md:gap-24 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+               {partners.map((partner) => (
+                 <div key={partner.name} className="h-12 md:h-16 flex items-center justify-center">
+                    <img src={partner.logo} alt={partner.name} className="h-full w-auto object-contain" />
                  </div>
                ))}
-            </div>
-            <div className="mt-16 flex justify-center">
-               <Link href="/about" className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-all group">
-                  TÌM HIỂU VỀ CHÚNG TÔI <ChevronRight size={14} className="group-hover:translate-x-2 transition-all" />
-               </Link>
             </div>
          </div>
       </section>
 
-      {/* Authority Showcase: Featured Work */}
-      <section className="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16">
+      {/* Featured Projects Section */}
+      <section className="max-w-7xl mx-auto px-6 py-32">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
           <div className="max-w-2xl">
-             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 text-accent-primary text-[10px] font-black uppercase tracking-widest mb-6 border border-accent-primary/20">
-                <Video size={12} /> Authority Showcase
+             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[11px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
+                <Video size={14} /> Authority Showcase
              </div>
-             <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase mb-4 italic-glow">
-                Dự án <span className="text-white/40">tiêu biểu</span>
+             <h2 className="text-5xl font-black italic tracking-tighter uppercase mb-6 italic-glow leading-none">
+                Dự án <span className="text-slate-300">Tiêu biểu</span>
              </h2>
-             <p className="text-text-muted font-medium text-lg leading-relaxed">
-                Chứng thực năng lực qua các tác phẩm được đầu tư bài bản về mặt hình ảnh và ngôn ngữ điện ảnh.
+             <p className="text-slate-500 font-bold text-lg italic leading-relaxed">
+                Chứng thực năng lực qua các tác phẩm truyền hình và điện ảnh quy mô lớn.
              </p>
           </div>
-          <Link href="/work" className="px-8 py-3 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-white transition-all flex items-center gap-3">
+          <Link href="/work" className="px-8 py-3 rounded-full bg-slate-50 border border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all flex items-center gap-3">
              XEM TẤT CẢ <ChevronRight size={14} />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-           {[1, 2, 3].map((_, i) => (
-             <Link key={i} href="/work" className="group block relative aspect-[4/3] rounded-[2.5rem] overflow-hidden border border-white/5 bg-white/5 hover:border-accent-primary/30 transition-all duration-700">
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-all z-10" />
-                <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all">
-                   <div className="w-12 h-12 rounded-full bg-accent-primary/20 backdrop-blur-md flex items-center justify-center text-accent-primary transform scale-50 group-hover:scale-100 transition-all">
-                      <Play size={20} fill="currentColor" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+           {projects.map((project, i) => (
+             <Link key={i} href="/work" className="group block relative aspect-[4/3] rounded-[3rem] overflow-hidden border border-slate-100 bg-white hover:border-accent-secondary/20 shadow-xl transition-all duration-700">
+                <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-white/40 group-hover:bg-transparent transition-all z-10" />
+                <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
+                   <div className="w-16 h-16 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-accent-secondary shadow-2xl">
+                      <Play size={24} fill="currentColor" />
                    </div>
                 </div>
-                <div className="absolute bottom-6 left-6 z-20">
-                   <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Production Project</p>
-                   <h4 className="text-lg font-black italic uppercase group-hover:text-accent-primary transition-colors">Tactical Visual v{i+1}</h4>
+                <div className="absolute bottom-10 left-10 z-20 text-white group-hover:text-slate-900 p-8 rounded-3xl bg-black/20 backdrop-blur-sm group-hover:bg-white/80 group-hover:shadow-2xl transition-all">
+                   <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">{project.category}</p>
+                   <h4 className="text-xl font-black italic uppercase">{project.title}</h4>
                 </div>
              </Link>
            ))}
         </div>
       </section>
 
-      {/* The Core System Section */}
-      <section className="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <BentoCard 
-            title={featuredCourse?.title || "Tactical Bundle"}
-            description={featuredCourse?.description || "Master the 21-day workflow of content automation."}
-            size="large"
-            icon={<Video size={32} className="text-accent-secondary" />}
-            className="md:col-span-2 md:row-span-2"
-          >
-            <div className="mt-8 flex flex-col gap-4">
-              <div className="flex items-center gap-3 text-sm text-text-muted">
-                <CheckCircle2 size={16} className="text-green-500" />
-                Dựng phim chuyên nghiệp trên Mobile
+      {/* Courses Bento Grid */}
+      <section className="bg-white py-32 px-6 border-y border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+             <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow">Lộ trình <span className="text-slate-300">Tài sản</span></h2>
+             <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300">Hệ thống đào tạo thực chiến tại Tanlab</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <BentoCard 
+              title={featuredCourse?.title || "VIDEO LÀ TÀI SẢN"}
+              description={featuredCourse?.description || "Làm chủ quy trình xây dựng cỗ máy thu nhập tự động từ smartphone."}
+              size="large"
+              icon={<Video size={32} className="text-accent-secondary" />}
+              className="md:col-span-2 md:row-span-2 shadow-2xl"
+            >
+              <div className="mt-8 flex flex-col gap-4">
+                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                  <CheckCircle2 size={16} className="text-accent-secondary" />
+                  Dựng phim chuyên nghiệp trên Mobile
+                </div>
+                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                  <CheckCircle2 size={16} className="text-accent-secondary" />
+                  Tư duy kịch bản thương mại hóa
+                </div>
+                <button 
+                  onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
+                  className="mt-6 p-5 rounded-2xl bg-accent-secondary text-white font-black text-xs uppercase tracking-widest hover:shadow-2xl hover:shadow-accent-secondary/30 transition-all"
+                >
+                   VÀO HỌC NGAY
+                </button>
               </div>
-              <div className="flex items-center gap-3 text-sm text-text-muted">
-                <CheckCircle2 size={16} className="text-green-500" />
-                Tư duy kịch bản "Bán mà không bán"
-              </div>
-              <button 
-                onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
-                className="mt-4 p-4 rounded-xl bg-accent-secondary/10 border border-accent-secondary/20 text-accent-secondary font-bold text-center hover:bg-accent-secondary/20 transition-all"
-              >
-                View Operations Details
-              </button>
-            </div>
-          </BentoCard>
+            </BentoCard>
 
-          <BentoCard title="Nội Dung Viral" description="Tiếp cận triệu khách hàng tự nhiên." icon={<Play size={24} />} />
-          <BentoCard title="Hệ Thống Phễu" description="Tự động hóa dòng tiền 24/7." icon={<Layers size={24} />} />
-          <BentoCard title="Thương Hiệu" description="Định vị personal brand sắc nét." icon={<Users size={24} />} className="md:col-span-2" />
+            <BentoCard title="Nội Dung Viral" description="Tiếp cận triệu khách hàng mục tiêu." icon={<Star size={24} />} className="bg-slate-50" />
+            <BentoCard title="Hệ Thống Phễu" description="Tự động hóa dòng tiền 24/7." icon={<Layers size={24} />} className="bg-slate-50" />
+            <BentoCard title="Thương Hiệu" description="Định vị Personal Brand sắc nét." icon={<Users size={24} />} className="md:col-span-2 bg-slate-50" />
+          </div>
         </div>
       </section>
 
       {/* Bonus Stack */}
-      <section className="bg-white/5 py-24 px-6 border-y border-white/5">
+      <section className="py-32 px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-center mb-16 underline-accent">QUÀ TẶNG <span className="text-accent-secondary">ĐẶC QUYỀN</span></h2>
+          <div className="text-center mb-20">
+             <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">QUÀ TẶNG <span className="text-accent-secondary">ĐẶC QUYỀN</span></h2>
+             <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mt-4 underline-accent">Exclusive Bonuses</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {bonuses.map((bonus, i) => (
-              <div key={i} className="flex gap-6 p-8 rounded-3xl lux-border-gold hover:border-accent-primary/30 transition-all group">
-                <div className="w-12 h-12 rounded-2xl bg-accent-primary/20 flex items-center justify-center text-accent-primary group-hover:scale-110 transition-transform shrink-0">
+              <div key={i} className="flex gap-8 p-10 rounded-[3rem] bg-white border border-slate-100 shadow-xl hover:translate-y-[-5px] transition-all group">
+                <div className="w-14 h-14 rounded-2xl bg-accent-secondary/5 flex items-center justify-center text-accent-secondary group-hover:scale-110 transition-transform shrink-0">
                   {bonus.icon}
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-2">{bonus.title}</h4>
-                  <p className="text-text-muted text-sm leading-relaxed">{bonus.desc}</p>
+                  <h4 className="font-black text-xl mb-3 text-slate-900 group-hover:text-accent-secondary transition-colors uppercase italic">{bonus.title}</h4>
+                  <p className="text-slate-500 text-sm font-medium leading-relaxed italic">{bonus.desc}</p>
                 </div>
               </div>
             ))}
@@ -274,25 +301,25 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 px-6">
+      <section className="py-32 px-6 bg-slate-50 border-t border-slate-100">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-center mb-16 flex items-center justify-center gap-3">
-             <HelpCircle className="text-accent-secondary" />
-             QUERY RESOLUTION
+          <h2 className="text-center mb-16 flex flex-col items-center gap-4 italic italic-glow">
+             <HelpCircle className="text-accent-secondary" size={32} />
+             GIẢI ĐÁP THẮC MẮC
           </h2>
           <div className="space-y-4">
             {faqs.map((faq, i) => (
               <div 
                 key={i} 
-                className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden transition-all"
+                className="rounded-3xl border border-slate-200 bg-white overflow-hidden transition-all shadow-sm"
                 onClick={() => setActiveFaq(activeFaq === i ? null : i)}
               >
-                <div className="p-6 flex items-center justify-between cursor-pointer hover:bg-white/[0.03]">
-                  <span className="font-bold">{faq.q}</span>
-                  <ChevronRight size={20} className={`text-text-muted transition-transform ${activeFaq === i ? 'rotate-90' : ''}`} />
+                <div className="p-8 flex items-center justify-between cursor-pointer hover:bg-slate-50">
+                  <span className="font-black text-slate-900 text-sm uppercase italic">{faq.q}</span>
+                  <ChevronRight size={20} className={`text-slate-300 transition-transform ${activeFaq === i ? 'rotate-90' : ''}`} />
                 </div>
                 {activeFaq === i && (
-                  <div className="px-6 pb-6 text-text-muted text-sm border-t border-white/5 pt-6 animate-fade-in">
+                  <div className="px-8 pb-8 text-slate-500 font-medium text-sm border-t border-slate-100 pt-8 animate-fade-in leading-relaxed italic">
                     {faq.a}
                   </div>
                 )}
@@ -302,22 +329,34 @@ export default function Home() {
         </div>
       </section>
       
-      {/* SaaS DRM Premium Integration */}
-      <section id="saas-preview" className="relative border-y border-white/5">
-        <SaaSDRMHero />
+      {/* SaaS DRM Minimalist Bar */}
+      <section id="saas-preview" className="relative bg-white py-12 border-y border-slate-100 overflow-hidden">
+         <div className="flex items-center gap-10 whitespace-nowrap animate-scroll-minimal">
+            {[1,2,3,4,5].map(i => (
+               <div key={i} className="flex items-center gap-6 text-[11px] font-black uppercase tracking-[0.5em] text-slate-200">
+                  <ShieldCheck size={16} className="text-accent-secondary" /> 
+                  BẢO MẬT TÀI SẢN TOÀN DIỆN VỚI TANLAB DRM 
+                  <span className="text-slate-100">//</span>
+               </div>
+            ))}
+         </div>
+         {/* Hidden/Minimized actual DRM content to preserve SEO and technical structure but keep UI light */}
+         <div className="sr-only">
+           <SaaSDRMHero />
+         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-32 px-6 text-center">
-        <div className="max-w-3xl mx-auto p-12 rounded-[3rem] bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 border border-white/10 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none" />
-          <h2 className="text-4xl md:text-5xl font-black mb-6"> READY TO <span className="text-accent-secondary">DEPLOY?</span></h2>
-          <p className="text-text-muted mb-10 leading-relaxed font-medium">Chiếc điện thoại của bạn đang chờ để được lên cấu hình mới. Đắm chìm vào 21 ngày thực chiến ngay hôm nay.</p>
+      <section className="py-40 px-6 text-center">
+        <div className="max-w-4xl mx-auto p-16 rounded-[4rem] bg-white border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.05)] relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent-primary/5 to-accent-secondary/5 opacity-50" />
+          <h2 className="text-5xl md:text-7xl font-black mb-8 italic italic-glow uppercase"> READY TO <span className="text-slate-300">DEPLOY?</span></h2>
+          <p className="text-lg text-slate-500 mb-12 leading-relaxed font-bold uppercase italic tracking-tight">Chiếc điện thoại của bạn đang chờ để được bứt phá tiềm năng.</p>
           <button 
                 onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
-                className="btn-premium px-12 py-5 rounded-full font-black text-sm tracking-widest shadow-2xl shadow-accent-primary/40 hover:shadow-accent-secondary/40"
+                className="btn-premium px-16 py-6 rounded-full font-black text-sm tracking-widest shadow-3xl"
               >
-                MISSION START &rarr;
+                GIA NHẬP TANLAB NGAY &rarr;
           </button>
         </div>
       </section>
