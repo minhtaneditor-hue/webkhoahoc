@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import BentoCard from '@/components/BentoCard';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 
 import { 
   ArrowRight,
@@ -21,7 +20,8 @@ import {
   HelpCircle,
   ShieldCheck,
   Zap,
-  Star
+  Star,
+  Quote
 } from 'lucide-react';
 
 export default function Home() {
@@ -102,10 +102,10 @@ export default function Home() {
     { title: "Ký Ức Vui Vẻ", category: "TV Production", image: "/asset/du_an_tieu_bieu/project_kuvv.png" }
   ];
 
-  const stats = [
-    { label: "Học viên", value: "1000+" },
-    { label: "Độ hài lòng", value: "99%" },
-    { label: "Dự án", value: "upto 1000" }
+  const testimonials = [
+    { name: "Trần Thành Tân", title: "Cinematographer", quote: "Tư duy làm phim triệu view đã thay đổi hoàn toàn sự nghiệp của Tân.", results: "Top 1 Trending" },
+    { name: "Nguyễn Đăng Hạnh", title: "Founder Chú Lùn Bakery", quote: "Video Marketing tự sản xuất giúp tiệm bánh của Hạnh bùng nổ doanh số.", results: "+300% Revenue" },
+    { name: "Nguyễn Tiến Dương", title: "Founder Thành Đô", quote: "Nhân hiệu uy tín được xây dựng sắc nét qua từng khung hình chuyên nghiệp.", results: "Industry Authority" }
   ];
 
   const bonuses = [
@@ -157,25 +157,30 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* NFT Style Stats Block - Updated with Mixed Avatars */}
+              {/* NFT Style Stats Block */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-12 pt-8 border-t border-slate-100">
-                {stats.map((stat, i) => (
-                   <div key={i} className="flex flex-col items-center md:items-start gap-1">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">{stat.label}</p>
-                      <p className="text-2xl font-black italic tracking-tighter text-slate-900">{stat.value}</p>
-                   </div>
-                ))}
+                <div className="flex flex-col items-center md:items-start gap-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Học viên</p>
+                    <p className="text-2xl font-black italic tracking-tighter text-slate-900">1000+</p>
+                </div>
+                <div className="flex flex-col items-center md:items-start gap-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Độ hài lòng</p>
+                    <p className="text-2xl font-black italic tracking-tighter text-slate-900">99%</p>
+                </div>
+                <div className="flex flex-col items-center md:items-start gap-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-300"><span className="text-[7px] opacity-60">up to</span> Dự án</p>
+                    <p className="text-2xl font-black italic tracking-tighter text-slate-900">1000+</p>
+                </div>
                 <div className="flex flex-col items-center md:items-start gap-2">
                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Xác nhận bởi:</p>
                    <div className="flex -space-x-3">
-                      {/* Mixed Avatars: 3 Students + 2 Brands */}
-                      {[1,2,3].map(i => (
-                        <div key={`s-${i}`} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-slate-100 ring-2 ring-gold/5 shadow-md">
-                           <img src={`https://i.pravatar.cc/100?u=student-${i}`} alt="student" className="w-full h-full object-cover" />
+                      {[1,2,3,4,5,6,7].map(i => (
+                        <div key={i} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-slate-100 ring-2 ring-gold/5 shadow-md">
+                           <img src={`https://i.pravatar.cc/100?u=user-${i}`} alt="user" className="w-full h-full object-cover" />
                         </div>
                       ))}
                       {[partners[0], partners[3]].map((brand, i) => (
-                        <div key={`b-${i}`} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-white ring-2 ring-gold/5 shadow-md p-1.5 flex items-center justify-center">
+                        <div key={`brand-${i}`} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-white ring-2 ring-gold/5 shadow-md p-1.5 flex items-center justify-center">
                            <img src={brand.logo} alt="brand" className="w-full h-full object-contain" />
                         </div>
                       ))}
@@ -263,8 +268,43 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Student Feedback Spotlight */}
+      <section className="py-32 bg-slate-50/50 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="text-center mb-20">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[10px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
+                  <Star size={14} /> Hào Quang Học Viên
+              </div>
+              <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase italic-glow leading-none">Phản hồi <span className="text-slate-300">thực chiến</span></h2>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              {testimonials.map((t, i) => (
+                 <div key={i} className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl relative group hover:scale-[1.02] transition-all">
+                    <Quote className="absolute top-8 right-8 text-accent-secondary/10" size={64} />
+                    <div className="inline-block px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[9px] font-black uppercase tracking-widest mb-8 border border-accent-secondary/10">
+                       {t.results}
+                    </div>
+                    <p className="text-lg font-medium text-slate-600 mb-10 italic leading-relaxed">"{t.quote}"</p>
+                    <div className="flex items-center gap-4 border-t border-slate-50 pt-8">
+                       <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100">
+                          <img src={`https://i.pravatar.cc/100?u=${t.name}`} className="w-full h-full object-cover" />
+                       </div>
+                       <div>
+                          <h4 className="font-black text-sm uppercase italic tracking-widest">{t.name}</h4>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">{t.title}</p>
+                       </div>
+                    </div>
+                 </div>
+              ))}
+           </div>
+           <div className="mt-20 text-center">
+              <Link href="/students" className="px-10 py-4 rounded-full bg-slate-950 text-white text-[11px] font-black uppercase tracking-widest hover:bg-accent-secondary transition-all shadow-2xl">XEM HALL OF FAME &rarr;</Link>
+           </div>
+        </div>
+      </section>
+
       {/* Courses Bento Grid */}
-      <section className="bg-slate-50/50 py-32 px-6">
+      <section className="bg-white py-32 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow leading-none">Lộ trình <span className="text-slate-300">Tài sản</span></h2>
@@ -304,7 +344,7 @@ export default function Home() {
       </section>
 
       {/* Bonus Stack */}
-      <section className="py-32 px-6 bg-white">
+      <section className="py-32 px-6 bg-slate-50/50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-20">
              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">QUÀ TẶNG <span className="text-accent-secondary">ĐẶC QUYỀN</span></h2>
@@ -327,7 +367,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-32 px-6 bg-slate-50/30 border-y border-slate-50">
+      <section className="py-32 px-6 bg-white border-y border-slate-50">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-center mb-16 flex flex-col items-center gap-4 italic italic-glow leading-none">
              <HelpCircle className="text-accent-secondary" size={32} />
@@ -340,7 +380,7 @@ export default function Home() {
                 className="rounded-3xl border border-slate-200 bg-white overflow-hidden transition-all shadow-sm"
                 onClick={() => setActiveFaq(activeFaq === i ? null : i)}
               >
-                <div className="p-8 flex items-center justify-between cursor-pointer hover:bg-slate-50">
+                <div className="p-8 flex items-center justify-between cursor-pointer hover:bg-white">
                   <span className="font-black text-slate-900 text-sm uppercase italic">{faq.q}</span>
                   <ChevronRight size={20} className={`text-slate-300 transition-transform ${activeFaq === i ? 'rotate-90' : ''}`} />
                 </div>
@@ -382,10 +422,6 @@ export default function Home() {
           </button>
         </div>
       </section>
-
-      <footer className="bg-white border-t border-slate-100">
-        <Footer />
-      </footer>
 
     </main>
   );

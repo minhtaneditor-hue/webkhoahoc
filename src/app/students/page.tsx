@@ -5,128 +5,154 @@ import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import { 
   User, 
-  ExternalLink, 
   Quote, 
-  Loader2,
   Award,
   Video,
-  Star
+  Star,
+  ExternalLink
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const ELITE_STUDENTS = [
+  {
+    id: 's1',
+    name: 'Trần Thành Tân',
+    title: 'Cinematographer / Visual Artist',
+    story: 'Khóa học đã thay đổi hoàn toàn cách mình tư duy về khung hình. Từ một người cầm máy theo bản năng, mình đã làm chủ được ngôn ngữ điện ảnh để kể những câu chuyện triệu view.',
+    avatar_url: 'https://i.pravatar.cc/150?u=tan',
+    results: 'Top 1 Trending Content Strategy'
+  },
+  {
+    id: 's2',
+    name: 'Nguyễn Đăng Hạnh',
+    title: 'Founder Chú Lùn Bakery',
+    story: 'Biến điện thoại thành cỗ máy bán hàng là có thật. Mình đã tự sản xuất toàn bộ nội dung marketing cho tiệm bánh và đạt doanh thu bứt phá chỉ sau 3 tuần áp dụng.',
+    avatar_url: 'https://i.pravatar.cc/150?u=hanh',
+    results: '300% Organic Lead Growth'
+  },
+  {
+    id: 's3',
+    name: 'Nguyễn Tiến Dương',
+    title: 'Founder Bảo Vệ Thành Đô',
+    story: 'Tư duy "Video là Tài sản" giúp mình xây dựng được nhân hiệu uy tín trong ngành dịch vụ bảo vệ. Khách hàng tin tưởng hơn khi thấy quy trình làm việc chuyên nghiệp qua ống kính.',
+    avatar_url: 'https://i.pravatar.cc/150?u=duong',
+    results: 'Established Industry Authority'
+  },
+  {
+    id: 's4',
+    name: 'Trương Thị Như Hằng',
+    title: 'Founder Thực phẩm Đồng Tâm',
+    story: 'Không chỉ là quay phim, đây là khóa học về chiến lược. Mình đã biết cách đóng gói giá trị sản phẩm truyền thống thành những video hiện đại, thu hút lượng lớn khách hàng trẻ.',
+    avatar_url: 'https://i.pravatar.cc/150?u=hang',
+    results: 'Viral Traditional Brand Refresh'
+  },
+  {
+    id: 's5',
+    name: 'Phan Quốc Việt',
+    title: 'Creative Specialist',
+    story: 'Quy trình sản xuất tinh gọn tại Tanlab giúp mình tiết kiệm 80% thời gian hậu kỳ mà chất lượng video vẫn đạt chuẩn truyền hình. Một khoản đầu tư quá xứng đáng.',
+    avatar_url: 'https://i.pravatar.cc/150?u=viet',
+    results: '80% Production Efficiency Increase'
+  },
+  {
+    id: 's6',
+    name: 'Lê Hoàng Nam',
+    title: 'Content Strategist',
+    story: 'Từ một người ngại lên hình, giáo trình của anh Minh Tấn đã giúp mình tự tin và có phong thái chuyên nghiệp. Giờ đây video không còn là nỗi sợ mà là đam mê.',
+    avatar_url: 'https://i.pravatar.cc/150?u=nam',
+    results: 'Personal Brand Breakthrough'
+  }
+];
+
 export default function StudentsPage() {
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>(ELITE_STUDENTS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStudents() {
       const { data } = await supabase.from('students').select('*').order('created_at', { ascending: false });
-      setStudents(data || []);
+      if (data && data.length > 0) {
+        setStudents(data);
+      }
       setLoading(false);
     }
     fetchStudents();
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#050507] text-white">
+    <main className="min-h-screen bg-white text-slate-900 selection:bg-accent-secondary/10 relative overflow-hidden">
+      {/* Dynamic Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_70%_20%,rgba(227,38,54,0.02),transparent)] pointer-events-none" />
+      
       {/* Header Section */}
-      <section className="pt-48 pb-20 px-6 text-center relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(227,38,54,0.08),transparent)] pointer-events-none" />
-        
+      <section className="pt-48 pb-20 px-6 text-center relative z-10">
         <motion.div
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
         >
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-[0.4em] text-white/40 mb-8">
-            <Award size={12} className="text-accent-primary" />
-            Student Excellence // Hall of Fame
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-slate-100 bg-slate-50 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8">
+            <Award size={12} className="text-accent-secondary" />
+            Hào Quang Học Viên // Hall of Fame
           </div>
-          <h1 className="text-5xl md:text-8xl font-black mb-8 leading-[0.9] tracking-tighter uppercase italic italic-glow">
-            Niềm Tự Hào <br />
-            Của <span className="text-accent-primary">Học Viện</span>
+          <h1 className="text-6xl md:text-8xl font-black mb-8 leading-[0.9] tracking-tighter uppercase italic italic-glow">
+            KẾT QUẢ LÀ <br />
+            <span className="text-slate-900">DINH DƯỠNG</span>
           </h1>
-          <p className="max-w-2xl mx-auto text-text-muted text-lg font-medium leading-relaxed italic">
-            Nơi trưng bày những thành quả, sự bứt phá và những sản phẩm thực chiến từ chính bàn tay các học viên của Minh Tân Academy.
+          <p className="max-w-xl mx-auto text-slate-500 text-lg font-medium leading-relaxed italic border-l-4 border-accent-secondary pl-8 text-left md:text-center md:border-l-0 md:pl-0">
+            Nơi trưng bày những thành quả bứt phá từ những học viên nỗ lực nhất tại Tanlab. Thành công của bạn chính là bộ mặt của chúng tôi.
           </p>
         </motion.div>
       </section>
 
-      {/* Students Grid */}
-      <section className="max-w-7xl mx-auto px-6 py-24 mb-20">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-40 gap-6">
-             <Loader2 size={40} className="text-accent-primary animate-spin" />
-             <p className="text-[10px] font-black uppercase tracking-widest text-white/20 font-mono tracking-widest">Synchronizing Success Stories...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {students.map((student, i) => (
-              <motion.div 
-                key={student.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="group relative"
-              >
-                 <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-10 hover:border-accent-primary/40 transition-all duration-700 h-full flex flex-col hover:shadow-[0_0_50px_rgba(227,38,54,0.05)]">
-                    <Quote className="text-accent-primary opacity-20 mb-8" size={40} />
-                    
-                    <p className="text-lg font-medium text-text-muted italic leading-relaxed mb-10 flex-1">
-                       "{student.story || 'Khóa học đã thực sự thay đổi tư duy làm phim của mình từ một người quay phim nghiệp dư thành một production chuyên nghiệp.'}"
-                    </p>
+      {/* Success Grid */}
+      <section className="max-w-7xl mx-auto px-6 py-24 mb-40 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+          {students.map((student, i) => (
+            <motion.div 
+              key={student.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="group"
+            >
+              <div className="bg-white border border-slate-100 rounded-[3rem] p-12 hover:border-accent-secondary/20 transition-all duration-700 h-full flex flex-col shadow-[0_10px_40px_rgba(0,0,0,0.02)] hover:shadow-2xl">
+                <div className="flex justify-between items-start mb-10">
+                   <Quote className="text-accent-secondary opacity-10" size={48} />
+                   <div className="px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[9px] font-black uppercase tracking-widest border border-accent-secondary/10">
+                      {student.results}
+                   </div>
+                </div>
+                
+                <p className="text-lg font-medium text-slate-600 italic leading-relaxed mb-12 flex-1">
+                   "{student.story}"
+                </p>
 
-                    <div className="flex items-center justify-between pt-10 border-t border-white/5">
-                       <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 bg-white/5 grayscale group-hover:grayscale-0 transition-all duration-700">
-                             {student.avatar_url ? (
-                               <img src={student.avatar_url} className="w-full h-full object-cover" />
-                             ) : (
-                               <div className="w-full h-full flex items-center justify-center text-white/10"><User size={24} /></div>
-                             )}
-                          </div>
-                          <div>
-                             <h4 className="text-xl font-black uppercase italic tracking-tighter group-hover:text-accent-primary transition-colors">{student.name}</h4>
-                             <p className="text-[10px] font-black uppercase tracking-widest text-white/20 italic">Elite Student</p>
-                          </div>
-                       </div>
-                       
-                       {student.project_link && (
-                         <a 
-                           href={student.project_link} 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-white/40 hover:bg-accent-primary hover:text-white transition-all shadow-xl"
-                         >
-                            <Video size={18} />
-                         </a>
-                       )}
-                    </div>
-                 </div>
-              </motion.div>
-            ))}
-
-            {students.length === 0 && (
-              <div className="col-span-full py-40 text-center bg-white/[0.01] border border-dashed border-white/10 rounded-[3rem]">
-                 <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 text-white/10">
-                    <Award size={40} />
-                 </div>
-                 <h3 className="text-2xl font-black uppercase italic mb-4">Sắp xuất hiện...</h3>
-                 <p className="text-text-muted font-medium italic">Chúng tôi đang cập nhật những câu chuyện thành công mới nhất.</p>
+                <div className="flex items-center gap-6 pt-10 border-t border-slate-50">
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-slate-50 shadow-inner bg-slate-50 group-hover:scale-110 transition-transform duration-500">
+                    <img src={student.avatar_url || `https://i.pravatar.cc/150?u=${student.name}`} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-black uppercase italic tracking-tighter text-slate-900 group-hover:text-accent-secondary transition-colors underline-accent">{student.name}</h4>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 mt-1">{student.title}</p>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-        )}
+            </motion.div>
+          ))}
+        </div>
       </section>
 
-      {/* Trust Trigger Section */}
-      <section className="max-w-5xl mx-auto px-6 mb-40 text-center">
-         <div className="p-20 rounded-[4rem] bg-accent-primary/5 border border-accent-primary/10">
-            <Star size={40} className="text-accent-primary mx-auto mb-8" />
-            <h2 className="text-3xl font-black mb-6 uppercase italic tracking-tighter">Bạn Muốn Là <span className="text-accent-primary">Gương Mặt</span> Tiếp Theo?</h2>
-            <p className="text-text-muted font-medium mb-10 max-w-2xl mx-auto italic">
-               Tham gia vào Academy và bắt đầu cuộc hành trình chuyển mình từ một người nghiệp dư thành một chuyên gia thực thụ. Kết quả của bạn là niềm tự hào của chúng tôi.
+      {/* Trust Call to Action */}
+      <section className="max-w-4xl mx-auto px-6 mb-40 text-center relative z-10">
+         <div className="p-20 rounded-[4rem] bg-slate-950 text-white relative overflow-hidden shadow-3xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent-secondary/10 blur-[100px] pointer-events-none" />
+            <Star size={40} className="text-accent-secondary mx-auto mb-8" />
+            <h2 className="text-3xl md:text-5xl font-black mb-8 uppercase italic tracking-tighter leading-none">TRỞ THÀNH CÂU CHUYỆN <br /><span className="text-accent-secondary">THÀNH CÔNG</span> TIẾP THEO</h2>
+            <p className="text-slate-400 font-medium mb-12 max-w-2xl mx-auto italic leading-relaxed">
+               Gia nhập cộng đồng Elite Student và bắt đầu hành trình chuyển hóa bản thân. Kết quả của bạn đã sẵn sàng để được trưng bày tại đây.
             </p>
-            <Link href="/academy" className="btn-premium px-12 py-5 inline-flex">GIA NHẬP ACADEMY NGAY</Link>
+            <Link href="/courses" className="btn-premium px-16 py-6 inline-flex shadow-[0_20px_50px_rgba(227,38,54,0.3)]">BẮT ĐẦU NGAY &rarr;</Link>
          </div>
       </section>
     </main>
