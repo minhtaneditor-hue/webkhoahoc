@@ -34,22 +34,54 @@ export default function Home() {
 
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      try {
+        const [
+          { data: { user: currentUser } },
+          { data: coursesData },
+          { data: settingsData }
+        ] = await Promise.all([
+          supabase.auth.getUser(),
+          supabase.from('courses').select('*').order('created_at', { ascending: false }),
+          supabase.from('site_settings').select('*')
+        ]);
 
-      const { data: coursesData } = await supabase.from('courses').select('*').order('created_at', { ascending: false });
-      if (coursesData) setCourses(coursesData);
+        if (currentUser) setUser(currentUser);
+        if (coursesData) setCourses(coursesData);
 
-      const { data: settingsData } = await supabase.from('site_settings').select('*');
-      const settingsMap: Record<string, string> = {};
-      settingsData?.forEach(s => { settingsMap[s.key] = s.value; });
-      setSettings(settingsMap);
-      setLoadingContent(false);
+        const settingsMap: Record<string, string> = {};
+        settingsData?.forEach(s => { settingsMap[s.key] = s.value; });
+        setSettings(settingsMap);
+      } catch (error) {
+        console.error("Loading error:", error);
+      } finally {
+        setLoadingContent(false);
+      }
     }
+    
+    // Safety timeout to prevent infinite loading if Supabase hangs
+    const timer = setTimeout(() => {
+      setLoadingContent(false);
+    }, 5000);
+
     init();
+    return () => clearTimeout(timer);
   }, []);
 
-  if (loadingContent) return <div className="min-h-screen bg-white flex items-center justify-center text-accent-secondary font-black tracking-widest animate-pulse">TANLAB TERMINAL LOADING...</div>;
+  if (loadingContent) return (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 via-white to-accent-secondary/5 -z-10" />
+      <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-accent-secondary/5 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-primary/5 blur-[120px] rounded-full" />
+      
+      <div className="flex flex-col items-center gap-8 relative z-10">
+        <div className="w-16 h-16 rounded-2xl bg-accent-secondary flex items-center justify-center text-white shadow-2xl animate-bounce italic font-black text-2xl">T</div>
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-[10px] font-black uppercase tracking-[0.5em] text-accent-secondary animate-pulse">TANLAB SYSTEMS</div>
+          <div className="text-slate-400 font-bold italic uppercase tracking-widest text-xs">Deploying Knowledge Assets...</div>
+        </div>
+      </div>
+    </div>
+  );
 
   const featuredCourse = courses.find(c => c.id === 'd290f1ee-6c54-4b01-90e6-d701748f0851') || courses[0];
 
