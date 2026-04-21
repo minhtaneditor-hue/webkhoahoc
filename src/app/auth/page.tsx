@@ -162,7 +162,6 @@ function AuthForm() {
 export default function AuthPage() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6 bg-white relative overflow-hidden">
-      <Navbar />
       
       {/* Background Decor */}
       <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-primary/5 blur-[120px] rounded-full" />
