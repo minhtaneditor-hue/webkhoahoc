@@ -21,7 +21,9 @@ import {
   ShieldCheck,
   Zap,
   Star,
-  Quote
+  Quote,
+  Flame,
+  Tv
 } from 'lucide-react';
 
 export default function Home() {
@@ -94,18 +96,18 @@ export default function Home() {
   ];
 
   const projects = [
-    { title: "2 Ngày 1 Đêm", category: "TV Show Integration", image: "/asset/du_an_tieu_bieu/project_2n1d.webp" },
-    { title: "Anh Trai Say Hi Movie", category: "Cinematic Production", image: "/asset/du_an_tieu_bieu/project_atsh_movie.jpg" },
-    { title: "Anh Trai Say Hi - Las Vegas", category: "Global Event Coverage", image: "/asset/du_an_tieu_bieu/project_atsh_vegas.webp" },
+    { title: "2 Ngày 1 Đêm", category: "TV Show Integration", image: "/asset/du_an_tieu_bieu/project_2n1d.webp", hot: true, type: "TV" },
+    { title: "Anh Trai Say Hi Movie", category: "Cinematic Production", image: "/asset/du_an_tieu_bieu/project_atsh_movie.jpg", hot: true, type: "Movie" },
+    { title: "Anh Trai Say Hi - Las Vegas", category: "Global Event Coverage", image: "/asset/du_an_tieu_bieu/project_atsh_vegas.webp", hot: true, type: "Global" },
     { title: "Nghệ Thuật Truyền Hình", category: "Digital Content", image: "/asset/du_an_tieu_bieu/project_nhth.jpg" },
     { title: "Mái Ấm Tình Thương", category: "Documentary", image: "/asset/du_an_tieu_bieu/project_matn.webp" },
-    { title: "Ký Ức Vui Vẻ", category: "TV Production", image: "/asset/du_an_tieu_bieu/project_kuvv.png" }
+    { title: "Ký Ức Vui Vẻ", category: "TV Production", image: "/asset/du_an_tieu_bieu/project_kuvv.png", type: "TV" }
   ];
 
   const testimonials = [
-    { name: "Trần Thành Tân", title: "Cinematographer", quote: "Tư duy làm phim triệu view đã thay đổi hoàn toàn sự nghiệp của Tân.", results: "Top 1 Trending" },
-    { name: "Nguyễn Đăng Hạnh", title: "Founder Chú Lùn Bakery", quote: "Video Marketing tự sản xuất giúp tiệm bánh của Hạnh bùng nổ doanh số.", results: "+300% Revenue" },
-    { name: "Nguyễn Tiến Dương", title: "Founder Thành Đô", quote: "Nhân hiệu uy tín được xây dựng sắc nét qua từng khung hình chuyên nghiệp.", results: "Industry Authority" }
+    { name: "Trần Thành Tân", title: "Cinematographer", quote: "Làm chủ ngôn ngữ điện ảnh triệu view.", avatar: "/asset/hoc_vien/tan.jpg", results: "Top 1 Trending" },
+    { name: "Nguyễn Đăng Hạnh", title: "Founder Chú Lùn Bakery", quote: "Biến tiệm bánh thành cỗ máy nội dung.", avatar: "/asset/hoc_vien/hanh.jpg", results: "+300% Revenue" },
+    { name: "Nguyễn Tiến Dương", title: "Founder Thành Đô", quote: "Video nâng tầm uy tín dịch vụ chuyên nghiệp.", avatar: "/asset/hoc_vien/duong.jpg", results: "Industry Authority" }
   ];
 
   const bonuses = [
@@ -174,9 +176,9 @@ export default function Home() {
                 <div className="flex flex-col items-center md:items-start gap-2">
                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Xác nhận bởi:</p>
                    <div className="flex -space-x-3">
-                      {[1,2,3,4,5,6,7].map(i => (
+                      {[1,2,3,4,5].map(i => (
                         <div key={i} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-slate-100 ring-2 ring-gold/5 shadow-md">
-                           <img src={`https://i.pravatar.cc/100?u=user-${i}`} alt="user" className="w-full h-full object-cover" />
+                           <img src={`https://i.pravatar.cc/100?u=student-${i}`} alt="student" className="w-full h-full object-cover" />
                         </div>
                       ))}
                       {[partners[0], partners[3]].map((brand, i) => (
@@ -212,25 +214,25 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Partners Section */}
+      {/* Partners Section - Smooth Fading Edge */}
       <section className="py-24 bg-white relative overflow-hidden">
          <div className="max-w-7xl mx-auto px-6 mb-20 text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[10px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
                 <Users size={14} /> Brand Network
             </div>
-            <h2 className="text-5xl font-black italic tracking-tighter uppercase italic-glow leading-none">
+            <h2 className="text-5xl font-black italic tracking-tighter uppercase leading-none">
                 Đối tác <span className="text-slate-300">Chiến lược</span>
             </h2>
          </div>
-         <div className="flex relative">
+         <div className="flex relative [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
             <motion.div 
               initial={{ x: 0 }}
               animate={{ x: "-50%" }}
-              transition={{ duration: 40, repeat: Infinity, ease: "linear", delay: 2 }}
+              transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
               className="flex items-center gap-32 whitespace-nowrap"
             >
                {[...partners, ...partners].map((partner, i) => (
-                 <div key={i} className="h-16 md:h-24 flex items-center justify-center">
+                 <div key={i} className="h-16 md:h-20 flex items-center justify-center grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
                     <img src={partner.logo} alt={partner.name} className="h-full w-auto object-contain" />
                  </div>
                ))}
@@ -238,7 +240,7 @@ export default function Home() {
          </div>
       </section>
 
-      {/* Featured Projects Grid */}
+      {/* Featured Projects Grid - Expanded & Hot Tags */}
       <section className="max-w-7xl mx-auto px-6 py-32 border-t border-slate-50">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
           <div className="max-w-2xl">
@@ -258,7 +260,22 @@ export default function Home() {
            {projects.map((project, i) => (
              <Link key={i} href="/work" className="group block relative aspect-[4/3] rounded-[3rem] overflow-hidden border border-slate-100 bg-white hover:border-accent-secondary/20 shadow-xl transition-all duration-700">
                 <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                
+                {/* Hot/TV Tags */}
+                <div className="absolute top-8 left-8 flex gap-2 z-30">
+                   {project.hot && (
+                      <div className="px-3 py-1.5 rounded-full bg-accent-secondary text-white text-[9px] font-black uppercase flex items-center gap-2 shadow-xl">
+                         <Flame size={10} fill="currentColor" /> HOT
+                      </div>
+                   )}
+                   {project.type && (
+                      <div className="px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-slate-900 text-[9px] font-black uppercase flex items-center gap-2 shadow-xl border border-white/20">
+                         <Tv size={10} /> {project.type}
+                      </div>
+                   )}
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <div className="absolute bottom-10 left-10 z-20 text-white">
                    <p className="text-[9px] font-black uppercase tracking-widest mb-2 opacity-70 mb-2">{project.category}</p>
                    <h4 className="text-[12px] font-black italic uppercase tracking-tight leading-none drop-shadow-md">{project.title}</h4>
@@ -268,52 +285,59 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Student Feedback Spotlight */}
-      <section className="py-32 bg-slate-50/50 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
-           <div className="text-center mb-20">
+      {/* Success Stories Spotlight - Magazine Style */}
+      <section className="py-32 bg-slate-50 relative overflow-hidden">
+        <div className="max-w-[1400px] mx-auto px-6">
+           <div className="text-center mb-24">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[10px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
-                  <Star size={14} /> Hào Quang Học Viên
+                  <Star size={14} /> Hào Quang Elite
               </div>
-              <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase italic-glow leading-none">Phản hồi <span className="text-slate-300">thực chiến</span></h2>
+              <h2 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">Phản Hồi <span className="text-slate-200">Từ Academy</span></h2>
            </div>
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               {testimonials.map((t, i) => (
-                 <div key={i} className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl relative group hover:scale-[1.02] transition-all">
-                    <Quote className="absolute top-8 right-8 text-accent-secondary/10" size={64} />
-                    <div className="inline-block px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[9px] font-black uppercase tracking-widest mb-8 border border-accent-secondary/10">
-                       {t.results}
+                 <div key={i} className="group relative rounded-[3rem] overflow-hidden aspect-[4/5] bg-white border border-slate-100 shadow-2xl transition-all duration-700 hover:-translate-y-2">
+                    <img src={t.avatar} alt={t.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                    
+                    <div className="absolute top-8 right-8">
+                      <div className="px-4 py-1.5 rounded-full bg-accent-secondary text-white text-[9px] font-black uppercase tracking-widest shadow-xl">
+                          {t.results}
+                      </div>
                     </div>
-                    <p className="text-lg font-medium text-slate-600 mb-10 italic leading-relaxed">"{t.quote}"</p>
-                    <div className="flex items-center gap-4 border-t border-slate-50 pt-8">
-                       <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100">
-                          <img src={`https://i.pravatar.cc/100?u=${t.name}`} className="w-full h-full object-cover" />
-                       </div>
-                       <div>
-                          <h4 className="font-black text-sm uppercase italic tracking-widest">{t.name}</h4>
-                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">{t.title}</p>
+
+                    <div className="absolute bottom-10 left-10 right-10 z-20">
+                       <Quote className="text-accent-secondary mb-4 opacity-80" size={32} />
+                       <h3 className="text-xl md:text-2xl font-black italic text-white uppercase tracking-tighter leading-tight mb-8">
+                          "{t.quote}"
+                       </h3>
+                       <div className="flex flex-col gap-0.5 border-l-2 border-accent-secondary pl-5">
+                          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white underline-accent inline-block">{t.name}</h4>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-white/40">{t.title}</p>
                        </div>
                     </div>
                  </div>
               ))}
            </div>
+           
            <div className="mt-20 text-center">
-              <Link href="/students" className="px-10 py-4 rounded-full bg-slate-950 text-white text-[11px] font-black uppercase tracking-widest hover:bg-accent-secondary transition-all shadow-2xl">XEM HALL OF FAME &rarr;</Link>
+              <Link href="/students" className="btn-premium px-12 py-5 rounded-full inline-flex text-xs shadow-3xl">XEM HALL OF FAME &rarr;</Link>
            </div>
         </div>
       </section>
 
-      {/* Courses Bento Grid */}
+      {/* Final Summary Grid */}
       <section className="bg-white py-32 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-             <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow leading-none">Lộ trình <span className="text-slate-300">Tài sản</span></h2>
-             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mt-6">Hệ thống đào tạo thực chiến tại Tanlab</p>
+             <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow leading-none">Hệ Sinh Thái <span className="text-slate-300">Tài sản</span></h2>
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mt-6 font-mono tracking-widest">Global Training & Security Infrastructure</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <BentoCard 
-              title={featuredCourse?.title || "VIDEO LÀ TÀI SẢN"}
-              description={featuredCourse?.description || "Làm chủ quy trình xây dựng cỗ máy thu nhập tự động từ smartphone."}
+              title="MINH TÂN ACADEMY"
+              description="Đào tạo tư duy xây dựng tài sản số từ smartphone."
               size="large"
               icon={<Video size={32} className="text-accent-secondary" />}
               className="md:col-span-2 md:row-span-2 shadow-2xl"
@@ -321,53 +345,27 @@ export default function Home() {
               <div className="mt-8 flex flex-col gap-4">
                 <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
                   <CheckCircle2 size={16} className="text-accent-secondary" />
-                  Dựng phim chuyên nghiệp trên Mobile
+                  21 Ngày Biến Video Thành Tài Sản
                 </div>
                 <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
                   <CheckCircle2 size={16} className="text-accent-secondary" />
-                  Tư duy kịch bản thương mại hóa
+                  Elite Coaching Đồng Hành 1:1
                 </div>
-                <button 
-                  onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
-                  className="mt-6 p-5 rounded-2xl bg-accent-secondary text-white font-black text-xs uppercase tracking-widest hover:shadow-2xl hover:shadow-accent-secondary/30 transition-all font-mono"
-                >
-                   VÀO HỌC NGAY
-                </button>
+                <Link href="/courses" className="mt-6 p-5 rounded-2xl bg-accent-secondary text-white font-black text-center text-[10px] uppercase tracking-widest hover:shadow-2xl hover:shadow-accent-secondary/30 transition-all font-sans">
+                   KHÁM PHÁ KHÓA HỌC
+                </Link>
               </div>
             </BentoCard>
 
-            <BentoCard title="Nội Dung Viral" description="Tiếp cận triệu khách hàng mục tiêu." icon={<Star size={24} />} className="bg-white" />
-            <BentoCard title="Hệ Thống Phễu" description="Tự động hóa dòng tiền 24/7." icon={<Layers size={24} />} className="bg-white" />
-            <BentoCard title="Thương Hiệu" description="Định vị Personal Brand sắc nét." icon={<Users size={24} />} className="md:col-span-2 bg-white" />
-          </div>
-        </div>
-      </section>
-
-      {/* Bonus Stack */}
-      <section className="py-32 px-6 bg-slate-50/50">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-20">
-             <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">QUÀ TẶNG <span className="text-accent-secondary">ĐẶC QUYỀN</span></h2>
-             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mt-6 underline-accent">Exclusive Bonuses</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {bonuses.map((bonus, i) => (
-              <div key={i} className="flex gap-8 p-10 rounded-[3rem] bg-white border border-slate-100 shadow-xl hover:translate-y-[-5px] transition-all group">
-                <div className="w-14 h-14 rounded-2xl bg-accent-secondary/5 flex items-center justify-center text-accent-secondary group-hover:scale-110 transition-transform shrink-0">
-                  {bonus.icon}
-                </div>
-                <div>
-                  <h4 className="font-black text-xl mb-3 text-slate-900 group-hover:text-accent-secondary transition-colors uppercase italic">{bonus.title}</h4>
-                  <p className="text-slate-500 text-sm font-medium leading-relaxed italic">{bonus.desc}</p>
-                </div>
-              </div>
-            ))}
+            <BentoCard title="tVNDRM SECURITY" description="Bảo mật nội dung Hollywood HLS." icon={<ShieldCheck size={24} />} className="bg-slate-50 border-none" />
+            <BentoCard title="PRODUCTION HUB" description="Sản xuất show truyền hình lớn." icon={<Tv size={24} />} className="bg-slate-50 border-none" />
+            <BentoCard title="VIP NETWORK" description="Kết nối cộng đồng Elite Việt Nam." icon={<Users size={24} />} className="md:col-span-2 bg-slate-50 border-none" />
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="py-32 px-6 bg-white border-y border-slate-50">
+      <section className="py-32 px-6 bg-slate-50/30 border-t border-slate-50">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-center mb-16 flex flex-col items-center gap-4 italic italic-glow leading-none">
              <HelpCircle className="text-accent-secondary" size={32} />
@@ -380,12 +378,12 @@ export default function Home() {
                 className="rounded-3xl border border-slate-200 bg-white overflow-hidden transition-all shadow-sm"
                 onClick={() => setActiveFaq(activeFaq === i ? null : i)}
               >
-                <div className="p-8 flex items-center justify-between cursor-pointer hover:bg-white">
-                  <span className="font-black text-slate-900 text-sm uppercase italic">{faq.q}</span>
+                <div className="p-8 flex items-center justify-between cursor-pointer hover:bg-slate-50">
+                  <span className="font-black text-slate-900 text-xs uppercase italic">{faq.q}</span>
                   <ChevronRight size={20} className={`text-slate-300 transition-transform ${activeFaq === i ? 'rotate-90' : ''}`} />
                 </div>
                 {activeFaq === i && (
-                  <div className="px-8 pb-8 text-slate-500 font-medium text-sm border-t border-slate-100 pt-8 animate-fade-in leading-relaxed italic">
+                  <div className="px-8 pb-8 text-slate-500 font-medium text-xs border-t border-slate-100 pt-8 animate-fade-in leading-relaxed italic">
                     {faq.a}
                   </div>
                 )}
@@ -414,12 +412,9 @@ export default function Home() {
             CHỈ CÒN <span className="text-accent-secondary animate-pulse">3 SUẤT ƯU ĐÃI CUỐI CÙNG</span> TRONG HÔM NAY!
           </p>
           
-          <button 
-                onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
-                className="btn-premium px-20 py-7 rounded-full font-black text-xs tracking-[0.3em] shadow-3xl mx-auto block hover:scale-105 transition-transform"
-              >
+          <Link href="/courses" className="btn-premium px-20 py-7 rounded-full font-black text-xs tracking-[0.3em] shadow-3xl mx-auto block hover:scale-105 transition-transform text-center max-w-fit flex items-center justify-center">
                 GIA NHẬP TANLAB NGAY &rarr;
-          </button>
+          </Link>
         </div>
       </section>
 

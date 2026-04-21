@@ -14,12 +14,33 @@ import {
   CheckCircle2,
   Star,
   Users,
-  Target
+  Target,
+  Flame,
+  Award
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+
+const INITIAL_COURSES = [
+  {
+    id: 'course-21-day',
+    title: '21 Ngày Biến Video Thành Tài Sản',
+    description: 'Bẻ khóa quy trình xây dựng cỗ máy thu nhập thụ động từ smartphone. Từ ý tưởng đến kịch bản triệu view và phễu chuyển đổi tự động.',
+    price: 1999000,
+    thumbnail_url: '/asset/hoc_vien/tan.jpg',
+    tag: 'FLAGSHIP',
+    features: ['21 Video bài giảng thực chiến', 'Kho 100+ kịch bản mẫu', 'Group hỗ trợ 1:1 trọn đời', 'Bộ Template thiết kế độc quyền']
+  },
+  {
+    id: 'course-production',
+    title: 'Quy Trình Sản Xuất Truyền Hình',
+    description: 'Học cách vận hành những show truyền hình thực tế lớn. Từ setup bối cảnh đến quản trị nhân sự sản xuất.',
+    price: 9999000,
+    thumbnail_url: '/asset/du_an_tieu_bieu/project_2n1d.webp',
+    tag: 'PRODUCTION'
+  }
+];
 
 const coachingPackages = [
   {
@@ -51,23 +72,28 @@ const coachingPackages = [
 ];
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>(INITIAL_COURSES);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchCourses() {
-      const { data } = await supabase.from('courses').select('*').order('created_at', { ascending: false });
-      setCourses(data || []);
+      try {
+        const { data } = await supabase.from('courses').select('*').order('created_at', { ascending: false });
+        if (data && data.length > 0) {
+          // Merge with static flagship but prioritize DB if duplicates
+          const merged = [...INITIAL_COURSES, ...data.filter(c => !INITIAL_COURSES.find(ic => ic.title === c.title))];
+          setCourses(merged);
+        }
+      } catch (e) {
+        console.error("Course fetch fail, using initials");
+      }
       setLoading(false);
     }
     fetchCourses();
   }, []);
 
-  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center text-accent-secondary font-black animate-pulse tracking-widest">TANLAB CATALOG LOADING...</div>;
-
   return (
-    <main className="min-h-screen bg-[#f8fafc] text-slate-900">
-      <Navbar />
+    <main className="min-h-screen bg-white text-slate-900 selection:bg-accent-secondary/10">
       
       <div className="max-w-7xl mx-auto pt-48 pb-24 px-6 text-center relative">
         <header className="mb-32 relative">
@@ -84,11 +110,9 @@ export default function CoursesPage() {
               DANH MỤC <span className="text-slate-300">KHÓA HỌC</span>
             </h1>
             <p className="max-w-3xl mx-auto text-slate-500 text-xl font-bold leading-relaxed mb-16 italic uppercase tracking-tight">
-              TỪ NỀN MÓNG KỸ THUẬT ĐẾN TƯ DUY KINH DOANH TRIỆU ĐÔ.<br />
-              <span className="text-sm font-medium normal-case tracking-normal text-slate-400">Chọn lộ trình phù hợp với mục tiêu bứt phá của bạn.</span>
+              TỪ NỀN MÓNG KỸ THUẬT ĐẾN TƯ DUY KINH DOANH TRIỆU ĐÔ.
             </p>
 
-            {/* Stats Bar */}
             <div className="flex flex-wrap justify-center gap-10 md:gap-20">
                {[
                  { label: "Học viên", value: "1.000+" },
@@ -104,10 +128,51 @@ export default function CoursesPage() {
           </motion.div>
         </header>
 
-        {/* High-Ticket Coaching */}
+        {/* Flagship Product Showcase */}
         <section className="mb-40">
-           <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase mb-4 italic-glow leading-none">Chương trình <span className="text-slate-300">Companion</span></h2>
+           <div className="text-left mb-16">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[10px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
+                  <Flame size={14} fill="currentColor" /> Signature Course
+              </div>
+              <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">BIẾN VIDEO THÀNH <br /><span className="text-slate-200">TÀI SẢN TRONG 21 NGÀY</span></h2>
+           </div>
+
+           <div className="bg-slate-950 rounded-[4rem] overflow-hidden grid grid-cols-1 lg:grid-cols-2 shadow-3xl text-left border border-white/5 relative group">
+              <div className="aspect-square relative overflow-hidden">
+                 <img src="/asset/hoc_vien/tan.jpg" alt="21 Day Course" className="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105" />
+                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent z-10" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10" />
+              </div>
+              <div className="p-16 flex flex-col justify-center relative z-20">
+                 <div className="mb-10">
+                    <h3 className="text-4xl font-black italic tracking-tighter uppercase text-white mb-4">21 NGÀY BIẾN VIDEO<br />THÀNH TÀI SẢN</h3>
+                    <p className="text-slate-400 font-medium italic leading-relaxed text-lg">Bẻ khóa lộ trình xây dựng cỗ máy thu nhập tự động chỉ từ chiếc smartphone của bạn.</p>
+                 </div>
+
+                 <div className="space-y-6 mb-12">
+                    {['21 Video bài giảng thực chiến', 'Kho 100+ kịch bản mẫu triệu view', 'Group hỗ trợ 1:1 trọn đời', 'Bộ Template thiết kế độc quyền'].map((f, i) => (
+                       <div key={i} className="flex items-center gap-4">
+                          <CheckCircle2 size={18} className="text-accent-secondary" />
+                          <span className="text-sm font-bold text-slate-300 italic uppercase tracking-wider">{f}</span>
+                       </div>
+                    ))}
+                 </div>
+
+                 <div className="flex flex-col sm:flex-row items-center gap-8 pt-8 border-t border-white/5">
+                    <div className="text-left">
+                       <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-1">MỨC ĐẦU TƯ</p>
+                       <p className="text-3xl font-black text-white italic tracking-tighter">1.999.000 <span className="text-xs">VNĐ</span></p>
+                    </div>
+                    <Link href="/courses/course-21-day" className="btn-premium px-12 py-5 rounded-full text-xs shadow-[0_20px_50px_rgba(227,38,54,0.3)] flex-1 text-center">GIA NHẬP NGAY &rarr;</Link>
+                 </div>
+              </div>
+           </div>
+        </section>
+
+        {/* Companion Program */}
+        <section className="mb-40">
+           <div className="text-center mb-24">
+              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase mb-4 leading-none">Chương trình <span className="text-slate-300">Companion</span></h2>
               <p className="text-slate-300 uppercase tracking-[0.4em] font-black text-[10px]">Đồng hành trực tiếp cùng Video Advisor</p>
            </div>
 
@@ -145,31 +210,33 @@ export default function CoursesPage() {
            </div>
         </section>
 
-        {/* Course Catalog */}
+        {/* Other Courses Grid */}
         <section className="text-left">
-           <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase mb-4 italic-glow leading-none">Tự học <span className="text-slate-300">Thực chiến</span></h2>
+           <div className="text-center mb-24">
+              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase mb-4 leading-none">Tự học <span className="text-slate-300">Thực chiến</span></h2>
               <p className="text-slate-300 uppercase tracking-[0.4em] font-black text-[10px]">Truy cập vĩnh viễn - Cập nhật liên tục</p>
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
              {courses.map((course, i) => (
                <motion.div 
-                 key={course.id}
-                 initial={{ opacity: 0, y: 20 }}
-                 whileInView={{ opacity: 1, y: 0 }}
+                 key={course.id + i}
+                 initial={{ opacity: 0, scale: 0.95 }}
+                 whileInView={{ opacity: 1, scale: 1 }}
                  viewport={{ once: true }}
                  className="group bg-white border border-slate-100 rounded-[3rem] overflow-hidden hover:border-accent-secondary/40 transition-all duration-700 hover:shadow-2xl flex flex-col"
                >
                   <div className="aspect-video relative overflow-hidden">
                      <img src={course.thumbnail_url} alt={course.title} className="w-full h-full object-cover grayscale brightness-110 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
-                     <div className="absolute top-6 left-6 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md border border-slate-100 text-[9px] font-black uppercase tracking-widest text-accent-secondary">
-                        Digital Asset
-                     </div>
+                     {course.tag && (
+                       <div className="absolute top-6 left-6 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-slate-100 text-[9px] font-black uppercase tracking-[0.2em] text-accent-secondary shadow-lg">
+                          {course.tag}
+                       </div>
+                     )}
                   </div>
                   <div className="p-8 flex flex-col flex-1">
                      <h3 className="text-xl font-black mb-4 group-hover:text-accent-secondary transition-colors italic uppercase text-slate-900 leading-tight">{course.title}</h3>
-                     <p className="text-slate-500 text-xs font-medium mb-8 italic line-clamp-3 leading-relaxed">{course.description || "Học quy trình bẻ khóa thuật toán đa nền tảng và xây dựng phễu bán hàng tự động."}</p>
+                     <p className="text-slate-500 text-[11px] font-medium mb-8 italic line-clamp-3 leading-relaxed">{course.description}</p>
                      
                      <div className="mt-auto pt-6 border-t border-slate-100 flex items-center justify-between">
                         <span className="text-2xl font-black tracking-tighter text-slate-900">
@@ -183,16 +250,9 @@ export default function CoursesPage() {
                </motion.div>
              ))}
            </div>
-           
-           {courses.length === 0 && (
-             <div className="py-20 text-center text-slate-300 font-bold uppercase tracking-widest animate-pulse">
-                Deploying catalog intelligence...
-             </div>
-           )}
         </section>
       </div>
 
-      <Footer />
     </main>
   );
 }
