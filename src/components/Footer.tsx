@@ -2,12 +2,6 @@
 
 import Link from 'next/link';
 import { 
-  Facebook, 
-  Play as Youtube, 
-  Instagram, 
-  Mail, 
-  Phone, 
-  MapPin, 
   ShieldCheck, 
   CreditCard,
   ExternalLink
@@ -33,10 +27,10 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-4">
               {[
-                { icon: <Facebook size={18} />, href: "#" },
-                { icon: <Youtube size={18} />, href: "#" },
-                { icon: <Instagram size={18} />, href: "#" },
-                { icon: <Mail size={18} />, href: "#" }
+                { icon: <FacebookIcon size={18} />, href: "#" },
+                { icon: <YoutubeIcon size={18} />, href: "#" },
+                { icon: <InstagramIcon size={18} />, href: "#" },
+                { icon: <MailIcon size={18} />, href: "#" }
               ].map((social, i) => (
                 <a key={i} href={social.href} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-accent-primary transition-all">
                   {social.icon}
@@ -83,14 +77,14 @@ export default function Footer() {
             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mb-8 font-mono">Direct Channel</h4>
             <div className="flex flex-col gap-8">
               <div className="flex items-start gap-4">
-                 <MapPin size={20} className="text-accent-primary shrink-0" />
+                 <MapPinIcon size={20} className="text-accent-primary shrink-0" />
                  <div>
                     <p className="text-white font-bold text-sm mb-1 uppercase tracking-tighter">Văn phòng</p>
                     <p className="text-text-muted text-xs font-medium leading-relaxed">District 1, Ho Chi Minh City, Vietnam</p>
                  </div>
               </div>
               <div className="flex items-start gap-4">
-                 <Phone size={20} className="text-accent-secondary shrink-0" />
+                 <PhoneIcon size={20} className="text-accent-secondary shrink-0" />
                  <div>
                     <p className="text-white font-bold text-sm mb-1 uppercase tracking-tighter">Hotline & Zalo</p>
                     <p className="text-text-muted text-xs font-medium">+84 (0) 900 000 000</p>
@@ -119,42 +113,50 @@ export default function Footer() {
   );
 }
 
-function ChevronRightIcon({ size, className }: { size: number, className: string }) {
+function FacebookIcon({ size, className }: { size: number, className?: string }) {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="m9 18 6-6-6-6"/>
-    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
   );
 }
 
-function InfoIcon({ size, className }: { size: number, className: string }) {
+function YoutubeIcon({ size, className }: { size: number, className?: string }) {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M12 16v-4"/>
-      <path d="M12 8h.01"/>
-    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.56 49.56 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+  );
+}
+
+function InstagramIcon({ size, className }: { size: number, className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+  );
+}
+
+function MailIcon({ size, className }: { size: number, className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+  );
+}
+
+function PhoneIcon({ size, className }: { size: number, className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+  );
+}
+
+function MapPinIcon({ size, className }: { size: number, className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+  );
+}
+
+function ChevronRightIcon({ size, className }: { size: number, className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>
+  );
+}
+
+function InfoIcon({ size, className }: { size: number, className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
   );
 }

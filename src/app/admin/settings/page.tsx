@@ -5,7 +5,7 @@ import { supabase } from '@/utils/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { isAdmin } from '@/lib/admin';
-import { Save, RefreshCw, Layout, Type, Mail, ShieldCheck } from 'lucide-react';
+import { Save, RefreshCw, Layout, Type, ShieldCheck } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<any[]>([]);
@@ -84,7 +84,7 @@ export default function AdminSettingsPage() {
                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-primary">
                       {group === 'hero' && <Layout size={24} />}
                       {group === 'branding' && <Type size={24} />}
-                      {group === 'contact' && <Mail size={24} />}
+                      {group === 'contact' && <MailIcon size={24} />}
                       {group === 'general' && <ShieldCheck size={24} />}
                    </div>
                    <h2 className="text-2xl font-black uppercase tracking-tight">{group} CONFIGURATION</h2>
@@ -123,5 +123,11 @@ export default function AdminSettingsPage() {
         </footer>
       </div>
     </div>
+  );
+}
+
+function MailIcon({ size }: { size: number }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
   );
 }
