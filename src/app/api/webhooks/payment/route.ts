@@ -5,9 +5,8 @@ import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function GET(req: Request) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const { searchParams } = new URL(req.url);
     const vnp_Params = Object.fromEntries(searchParams.entries());

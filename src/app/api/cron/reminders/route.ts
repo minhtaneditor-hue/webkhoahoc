@@ -5,9 +5,8 @@ import { getRetentionEmailTemplate } from '@/lib/retention-emails';
 
 export const dynamic = 'force-dynamic';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function GET(req: Request) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     // 1. Security Check (Manual trigger protection)
     const authHeader = req.headers.get('authorization');
