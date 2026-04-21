@@ -24,6 +24,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [settings, setSettings] = useState<any>({});
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     async function getSession() {
@@ -35,8 +36,15 @@ export default function Navbar() {
       const s = data?.reduce((acc: any, item: any) => ({ ...acc, [item.key]: item.value }), {});
       setSettings(s || {});
     }
+    
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
     getSession();
     fetchSettings();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleLogout = async () => {
@@ -58,7 +66,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 py-6 px-10">
+    <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${isScrolled ? 'py-4 px-10 bg-white/80 backdrop-blur-2xl shadow-xl' : 'py-8 px-10 bg-transparent'}`}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
