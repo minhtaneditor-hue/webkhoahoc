@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
@@ -146,7 +148,7 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen text-slate-900 selection:bg-accent-secondary/10 relative">
+    <main className="min-h-screen text-slate-900 selection:bg-accent-secondary/10 relative overflow-visible">
       <Navbar />
 
       {/* Hero Section */}
@@ -240,7 +242,7 @@ export default function Home() {
         
         {/* Featured Projects Section (Stack 1) */}
         <StackSection index={0} total={5} scrollYProgress={scrollYProgress}>
-          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white border border-slate-100 shadow-2xl">
+          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
               <div className="max-w-2xl">
                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[11px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
@@ -280,7 +282,7 @@ export default function Home() {
 
         {/* Courses Bento Grid (Stack 2) */}
         <StackSection index={1} total={5} scrollYProgress={scrollYProgress}>
-          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white border border-slate-100 shadow-2xl">
+          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-20">
                  <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow">Lộ trình <span className="text-slate-300">Tài sản</span></h2>
@@ -322,7 +324,7 @@ export default function Home() {
 
         {/* Bonus Stack (Stack 3) */}
         <StackSection index={2} total={5} scrollYProgress={scrollYProgress}>
-          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white border border-slate-100 shadow-2xl">
+          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white">
             <div className="max-w-5xl mx-auto">
               <div className="text-center mb-20">
                  <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">QUÀ TẶNG <span className="text-accent-secondary">ĐẶC QUYỀN</span></h2>
@@ -347,7 +349,7 @@ export default function Home() {
 
         {/* FAQ Section (Stack 4) */}
         <StackSection index={3} total={5} scrollYProgress={scrollYProgress}>
-          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white border border-slate-100 shadow-2xl">
+          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-center mb-16 flex flex-col items-center gap-4 italic italic-glow">
                  <HelpCircle className="text-accent-secondary" size={32} />
@@ -378,23 +380,25 @@ export default function Home() {
 
         {/* Final CTA (Stack 5) */}
         <StackSection index={4} total={5} scrollYProgress={scrollYProgress}>
-          <section className="max-w-4xl mx-auto p-16 rounded-[4rem] bg-white border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.05)] relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent-primary/5 to-accent-secondary/5 opacity-50" />
-            <h2 className="text-5xl md:text-7xl font-black mb-8 italic italic-glow uppercase"> READY TO <span className="text-slate-300">DEPLOY?</span></h2>
-            <p className="text-lg text-slate-500 mb-12 leading-relaxed font-bold uppercase italic tracking-tight">Chiếc điện thoại của bạn đang chờ để được bứt phá tiềm năng.</p>
-            <button 
-                  onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
-                  className="btn-premium px-16 py-6 rounded-full font-black text-sm tracking-widest shadow-3xl"
-                >
-                  GIA NHẬP TANLAB NGAY &rarr;
-            </button>
+          <section className="max-w-4xl mx-auto p-16 rounded-[4rem] bg-white text-center">
+            <div className="relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent-primary/5 to-accent-secondary/5 opacity-50" />
+              <h2 className="text-5xl md:text-7xl font-black mb-8 italic italic-glow uppercase"> READY TO <span className="text-slate-300">DEPLOY?</span></h2>
+              <p className="text-lg text-slate-500 mb-12 leading-relaxed font-bold uppercase italic tracking-tight">Chiếc điện thoại của bạn đang chờ để được bứt phá tiềm năng.</p>
+              <button 
+                    onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
+                    className="btn-premium px-16 py-6 rounded-full font-black text-sm tracking-widest shadow-3xl mx-auto"
+                  >
+                    GIA NHẬP TANLAB NGAY &rarr;
+              </button>
+            </div>
           </section>
         </StackSection>
 
       </div>
 
       {/* Footer Area */}
-      <footer className="relative z-[20] bg-white">
+      <footer className="relative z-[20] bg-white border-t border-slate-100">
         <Footer />
       </footer>
 
@@ -406,36 +410,23 @@ function StackSection({ children, index, total, scrollYProgress }: { children: R
   const start = index / total;
   const end = (index + 1) / total;
   
-  // As the user scrolls through THIS section's range, we scale down slightly to create the stack effect
-  const scale = useTransform(scrollYProgress, [start, end], [1, 0.95]);
-  const opacity = useTransform(scrollYProgress, [start, end], [1, 0.8]);
+  // High authority scale down as requested "scale nhỏ nhỏ lại"
+  const scale = useTransform(scrollYProgress, [start, end], [1, 0.85]);
+  const opacity = useTransform(scrollYProgress, [start, end], [1, 0.4]);
 
   return (
     <motion.div 
       style={{ 
         scale, 
         opacity,
-        top: `calc(10% + ${index * 20}px)`, // Slight vertical offset to show the stack
+        top: `calc(100px + ${index * 40}px)`, // Premium offset for stacking visibility
         zIndex: index + 10
       }} 
-      className="sticky top-0 w-full min-h-screen flex items-center justify-center py-10 px-6 backdrop-blur-sm"
+      className="sticky top-0 w-full min-h-[80vh] flex items-center justify-center py-10 px-6"
     >
-      <div className="w-full">
+      <div className="w-full max-w-7xl mx-auto bg-white rounded-[4rem] shadow-[0_60px_120px_rgba(0,0,0,0.15)] border border-slate-100/50 overflow-hidden">
         {children}
       </div>
     </motion.div>
-  );
-}
-bold uppercase italic tracking-tight">Chiếc điện thoại của bạn đang chờ để được bứt phá tiềm năng.</p>
-          <button 
-                onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
-                className="btn-premium px-16 py-6 rounded-full font-black text-sm tracking-widest shadow-3xl"
-              >
-                GIA NHẬP TANLAB NGAY &rarr;
-          </button>
-        </div>
-      </section>
-
-    </main>
   );
 }
