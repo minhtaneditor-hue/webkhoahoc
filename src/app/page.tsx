@@ -1,29 +1,5 @@
-"use client";
-
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { supabase } from '@/utils/supabase';
-import BentoCard from '@/components/BentoCard';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import SaaSDRMHero from '@/components/SaaSDRMHero';
-
-import { 
-  ArrowRight,
-  Users,
-  Terminal,
-  Play,
-  Award,
-  Video,
-  ChevronRight,
-  CheckCircle2,
-  Layers,
-  HelpCircle,
-  ShieldCheck,
-  Zap,
-  Star
-} from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useScroll, useTransform } from 'framer-motion';
 
 export default function Home() {
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -31,6 +7,12 @@ export default function Home() {
   const [courses, setCourses] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
 
   useEffect(() => {
     async function init() {
@@ -142,11 +124,11 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] text-slate-900 selection:bg-accent-secondary/10">
+    <main className="min-h-screen text-slate-900 selection:bg-accent-secondary/10 relative">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-48 pb-32 px-6 overflow-hidden min-h-[95vh] flex items-center bg-white">
+      <section className="relative pt-48 pb-32 px-6 overflow-hidden min-h-[95vh] flex items-center bg-white z-[5]">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_70%_30%,rgba(227,38,54,0.03),transparent)] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
         
@@ -213,7 +195,7 @@ export default function Home() {
       </section>
 
       {/* Partners Section */}
-      <section className="py-24 border-y border-slate-100 bg-white">
+      <section className="py-24 border-y border-slate-100 bg-white relative z-[6]">
          <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mb-4 font-mono">Trusted by Global Giants</p>
@@ -231,159 +213,198 @@ export default function Home() {
          </div>
       </section>
 
-      {/* Featured Projects Section */}
-      <section className="max-w-7xl mx-auto px-6 py-32">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
-          <div className="max-w-2xl">
-             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[11px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
-                <Video size={14} /> Authority Showcase
-             </div>
-             <h2 className="text-5xl font-black italic tracking-tighter uppercase mb-6 italic-glow leading-none">
-                Dự án <span className="text-slate-300">Tiêu biểu</span>
-             </h2>
-             <p className="text-slate-500 font-bold text-lg italic leading-relaxed">
-                Chứng thực năng lực qua các tác phẩm truyền hình và điện ảnh quy mô lớn.
-             </p>
-          </div>
-          <Link href="/work" className="px-8 py-3 rounded-full bg-slate-50 border border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all flex items-center gap-3">
-             XEM TẤT CẢ <ChevronRight size={14} />
-          </Link>
-        </div>
+      {/* STACKING CONTAINER */}
+      <div ref={containerRef} className="relative">
+        
+        {/* Featured Projects Section (Stack 1) */}
+        <StackSection index={0} total={5} scrollYProgress={scrollYProgress}>
+          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white border border-slate-100 shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
+              <div className="max-w-2xl">
+                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[11px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
+                    <Video size={14} /> Authority Showcase
+                 </div>
+                 <h2 className="text-5xl font-black italic tracking-tighter uppercase mb-6 italic-glow leading-none">
+                    Dự án <span className="text-slate-300">Tiêu biểu</span>
+                 </h2>
+                 <p className="text-slate-500 font-bold text-lg italic leading-relaxed">
+                    Chứng thực năng lực qua các tác phẩm truyền hình và điện ảnh quy mô lớn.
+                 </p>
+              </div>
+              <Link href="/work" className="px-8 py-3 rounded-full bg-slate-50 border border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all flex items-center gap-3">
+                 XEM TẤT CẢ <ChevronRight size={14} />
+              </Link>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-           {projects.map((project, i) => (
-             <Link key={i} href="/work" className="group block relative aspect-[4/3] rounded-[3rem] overflow-hidden border border-slate-100 bg-white hover:border-accent-secondary/20 shadow-xl transition-all duration-700">
-                <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-white/40 group-hover:bg-transparent transition-all z-10" />
-                <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
-                   <div className="w-16 h-16 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-accent-secondary shadow-2xl">
-                      <Play size={24} fill="currentColor" />
-                   </div>
-                </div>
-                <div className="absolute bottom-10 left-10 z-20 text-white group-hover:text-slate-900 p-8 rounded-3xl bg-black/20 backdrop-blur-sm group-hover:bg-white/80 group-hover:shadow-2xl transition-all">
-                   <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">{project.category}</p>
-                   <h4 className="text-xl font-black italic uppercase">{project.title}</h4>
-                </div>
-             </Link>
-           ))}
-        </div>
-      </section>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+               {projects.map((project, i) => (
+                 <Link key={i} href="/work" className="group block relative aspect-[4/3] rounded-[3rem] overflow-hidden border border-slate-100 bg-white hover:border-accent-secondary/20 shadow-xl transition-all duration-700">
+                    <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-white/40 group-hover:bg-transparent transition-all z-10" />
+                    <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
+                       <div className="w-16 h-16 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-accent-secondary shadow-2xl">
+                          <Play size={24} fill="currentColor" />
+                       </div>
+                    </div>
+                    <div className="absolute bottom-10 left-10 z-20 text-white group-hover:text-slate-900 p-8 rounded-3xl bg-black/20 backdrop-blur-sm group-hover:bg-white/80 group-hover:shadow-2xl transition-all">
+                       <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">{project.category}</p>
+                       <h4 className="text-xl font-black italic uppercase">{project.title}</h4>
+                    </div>
+                 </Link>
+               ))}
+            </div>
+          </section>
+        </StackSection>
 
-      {/* Courses Bento Grid */}
-      <section className="bg-white py-32 px-6 border-y border-slate-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-             <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow">Lộ trình <span className="text-slate-300">Tài sản</span></h2>
-             <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300">Hệ thống đào tạo thực chiến tại Tanlab</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <BentoCard 
-              title={featuredCourse?.title || "VIDEO LÀ TÀI SẢN"}
-              description={featuredCourse?.description || "Làm chủ quy trình xây dựng cỗ máy thu nhập tự động từ smartphone."}
-              size="large"
-              icon={<Video size={32} className="text-accent-secondary" />}
-              className="md:col-span-2 md:row-span-2 shadow-2xl"
-            >
-              <div className="mt-8 flex flex-col gap-4">
-                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                  <CheckCircle2 size={16} className="text-accent-secondary" />
-                  Dựng phim chuyên nghiệp trên Mobile
-                </div>
-                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                  <CheckCircle2 size={16} className="text-accent-secondary" />
-                  Tư duy kịch bản thương mại hóa
-                </div>
-                <button 
-                  onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
-                  className="mt-6 p-5 rounded-2xl bg-accent-secondary text-white font-black text-xs uppercase tracking-widest hover:shadow-2xl hover:shadow-accent-secondary/30 transition-all"
+        {/* Courses Bento Grid (Stack 2) */}
+        <StackSection index={1} total={5} scrollYProgress={scrollYProgress}>
+          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white border border-slate-100 shadow-2xl">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center mb-20">
+                 <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow">Lộ trình <span className="text-slate-300">Tài sản</span></h2>
+                 <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300">Hệ thống đào tạo thực chiến tại Tanlab</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <BentoCard 
+                  title={featuredCourse?.title || "VIDEO LÀ TÀI SẢN"}
+                  description={featuredCourse?.description || "Làm chủ quy trình xây dựng cỗ máy thu nhập tự động từ smartphone."}
+                  size="large"
+                  icon={<Video size={32} className="text-accent-secondary" />}
+                  className="md:col-span-2 md:row-span-2 shadow-2xl"
                 >
-                   VÀO HỌC NGAY
-                </button>
-              </div>
-            </BentoCard>
-
-            <BentoCard title="Nội Dung Viral" description="Tiếp cận triệu khách hàng mục tiêu." icon={<Star size={24} />} className="bg-slate-50" />
-            <BentoCard title="Hệ Thống Phễu" description="Tự động hóa dòng tiền 24/7." icon={<Layers size={24} />} className="bg-slate-50" />
-            <BentoCard title="Thương Hiệu" description="Định vị Personal Brand sắc nét." icon={<Users size={24} />} className="md:col-span-2 bg-slate-50" />
-          </div>
-        </div>
-      </section>
-
-      {/* Bonus Stack */}
-      <section className="py-32 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-20">
-             <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">QUÀ TẶNG <span className="text-accent-secondary">ĐẶC QUYỀN</span></h2>
-             <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mt-4 underline-accent">Exclusive Bonuses</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {bonuses.map((bonus, i) => (
-              <div key={i} className="flex gap-8 p-10 rounded-[3rem] bg-white border border-slate-100 shadow-xl hover:translate-y-[-5px] transition-all group">
-                <div className="w-14 h-14 rounded-2xl bg-accent-secondary/5 flex items-center justify-center text-accent-secondary group-hover:scale-110 transition-transform shrink-0">
-                  {bonus.icon}
-                </div>
-                <div>
-                  <h4 className="font-black text-xl mb-3 text-slate-900 group-hover:text-accent-secondary transition-colors uppercase italic">{bonus.title}</h4>
-                  <p className="text-slate-500 text-sm font-medium leading-relaxed italic">{bonus.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-32 px-6 bg-slate-50 border-t border-slate-100">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-center mb-16 flex flex-col items-center gap-4 italic italic-glow">
-             <HelpCircle className="text-accent-secondary" size={32} />
-             GIẢI ĐÁP THẮC MẮC
-          </h2>
-          <div className="space-y-4">
-            {faqs.map((faq, i) => (
-              <div 
-                key={i} 
-                className="rounded-3xl border border-slate-200 bg-white overflow-hidden transition-all shadow-sm"
-                onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-              >
-                <div className="p-8 flex items-center justify-between cursor-pointer hover:bg-slate-50">
-                  <span className="font-black text-slate-900 text-sm uppercase italic">{faq.q}</span>
-                  <ChevronRight size={20} className={`text-slate-300 transition-transform ${activeFaq === i ? 'rotate-90' : ''}`} />
-                </div>
-                {activeFaq === i && (
-                  <div className="px-8 pb-8 text-slate-500 font-medium text-sm border-t border-slate-100 pt-8 animate-fade-in leading-relaxed italic">
-                    {faq.a}
+                  <div className="mt-8 flex flex-col gap-4">
+                    <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                      <CheckCircle2 size={16} className="text-accent-secondary" />
+                      Dựng phim chuyên nghiệp trên Mobile
+                    </div>
+                    <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                      <CheckCircle2 size={16} className="text-accent-secondary" />
+                      Tư duy kịch bản thương mại hóa
+                    </div>
+                    <button 
+                      onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
+                      className="mt-6 p-5 rounded-2xl bg-accent-secondary text-white font-black text-xs uppercase tracking-widest hover:shadow-2xl hover:shadow-accent-secondary/30 transition-all"
+                    >
+                       VÀO HỌC NGAY
+                    </button>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* SaaS DRM Minimalist Bar */}
-      <section id="saas-preview" className="relative bg-white py-12 border-y border-slate-100 overflow-hidden">
-         <div className="flex items-center gap-10 whitespace-nowrap animate-scroll-minimal">
-            {[1,2,3,4,5].map(i => (
-               <div key={i} className="flex items-center gap-6 text-[11px] font-black uppercase tracking-[0.5em] text-slate-200">
-                  <ShieldCheck size={16} className="text-accent-secondary" /> 
-                  BẢO MẬT TÀI SẢN TOÀN DIỆN VỚI TANLAB DRM 
-                  <span className="text-slate-100">//</span>
-               </div>
-            ))}
-         </div>
-         {/* Hidden/Minimized actual DRM content to preserve SEO and technical structure but keep UI light */}
-         <div className="sr-only">
-           <SaaSDRMHero />
-         </div>
-      </section>
+                </BentoCard>
 
-      {/* Final CTA */}
-      <section className="py-40 px-6 text-center">
-        <div className="max-w-4xl mx-auto p-16 rounded-[4rem] bg-white border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.05)] relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent-primary/5 to-accent-secondary/5 opacity-50" />
-          <h2 className="text-5xl md:text-7xl font-black mb-8 italic italic-glow uppercase"> READY TO <span className="text-slate-300">DEPLOY?</span></h2>
-          <p className="text-lg text-slate-500 mb-12 leading-relaxed font-bold uppercase italic tracking-tight">Chiếc điện thoại của bạn đang chờ để được bứt phá tiềm năng.</p>
+                <BentoCard title="Nội Dung Viral" description="Tiếp cận triệu khách hàng mục tiêu." icon={<Star size={24} />} className="bg-slate-50" />
+                <BentoCard title="Hệ Thống Phễu" description="Tự động hóa dòng tiền 24/7." icon={<Layers size={24} />} className="bg-slate-50" />
+                <BentoCard title="Thương Hiệu" description="Định vị Personal Brand sắc nét." icon={<Users size={24} />} className="md:col-span-2 bg-slate-50" />
+              </div>
+            </div>
+          </section>
+        </StackSection>
+
+        {/* Bonus Stack (Stack 3) */}
+        <StackSection index={2} total={5} scrollYProgress={scrollYProgress}>
+          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white border border-slate-100 shadow-2xl">
+            <div className="max-w-5xl mx-auto">
+              <div className="text-center mb-20">
+                 <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">QUÀ TẶNG <span className="text-accent-secondary">ĐẶC QUYỀN</span></h2>
+                 <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mt-4 underline-accent">Exclusive Bonuses</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {bonuses.map((bonus, i) => (
+                  <div key={i} className="flex gap-8 p-10 rounded-[3rem] bg-white border border-slate-100 shadow-xl hover:translate-y-[-5px] transition-all group">
+                    <div className="w-14 h-14 rounded-2xl bg-accent-secondary/5 flex items-center justify-center text-accent-secondary group-hover:scale-110 transition-transform shrink-0">
+                      {bonus.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-black text-xl mb-3 text-slate-900 group-hover:text-accent-secondary transition-colors uppercase italic">{bonus.title}</h4>
+                      <p className="text-slate-500 text-sm font-medium leading-relaxed italic">{bonus.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </StackSection>
+
+        {/* FAQ Section (Stack 4) */}
+        <StackSection index={3} total={5} scrollYProgress={scrollYProgress}>
+          <section className="max-w-7xl mx-auto px-6 py-32 rounded-[4rem] bg-white border border-slate-100 shadow-2xl">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-center mb-16 flex flex-col items-center gap-4 italic italic-glow">
+                 <HelpCircle className="text-accent-secondary" size={32} />
+                 GIẢI ĐÁP THẮC MẮC
+              </h2>
+              <div className="space-y-4">
+                {faqs.map((faq, i) => (
+                  <div 
+                    key={i} 
+                    className="rounded-3xl border border-slate-200 bg-white overflow-hidden transition-all shadow-sm"
+                    onClick={() => setActiveFaq(activeFaq === i ? null : i)}
+                  >
+                    <div className="p-8 flex items-center justify-between cursor-pointer hover:bg-slate-50">
+                      <span className="font-black text-slate-900 text-sm uppercase italic">{faq.q}</span>
+                      <ChevronRight size={20} className={`text-slate-300 transition-transform ${activeFaq === i ? 'rotate-90' : ''}`} />
+                    </div>
+                    {activeFaq === i && (
+                      <div className="px-8 pb-8 text-slate-500 font-medium text-sm border-t border-slate-100 pt-8 animate-fade-in leading-relaxed italic">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </StackSection>
+
+        {/* Final CTA (Stack 5) */}
+        <StackSection index={4} total={5} scrollYProgress={scrollYProgress}>
+          <section className="max-w-4xl mx-auto p-16 rounded-[4rem] bg-white border border-slate-100 shadow-[0_50px_100px_rgba(0,0,0,0.05)] relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent-primary/5 to-accent-secondary/5 opacity-50" />
+            <h2 className="text-5xl md:text-7xl font-black mb-8 italic italic-glow uppercase"> READY TO <span className="text-slate-300">DEPLOY?</span></h2>
+            <p className="text-lg text-slate-500 mb-12 leading-relaxed font-bold uppercase italic tracking-tight">Chiếc điện thoại của bạn đang chờ để được bứt phá tiềm năng.</p>
+            <button 
+                  onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
+                  className="btn-premium px-16 py-6 rounded-full font-black text-sm tracking-widest shadow-3xl"
+                >
+                  GIA NHẬP TANLAB NGAY &rarr;
+            </button>
+          </section>
+        </StackSection>
+
+      </div>
+
+      {/* Footer Area */}
+      <footer className="relative z-[20] bg-white">
+        <Footer />
+      </footer>
+
+    </main>
+  );
+}
+
+function StackSection({ children, index, total, scrollYProgress }: { children: React.ReactNode, index: number, total: number, scrollYProgress: any }) {
+  const start = index / total;
+  const end = (index + 1) / total;
+  
+  // As the user scrolls through THIS section's range, we scale down slightly to create the stack effect
+  const scale = useTransform(scrollYProgress, [start, end], [1, 0.95]);
+  const opacity = useTransform(scrollYProgress, [start, end], [1, 0.8]);
+
+  return (
+    <motion.div 
+      style={{ 
+        scale, 
+        opacity,
+        top: `calc(10% + ${index * 20}px)`, // Slight vertical offset to show the stack
+        zIndex: index + 10
+      }} 
+      className="sticky top-0 w-full min-h-screen flex items-center justify-center py-10 px-6 backdrop-blur-sm"
+    >
+      <div className="w-full">
+        {children}
+      </div>
+    </motion.div>
+  );
+}
+bold uppercase italic tracking-tight">Chiếc điện thoại của bạn đang chờ để được bứt phá tiềm năng.</p>
           <button 
                 onClick={() => { if (featuredCourse) handlePayment(featuredCourse.id, featuredCourse.price, featuredCourse.title); }}
                 className="btn-premium px-16 py-6 rounded-full font-black text-sm tracking-widest shadow-3xl"
