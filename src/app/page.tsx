@@ -9,7 +9,16 @@ import Footer from '@/components/Footer';
 import SaaSDRMHero from '@/components/SaaSDRMHero';
 
 import { 
-  ArrowRight
+  ArrowRight,
+  Users,
+  Terminal,
+  Play,
+  Award,
+  Video,
+  ChevronRight,
+  CheckCircle2,
+  Layers,
+  HelpCircle
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { isAdmin } from '@/lib/admin';
