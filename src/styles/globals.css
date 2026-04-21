@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* --- APPLE LUX DESIGN SYSTEM (Tailwind 4 Standard) --- */
+@theme {
+  --color-gold: #f5bc1b;
+  --color-gold-glow: rgba(245, 188, 27, 0.4);
+  --color-crimson: #e32636;
+  --color-crimson-glow: rgba(227, 38, 54, 0.4);
+  
+  --color-accent-primary: var(--color-gold);
+  --color-accent-secondary: var(--color-crimson);
+  --color-text-main: #f5f5f5;
+  --color-text-muted: #888888;
+  
+  /* SaaS DRM Brand Colors (Aligned with Main Theme) */
+  --color-saas-primary: var(--color-crimson);
+  --color-saas-secondary: #1a1a1a;
+  --color-saas-accent: var(--color-gold);
+  --color-saas-bg-pill: rgba(227, 38, 54, 0.2);
+  --color-saas-border-pill: rgba(245, 188, 27, 0.3);
+
+  /* SaaS DRM Fonts */
+  --font-family-manrope: var(--font-manrope), sans-serif;
+  --font-family-cabin: var(--font-cabin), sans-serif;
+  --font-family-instrument: var(--font-instrument-serif), serif;
+  --font-family-inter: var(--font-inter), sans-serif;
+
+  /* Apple-style Geometry */
+  --radius-bento: 48px;
+}
+
+:root {
+  --background: #050507;
+  --foreground: #ffffff;
+  --glass-bg: rgba(20, 20, 25, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --lux-shadow: 0 30px 60px rgba(0,0,0,0.8);
+}
+
+/* Functional Minimalism: Liquid Glass */
+@utility glass-effect {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(32px);
+  box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.01);
+}
+
+@utility btn-premium {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-crimson);
+  color: white;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 12px;
+  transition-property: all;
+  transition-duration: 700ms;
+  box-shadow: 0 15px 40px rgba(227, 38, 54, 0.3);
+  padding: 1.25rem 2.5rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+@utility lux-border-gold {
+  border: 1px solid rgba(245, 188, 27, 0.1);
+  background-color: rgba(10, 10, 12, 0.8);
+  backdrop-filter: blur(24px);
+  border-radius: 3rem;
+  transition-property: all;
+  transition-duration: 700ms;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(245, 188, 27, 0.05);
+}
+
+@utility nav-blur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  padding: 1rem 1.5rem;
+  transition-property: all;
+  transition-duration: 500ms;
+  background-color: rgba(5, 5, 7, 0.4);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@utility underline-accent {
+  position: relative;
+  display: inline-block;
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 60%;
+    height: 4px;
+    background-color: var(--color-accent-secondary);
+  }
+}
+
+@utility auth-card {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(40px);
+  border-radius: 2.5rem;
+  padding: 2.5rem;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+/* Base Styles */
+body {
+  background-color: #050507;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1 { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 900; letter-spacing: -0.04em; line-height: 0.95; margin-bottom: 2rem; text-transform: uppercase; }
+h2 { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 3rem; text-transform: uppercase; }
+h3 { font-size: clamp(1.2rem, 3vw, 1.8rem); font-weight: 900; text-transform: uppercase; }
+
+/* Custom Animations */
+@keyframes glow-pulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0.3; }
+}
+
+.glow-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(245, 188, 27, 0.05), transparent);
+  pointer-events: none;
+  animation: glow-pulse 4s ease-in-out infinite;
+}

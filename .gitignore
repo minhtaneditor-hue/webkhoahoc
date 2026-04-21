@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# mac metadata
+._*
+.DS_Store
+
+# ai agents & skills
+.agent/
+.agent_logs/
+src/**/._*
+**/._*
