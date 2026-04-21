@@ -26,7 +26,7 @@ import {
 
 export default function Home() {
   const [settings, setSettings] = useState<Record<string, string>>({});
-  const [loadingContent, setLoadingContent] = useState(false); // Instant load
+  const [loadingContent, setLoadingContent] = useState(false);
   const [courses, setCourses] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -102,6 +102,12 @@ export default function Home() {
     { title: "Ký Ức Vui Vẻ", category: "TV Production", image: "/asset/du_an_tieu_bieu/project_kuvv.png" }
   ];
 
+  const stats = [
+    { label: "Artwork", value: "27k+" },
+    { label: "Academy", value: "99%" },
+    { label: "Project", value: "12k+" }
+  ];
+
   const bonuses = [
     { title: "Kèm cặp 1:1 trọn đời", desc: "Hỗ trợ trực tiếp qua Zalo/Group để bạn không đơn độc trên hành trình.", icon: <Users size={20} /> },
     { title: "Kho kịch bản Triệu View", desc: "100+ mẫu nội dung đã được chứng minh hiệu quả thực tế.", icon: <Terminal size={20} /> },
@@ -117,12 +123,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen text-slate-900 selection:bg-accent-secondary/10 relative overflow-x-hidden bg-white">
-      <Navbar />
-
       {/* Hero Section */}
-      <section className="relative pt-48 pb-32 px-6 overflow-hidden min-h-[90vh] flex items-center bg-white">
+      <section className="relative pt-24 pb-32 px-6 overflow-hidden min-h-[85vh] flex items-center bg-white border-b border-slate-50">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_70%_30%,rgba(227,38,54,0.03),transparent)] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
         
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-20 items-center relative z-10">
           <motion.div 
@@ -130,7 +133,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             className="text-left"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-100 bg-slate-50/50 text-[11px] font-black text-slate-400 mb-10 tracking-[0.3em] uppercase">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-100 bg-slate-50/10 text-[10px] font-black text-slate-400 mb-8 tracking-[0.3em] uppercase">
               <Zap size={14} className="text-accent-secondary" /> Tri thức là sức mạnh
             </div>
             
@@ -139,18 +142,40 @@ export default function Home() {
               <span className="text-slate-900">TÀI SẢN</span>
             </h1>
             
-            <p className="text-xl text-slate-500 mb-12 max-w-lg leading-relaxed font-bold uppercase tracking-tight">
+            <p className="text-lg md:text-xl text-slate-500 mb-12 max-w-lg leading-relaxed font-bold uppercase tracking-tight">
               BIẾN ĐIỆN THOẠI THÀNH TÀI SẢN<br />
               <span className="text-sm font-medium normal-case tracking-normal text-slate-400">Kiến tạo cỗ máy thu nhập thụ động chỉ với smartphone và chiến lược nội dung viral.</span>
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-6">
-              <Link href="/courses" className="btn-premium flex items-center justify-center gap-4 group">
-                VÀO HỌC NGAY <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
-              </Link>
-              <Link href="/courses" className="px-10 py-5 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all">
-                KHÓA HỌC
-              </Link>
+            <div className="flex flex-col gap-10">
+              <div className="flex flex-col sm:flex-row gap-6">
+                <Link href="/courses" className="btn-premium flex items-center justify-center gap-4 group">
+                  VÀO HỌC NGAY <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+                </Link>
+                <Link href="/courses" className="px-10 py-5 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all">
+                  KHÓA HỌC
+                </Link>
+              </div>
+
+              {/* NFT Style Stats Block */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-12 pt-8 border-t border-slate-100">
+                {stats.map((stat, i) => (
+                   <div key={i} className="flex flex-col items-center md:items-start gap-1">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">{stat.label}</p>
+                      <p className="text-2xl font-black italic tracking-tighter text-slate-900">{stat.value}</p>
+                   </div>
+                ))}
+                <div className="flex flex-col items-center md:items-start gap-2">
+                   <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">Trusted By</p>
+                   <div className="flex -space-x-3">
+                      {[1,2,3,4,5].map(i => (
+                        <div key={i} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-slate-100 ring-2 ring-gold/5">
+                           <img src={`https://i.pravatar.cc/100?u=${i}`} alt="user" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              </div>
             </div>
           </motion.div>
 
@@ -166,45 +191,35 @@ export default function Home() {
                   alt="Video Advisor"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3000ms] ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                 <div className="absolute bottom-12 left-12">
                    <p className="text-[11px] font-black tracking-[0.5em] text-white uppercase mb-3 drop-shadow-md">Video Advisor</p>
                    <p className="text-5xl font-black tracking-tighter text-white italic drop-shadow-xl">MINH TẤN</p>
                 </div>
             </div>
-            {/* Stat Badge */}
-            <motion.div 
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="absolute -top-12 -right-8 p-10 bg-white shadow-2xl rounded-[3rem] hidden lg:block border border-slate-100"
-            >
-               <p className="text-5xl font-black text-accent-secondary mb-1">99%</p>
-               <p className="text-[11px] font-black uppercase tracking-widest text-slate-300">Học viên hài lòng</p>
-            </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Partners Auto-Scroll Ticker */}
-      <section className="py-20 border-y border-slate-100 bg-white relative overflow-hidden">
-         <div className="max-w-7xl mx-auto px-6 mb-12">
-            <h3 className="text-center text-[10px] font-black uppercase tracking-[0.5em] text-slate-300">ĐỐI TÁC CHIẾN LƯỢC & THƯƠNG HIỆU HỢP TÁC</h3>
+      {/* Partners Section */}
+      <section className="py-24 bg-white relative overflow-hidden">
+         <div className="max-w-7xl mx-auto px-6 mb-20 text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[10px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
+                <Users size={14} /> Brand Network
+            </div>
+            <h2 className="text-5xl font-black italic tracking-tighter uppercase italic-glow leading-none">
+                Đối tác <span className="text-slate-300">Chiến lược</span>
+            </h2>
          </div>
          <div className="flex relative">
             <motion.div 
               initial={{ x: 0 }}
               animate={{ x: "-50%" }}
-              transition={{ 
-                duration: 30, 
-                repeat: Infinity, 
-                ease: "linear",
-                delay: 2 // Initial delay as requested
-              }}
-              className="flex items-center gap-24 whitespace-nowrap"
+              transition={{ duration: 40, repeat: Infinity, ease: "linear", delay: 2 }}
+              className="flex items-center gap-32 whitespace-nowrap"
             >
                {[...partners, ...partners].map((partner, i) => (
-                 <div key={i} className="h-12 md:h-20 flex items-center justify-center">
+                 <div key={i} className="h-16 md:h-24 flex items-center justify-center">
                     <img src={partner.logo} alt={partner.name} className="h-full w-auto object-contain" />
                  </div>
                ))}
@@ -212,8 +227,8 @@ export default function Home() {
          </div>
       </section>
 
-      {/* Featured Projects Grid (Normal Scroll) */}
-      <section className="max-w-7xl mx-auto px-6 py-32">
+      {/* Featured Projects Grid */}
+      <section className="max-w-7xl mx-auto px-6 py-32 border-t border-slate-50">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
           <div className="max-w-2xl">
              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[11px] font-black uppercase tracking-widest mb-6 border border-accent-secondary/10">
@@ -228,49 +243,26 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
            {projects.map((project, i) => (
              <Link key={i} href="/work" className="group block relative aspect-[4/3] rounded-[3rem] overflow-hidden border border-slate-100 bg-white hover:border-accent-secondary/20 shadow-xl transition-all duration-700">
                 <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80" />
-                <div className="absolute bottom-6 left-6 z-20 text-white">
-                   <p className="text-[8px] font-black uppercase tracking-widest mb-1 opacity-60">{project.category}</p>
-                   <h4 className="text-[10px] font-black italic uppercase tracking-tight leading-none">{project.title}</h4>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                <div className="absolute bottom-10 left-10 z-20 text-white">
+                   <p className="text-[9px] font-black uppercase tracking-widest mb-2 opacity-70 mb-2">{project.category}</p>
+                   <h4 className="text-[12px] font-black italic uppercase tracking-tight leading-none drop-shadow-md">{project.title}</h4>
                 </div>
              </Link>
            ))}
         </div>
       </section>
 
-      {/* DRM Ticker Section */}
-      <section className="bg-slate-950 py-10 relative overflow-hidden">
-        <div className="flex whitespace-nowrap">
-          <motion.div 
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="flex items-center gap-16"
-          >
-            {[1,2,3,4].map(i => (
-              <div key={i} className="flex items-center gap-8 text-[11px] font-black uppercase tracking-[0.5em] text-white">
-                <ShieldCheck size={16} className="text-accent-secondary" /> 
-                <span className="bg-gradient-to-r from-white via-slate-400 to-white bg-clip-text text-transparent">BẢO MẬT TÀI SẢN TOÀN DIỆN VỚI TANLAB DRM</span>
-                <span className="text-slate-800">//</span>
-                <span className="text-accent-secondary italic">ANTI-PIRACY TECHNOLOGY</span>
-                <span className="text-slate-800">//</span>
-                <span className="text-slate-400">100% CONTENT PROTECTION</span>
-                <span className="text-slate-800">//</span>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
       {/* Courses Bento Grid */}
-      <section className="bg-white py-32 px-6 border-b border-slate-100">
+      <section className="bg-slate-50/50 py-32 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-             <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow">Lộ trình <span className="text-slate-300">Tài sản</span></h2>
-             <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300">Hệ thống đào tạo thực chiến tại Tanlab</p>
+             <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase italic-glow leading-none">Lộ trình <span className="text-slate-300">Tài sản</span></h2>
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mt-6">Hệ thống đào tạo thực chiến tại Tanlab</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <BentoCard 
@@ -298,19 +290,19 @@ export default function Home() {
               </div>
             </BentoCard>
 
-            <BentoCard title="Nội Dung Viral" description="Tiếp cận triệu khách hàng mục tiêu." icon={<Star size={24} />} className="bg-slate-50" />
-            <BentoCard title="Hệ Thống Phễu" description="Tự động hóa dòng tiền 24/7." icon={<Layers size={24} />} className="bg-slate-50" />
-            <BentoCard title="Thương Hiệu" description="Định vị Personal Brand sắc nét." icon={<Users size={24} />} className="md:col-span-2 bg-slate-50" />
+            <BentoCard title="Nội Dung Viral" description="Tiếp cận triệu khách hàng mục tiêu." icon={<Star size={24} />} className="bg-white" />
+            <BentoCard title="Hệ Thống Phễu" description="Tự động hóa dòng tiền 24/7." icon={<Layers size={24} />} className="bg-white" />
+            <BentoCard title="Thương Hiệu" description="Định vị Personal Brand sắc nét." icon={<Users size={24} />} className="md:col-span-2 bg-white" />
           </div>
         </div>
       </section>
 
       {/* Bonus Stack */}
-      <section className="py-32 px-6 bg-slate-50/30">
+      <section className="py-32 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-20">
              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">QUÀ TẶNG <span className="text-accent-secondary">ĐẶC QUYỀN</span></h2>
-             <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mt-4 underline-accent">Exclusive Bonuses</p>
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mt-6 underline-accent">Exclusive Bonuses</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {bonuses.map((bonus, i) => (
@@ -329,9 +321,9 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-32 px-6 bg-white border-y border-slate-100">
+      <section className="py-32 px-6 bg-slate-50/30 border-y border-slate-50">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-center mb-16 flex flex-col items-center gap-4 italic italic-glow">
+          <h2 className="text-center mb-16 flex flex-col items-center gap-4 italic italic-glow leading-none">
              <HelpCircle className="text-accent-secondary" size={32} />
              GIẢI ĐÁP THẮC MẮC
           </h2>
@@ -372,7 +364,7 @@ export default function Home() {
             SẴN SÀNG <span className="text-slate-900">BỨT PHÁ?</span>
           </h2>
           
-          <p className="text-xl text-slate-400 mb-12 font-black uppercase italic tracking-widest border-y border-slate-50 py-6 inline-block">
+          <p className="text-lg md:text-xl text-slate-400 mb-12 font-black uppercase italic tracking-widest border-y border-slate-50 py-6 inline-block">
             CHỈ CÒN <span className="text-accent-secondary animate-pulse">3 SUẤT ƯU ĐÃI CUỐI CÙNG</span> TRONG HÔM NAY!
           </p>
           

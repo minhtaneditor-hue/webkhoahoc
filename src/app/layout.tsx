@@ -29,6 +29,7 @@ export const metadata: Metadata = {
 };
 
 import Navbar from "@/components/Navbar";
+import GlobalTicker from "@/components/GlobalTicker";
 import Footer from "@/components/Footer";
 import AIChatAssistant from "@/components/AIChatAssistant";
 
@@ -40,6 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${manrope.variable} ${cabin.variable} ${instrumentSerif.variable}`}>
       <body className="antialiased">
+        <GlobalTicker />
         <Navbar />
         {children}
         <Footer />
