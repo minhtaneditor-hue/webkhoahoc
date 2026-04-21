@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import DrmPlayer from '@/components/video/DrmPlayer';
+// Removed: client-side jsonwebtoken import for security
 
 export default function LearningPortal() {
   const { courseId, lessonId } = useParams();
@@ -27,6 +29,11 @@ export default function LearningPortal() {
   const [currentLesson, setCurrentLesson] = useState<any>(null);
   const [progress, setProgress] = useState<string[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [drmToken, setDrmToken] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('STUDENT');
+
+  // Sercet key from user for DRM handshake
+  // DRM configuration is now handled on the server-side (/api/drm/token)
 
   useEffect(() => {
     async function init() {
@@ -49,8 +56,23 @@ export default function LearningPortal() {
       setLessons(lessonsData || []);
       setProgress(progressData?.map(p => p.lesson_id) || []);
 
+      if (user) {
+        setUserEmail(user.email || 'STUDENT');
+      }
+
       if (lessonId && lessonsData) {
-        setCurrentLesson(lessonsData.find(l => l.id === lessonId));
+        const lesson = lessonsData.find(l => l.id === lessonId);
+        setCurrentLesson(lesson);
+        
+        // Generate a temporary DRM token for the session
+        if (user && lesson && lesson.video_url?.includes('drm:')) {
+           const vId = lesson.video_url.split('drm:')[1];
+           fetch(`/api/drm/token?videoId=${vId}`)
+             .then(res => res.json())
+             .then(data => {
+                if (data.token) setDrmToken(data.token);
+             });
+        }
       } else if (lessonsData && lessonsData.length > 0) {
         setCurrentLesson(lessonsData[0]);
       }
@@ -188,7 +210,13 @@ export default function LearningPortal() {
             <div className="space-y-10">
               {/* Video Player */}
               <div className="relative group/player rounded-[3rem] overflow-hidden border border-white/10 bg-black aspect-video shadow-2xl">
-                 {currentLesson.video_url ? (
+                 {currentLesson.video_url && currentLesson.video_url.includes('drm:') ? (
+                    <DrmPlayer 
+                      videoId={currentLesson.video_url.split('drm:')[1]}
+                      token={drmToken}
+                      watermark={userEmail}
+                    />
+                 ) : currentLesson.video_url ? (
                     <iframe 
                       src={currentLesson.video_url.includes('youtube') ? currentLesson.video_url.replace('watch?v=', 'embed/') : currentLesson.video_url}
                       className="w-full h-full"
