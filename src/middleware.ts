@@ -13,64 +13,71 @@ export async function middleware(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // RESILIENCE CHECK: Skip auth if variables are missing or placeholders
+  // RESILIENCE CHECK: If keys are missing or placeholders, skip auth logic to prevent 500 error
   if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
+    console.warn("Middleware: Supabase keys missing. Bypassing auth checks.");
     return res;
   }
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
-    {
-      cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value;
+  try {
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseKey,
+      {
+        cookies: {
+          get(name: string) {
+            return req.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            req.cookies.set({ name, value, ...options });
+            res = NextResponse.next({
+              request: {
+                headers: req.headers,
+              },
+            });
+            res.cookies.set({ name, value, ...options });
+          },
+          remove(name: string, options: CookieOptions) {
+            req.cookies.set({ name, value: '', ...options });
+            res = NextResponse.next({
+              request: {
+                headers: req.headers,
+              },
+            });
+            res.cookies.set({ name, value: '', ...options });
+          },
         },
-        set(name: string, value: string, options: CookieOptions) {
-          req.cookies.set({ name, value, ...options });
-          res = NextResponse.next({
-            request: {
-              headers: req.headers,
-            },
-          });
-          res.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          req.cookies.set({ name, value: '', ...options });
-          res = NextResponse.next({
-            request: {
-              headers: req.headers,
-            },
-          });
-          res.cookies.set({ name, value: '', ...options });
-        },
-      },
+      }
+    );
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    // ADMIN LOCKDOWN: Only authorized emails can access /admin
+    const isAdminPath = req.nextUrl.pathname.startsWith('/admin');
+    if (isAdminPath) {
+      if (!session || !isAdmin(session.user.email)) {
+        return NextResponse.redirect(new URL('/auth', req.url));
+      }
     }
-  );
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    // If session exists and user is trying to access auth pages, redirect to dashboard
+    if (session && req.nextUrl.pathname.startsWith('/auth')) {
+      return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
 
-  // ADMIN LOCKDOWN: Only authorized emails can access /admin
-  const isAdminPath = req.nextUrl.pathname.startsWith('/admin');
-  if (isAdminPath) {
-    if (!session || !isAdmin(session.user.email)) {
+    // If no session and trying to access protected routes, redirect to auth
+    if (!session && (
+      req.nextUrl.pathname.startsWith('/dashboard') || 
+      req.nextUrl.pathname.startsWith('/courses/lesson')
+    )) {
       return NextResponse.redirect(new URL('/auth', req.url));
     }
-  }
-
-  // If session exists and user is trying to access auth pages, redirect to dashboard
-  if (session && req.nextUrl.pathname.startsWith('/auth')) {
-    return NextResponse.redirect(new URL('/dashboard', req.url));
-  }
-
-  // If no session and trying to access protected routes, redirect to auth
-  if (!session && (
-    req.nextUrl.pathname.startsWith('/dashboard') || 
-    req.nextUrl.pathname.startsWith('/courses/lesson')
-  )) {
-    return NextResponse.redirect(new URL('/auth', req.url));
+  } catch (error) {
+    console.error("Middleware Auth Error:", error);
+    // On error, we still want to allow access to the page rather than showing a 500
+    return res;
   }
 
   return res;
