@@ -116,20 +116,20 @@ export default function Home() {
   };
 
   const partners = [
-    { name: "Phú Long", logo: "/asset/doi tac/logo-phu-long.jpg.webp" },
-    { name: "Viglacera", logo: "/asset/doi tac/viglacera-edited-1748248760146.webp" },
-    { name: "Suntory Pepsico", logo: "/asset/doi tac/logo.png" },
-    { name: "HTV", logo: "/asset/doi tac/unnamed.png" },
-    { name: "Vietjet", logo: "/asset/doi tac/channels4_profile.jpg" }
+    { name: "Phú Long", logo: "/asset/doi_tac/logo-phu-long.jpg.webp" },
+    { name: "Viglacera", logo: "/asset/doi_tac/viglacera-edited-1748248760146.webp" },
+    { name: "Suntory Pepsico", logo: "/asset/doi_tac/logo.png" },
+    { name: "HTV", logo: "/asset/doi_tac/unnamed.png" },
+    { name: "Vietjet", logo: "/asset/doi_tac/channels4_profile.jpg" }
   ];
 
   const projects = [
-    { title: "2 Ngày 1 Đêm", category: "TV Show Integration", image: "/asset/du an tieu bieu/544ea4rx_1920x1080-2n1d3d4949a0757e8a42510797a7441b3256_1267_712.webp" },
-    { title: "Anh Trai Say Hi Movie", category: "Cinematic Production", image: "/asset/du an tieu bieu/AnhTraiSayHiOpening.jpg" },
-    { title: "Anh Trai Say Hi - Las Vegas", category: "Global Event Coverage", image: "/asset/du an tieu bieu/ATSH_logo_HTV2.webp" },
-    { title: "Nghệ Thuật Truyền Hình", category: "Digital Content", image: "/asset/du an tieu bieu/NHTH.jpg" },
-    { title: "Mái Ấm Tình Thương", category: "Documentary", image: "/asset/du an tieu bieu/MATN_logo_HTV7.webp" },
-    { title: "Ký Ức Vui Vẻ", category: "TV Production", image: "/asset/du an tieu bieu/Ky_uc_vui_ve_VTV.png" }
+    { title: "2 Ngày 1 Đêm", category: "TV Show Integration", image: "/asset/du_an_tieu_bieu/544ea4rx_1920x1080-2n1d3d4949a0757e8a42510797a7441b3256_1267_712.webp" },
+    { title: "Anh Trai Say Hi Movie", category: "Cinematic Production", image: "/asset/du_an_tieu_bieu/AnhTraiSayHiOpening.jpg" },
+    { title: "Anh Trai Say Hi - Las Vegas", category: "Global Event Coverage", image: "/asset/du_an_tieu_bieu/ATSH_logo_HTV2.webp" },
+    { title: "Nghệ Thuật Truyền Hình", category: "Digital Content", image: "/asset/du_an_tieu_bieu/NHTH.jpg" },
+    { title: "Mái Ấm Tình Thương", category: "Documentary", image: "/asset/du_an_tieu_bieu/MATN_logo_HTV7.webp" },
+    { title: "Ký Ức Vui Vẻ", category: "TV Production", image: "/asset/du_an_tieu_bieu/Ky_uc_vui_ve_VTV.png" }
   ];
 
   const bonuses = [
