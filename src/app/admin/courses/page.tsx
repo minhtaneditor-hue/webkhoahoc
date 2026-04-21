@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { 
   Database, 
   Plus, 
@@ -17,7 +18,8 @@ import {
   DollarSign,
   GripVertical,
   CheckCircle2,
-  Users
+  Users,
+  Globe
 } from 'lucide-react';
 
 const mockCourses = [
