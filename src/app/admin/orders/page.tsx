@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/utils/supabase';
 import { 
   CreditCard, 
   Search, 
@@ -9,7 +10,6 @@ import {
   Download, 
   ChevronLeft, 
   ChevronRight,
-  ExternalLink,
   CheckCircle2,
   Clock,
   AlertCircle,
@@ -17,18 +17,96 @@ import {
   Smartphone
 } from 'lucide-react';
 
-const mockOrders = [
-  { id: "ORD-9281", user: "Trần Thành Tân", email: "tan@tanlab.vn", course: "21 Ngày Video Tài Sản", amount: "1,999,000", method: "VNPay", status: "Success", date: "21/04/2026 10:30" },
-  { id: "ORD-9280", user: "Nguyễn Đăng Hạnh", email: "hanh@bakery.com", course: "Video Strategy Audit", amount: "999,000", method: "Bank Transfer", status: "Pending", date: "21/04/2026 09:15" },
-  { id: "ORD-9279", user: "Lê Minh Tấn", email: "tan@academy.com", course: "Premium Coaching 1:1", amount: "12,000,000", method: "VNPay", status: "Success", date: "21/04/2026 08:45" },
-  { id: "ORD-9278", user: "Phạm Gia Bảo", email: "bao@creative.vn", course: "21 Ngày Video Tài Sản", amount: "1,999,000", method: "MoMo", status: "Failed", date: "21/04/2026 07:20" },
-  { id: "ORD-9277", user: "Trương Thị Như Hằng", email: "hang@food.vn", course: "21 Ngày Video Tài Sản", amount: "1,999,000", method: "Bank Transfer", status: "Success", date: "20/04/2026 18:10" },
-];
+interface OrderRecord {
+  id: string;
+  order_id: string;
+  user: string;
+  email: string;
+  course: string;
+  amount: number;
+  method: string;
+  status: string;
+  date: string;
+  raw_status: string;
+}
 
 export default function OrdersManagement() {
   const [activeTab, setActiveTab] = useState("Tất cả");
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<OrderRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const tabs = ["Tất cả", "Thành công", "Chờ xử lý", "Thất bại"];
+
+  useEffect(() => {
+    async function fetchOrders() {
+      setIsLoading(true);
+      try {
+        const { data: payments } = await supabase
+          .from('payments')
+          .select(`
+            id,
+            order_id,
+            amount,
+            status,
+            payment_method,
+            created_at,
+            users (full_name, email),
+            courses (title)
+          `)
+          .order('created_at', { ascending: false });
+
+        const mapped: OrderRecord[] = (payments || []).map(p => ({
+          id: p.id,
+          order_id: p.order_id || p.id.slice(0, 8),
+          user: (p.users as any)?.full_name || 'Anonymous',
+          email: (p.users as any)?.email || '',
+          course: (p.courses as any)?.title || 'Unknown Course',
+          amount: Number(p.amount),
+          method: p.payment_method || 'Bank Transfer',
+          status: p.status === 'success' ? 'Success' : p.status === 'pending' ? 'Pending' : 'Failed',
+          raw_status: p.status || 'pending',
+          date: new Date(p.created_at).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        }));
+
+        setOrders(mapped);
+        setFilteredOrders(mapped);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    let result = orders;
+    
+    // Filter by tab
+    if (activeTab === "Thành công") result = result.filter(o => o.raw_status === 'success');
+    else if (activeTab === "Chờ xử lý") result = result.filter(o => o.raw_status === 'pending');
+    else if (activeTab === "Thất bại") result = result.filter(o => o.raw_status === 'failed');
+
+    // Filter by search
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      result = result.filter(o => 
+        o.order_id.toLowerCase().includes(lower) || 
+        o.user.toLowerCase().includes(lower) || 
+        o.email.toLowerCase().includes(lower)
+      );
+    }
+
+    setFilteredOrders(result);
+  }, [activeTab, searchTerm, orders]);
+
+  const stats = {
+    success: orders.filter(o => o.raw_status === 'success').reduce((sum, o) => sum + o.amount, 0),
+    pending: orders.filter(o => o.raw_status === 'pending').reduce((sum, o) => sum + o.amount, 0),
+    totalCount: orders.length
+  };
 
   return (
     <div className="space-y-10">
@@ -48,22 +126,22 @@ export default function OrdersManagement() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
          <div className="p-8 rounded-[3rem] bg-emerald-50 border border-emerald-100 shadow-sm flex items-center justify-between group">
             <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60 mb-1">Thành công (Tháng)</p>
-               <p className="text-2xl font-black italic text-emerald-600">84,500,000đ</p>
+               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60 mb-1">Thành công (Tổng)</p>
+               <p className="text-2xl font-black italic text-emerald-600">{stats.success.toLocaleString('vi-VN')}đ</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-500 shadow-sm"><CheckCircle2 size={24} /></div>
          </div>
          <div className="p-8 rounded-[3rem] bg-amber-50 border border-amber-100 shadow-sm flex items-center justify-between group">
             <div>
                <p className="text-[10px] font-black uppercase tracking-widest text-amber-600/60 mb-1">Đang chờ xử lý</p>
-               <p className="text-2xl font-black italic text-amber-600">12,200,000đ</p>
+               <p className="text-2xl font-black italic text-amber-600">{stats.pending.toLocaleString('vi-VN')}đ</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-amber-500 shadow-sm"><Clock size={24} /></div>
          </div>
          <div className="p-8 rounded-[3rem] bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between group">
             <div>
                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Tổng đơn hàng</p>
-               <p className="text-2xl font-black italic text-white">1,542 đơn</p>
+               <p className="text-2xl font-black italic text-white">{stats.totalCount} đơn</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-white shadow-sm"><Smartphone size={24} /></div>
          </div>
@@ -89,7 +167,13 @@ export default function OrdersManagement() {
             <div className="flex items-center gap-4 flex-1 max-w-sm">
                <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                  <input type="text" placeholder="Tìm mã đơn, tên..." className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-0 outline-none" />
+                  <input 
+                    type="text" 
+                    placeholder="Tìm mã đơn, tên, email..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-0 outline-none" 
+                  />
                </div>
             </div>
          </div>
@@ -107,10 +191,14 @@ export default function OrdersManagement() {
                   </tr>
                </thead>
                <tbody>
-                  {mockOrders.map((order, i) => (
-                     <tr key={i} className="hover:bg-slate-50 transition-all group">
+                  {isLoading ? (
+                    <tr><td colSpan={6} className="py-10 text-center text-slate-300 italic font-bold">Đang tải lịch sử giao dịch...</td></tr>
+                  ) : filteredOrders.length === 0 ? (
+                    <tr><td colSpan={6} className="py-10 text-center text-slate-300 italic font-bold">Không tìm thấy giao dịch nào.</td></tr>
+                  ) : filteredOrders.map((order, i) => (
+                     <tr key={order.id} className="hover:bg-slate-50 transition-all group">
                         <td className="py-6">
-                           <span className="text-xs font-black italic text-slate-900">{order.id}</span>
+                           <span className="text-xs font-black italic text-slate-900">{order.order_id}</span>
                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 mt-1">{order.course}</p>
                         </td>
                         <td className="py-6">
@@ -126,7 +214,7 @@ export default function OrdersManagement() {
                            </div>
                         </td>
                         <td className="py-6 text-right">
-                           <span className="text-sm font-black italic text-slate-900">{order.amount}đ</span>
+                           <span className="text-sm font-black italic text-slate-900">{order.amount.toLocaleString('vi-VN')}đ</span>
                         </td>
                         <td className="py-6 text-right">
                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{order.date}</div>
@@ -148,7 +236,7 @@ export default function OrdersManagement() {
 
          {/* Pagination */}
          <div className="flex items-center justify-between pt-10 border-t border-slate-50">
-            <p className="text-[10px] font-bold text-slate-300 italic">Page 1 of 54</p>
+            <p className="text-[10px] font-bold text-slate-300 italic">Hiển thị {filteredOrders.length} kết quả</p>
             <div className="flex items-center gap-4">
                <button className="w-10 h-10 rounded-xl border border-slate-100 flex items-center justify-center text-slate-300 hover:text-slate-900 transition-all">
                   <ChevronLeft size={18} />

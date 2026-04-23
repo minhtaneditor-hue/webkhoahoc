@@ -1,8 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { supabase } from '@/utils/supabase';
 import { 
   ArrowUpRight, 
   ArrowDownRight, 
@@ -11,55 +12,135 @@ import {
   PlayCircle, 
   TrendingUp,
   Clock,
-  ExternalLink,
   ChevronRight,
-  Zap,
-  Flame
+  Zap
 } from 'lucide-react';
 
-const stats = [
-  { 
-    title: "Tổng Doanh Thu", 
-    value: "128,400,000", 
-    unit: "VNĐ",
-    change: "+12.5%", 
-    isUp: true,
-    icon: <CreditCard className="text-emerald-500" />
-  },
-  { 
-    title: "Học Viên Mới", 
-    value: "1,240", 
-    unit: "Học viên",
-    change: "+8.2%", 
-    isUp: true,
-    icon: <Users className="text-blue-500" />
-  },
-  { 
-    title: "Tỷ Lệ Hoàn Thành", 
-    value: "68.4", 
-    unit: "%",
-    change: "-2.1%", 
-    isUp: false,
-    icon: <PlayCircle className="text-amber-500" />
-  },
-  { 
-    title: "Lượt Xem Bài Giảng", 
-    value: "15,800", 
-    unit: "Lượt",
-    change: "+24.0%", 
-    isUp: true,
-    icon: <TrendingUp className="text-purple-500" />
-  }
-];
+interface DashboardStats {
+  revenue: number;
+  students: number;
+  lectureViews: number;
+  completionRate: number;
+}
 
-const recentOrders = [
-  { id: "ORD-9281", user: "Trần Thành Tân", course: "21 Ngày Video Tài Sản", amount: "1,999,000", date: "10:30 Hôm nay", status: "Hoàn tất" },
-  { id: "ORD-9280", user: "Nguyễn Đăng Hạnh", course: "Video Strategy Audit", amount: "999,000", date: "09:15 Hôm nay", status: "Đang xử lý" },
-  { id: "ORD-9279", user: "Lê Minh Tấn", course: "Premium Coaching 1:1", amount: "12,000,000", date: "08:45 Hôm nay", status: "Hoàn tất" },
-  { id: "ORD-9278", user: "Phạm Gia Bảo", course: "21 Ngày Video Tài Sản", amount: "1,999,000", date: "Hôm qua", status: "Thất bại" },
-];
+interface RecentOrder {
+  id: string;
+  user: string;
+  course: string;
+  amount: number;
+  date: string;
+  status: string;
+}
 
 export default function AdminDashboard() {
+  const [statsData, setStatsData] = useState<DashboardStats>({
+    revenue: 0,
+    students: 0,
+    lectureViews: 0,
+    completionRate: 0
+  });
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      setIsLoading(true);
+      try {
+        // 1. Fetch Revenue (Total of successful payments)
+        const { data: payments } = await supabase
+          .from('payments')
+          .select('amount')
+          .eq('status', 'success');
+        
+        const totalRevenue = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+
+        // 2. Fetch Total Students
+        const { count: studentCount } = await supabase
+          .from('users')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'student');
+
+        // 3. Fetch Lecture Views (Total progress entries)
+        const { count: viewsCount } = await supabase
+          .from('student_progress')
+          .select('*', { count: 'exact', head: true });
+
+        // 4. Fetch Recent Orders
+        const { data: orders } = await supabase
+          .from('payments')
+          .select(`
+            id,
+            order_id,
+            amount,
+            status,
+            created_at,
+            users (full_name),
+            courses (title)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        const mappedOrders: RecentOrder[] = (orders || []).map(o => ({
+          id: o.order_id || o.id.slice(0, 8),
+          user: (o.users as any)?.full_name || 'Anonymous',
+          course: (o.courses as any)?.title || 'Unknown Course',
+          amount: Number(o.amount),
+          date: new Date(o.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + (new Date(o.created_at).toDateString() === new Date().toDateString() ? ' Hôm nay' : ' Ngày trước'),
+          status: o.status === 'success' ? 'Hoàn tất' : o.status === 'pending' ? 'Đang xử lý' : 'Thất bại'
+        }));
+
+        setStatsData({
+          revenue: totalRevenue,
+          students: studentCount || 0,
+          lectureViews: viewsCount || 0,
+          completionRate: 68.4 // Keep static for now or calculate if possible
+        });
+        setRecentOrders(mappedOrders);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchDashboardData();
+  }, []);
+
+  const stats = [
+    { 
+      title: "Tổng Doanh Thu", 
+      value: statsData.revenue.toLocaleString('vi-VN'), 
+      unit: "VNĐ",
+      change: "+12.5%", 
+      isUp: true,
+      icon: <CreditCard className="text-emerald-500" />
+    },
+    { 
+      title: "Học Viên", 
+      value: statsData.students.toLocaleString('vi-VN'), 
+      unit: "Thành viên",
+      change: "+8.2%", 
+      isUp: true,
+      icon: <Users className="text-blue-500" />
+    },
+    { 
+      title: "Tỷ Lệ Hoàn Thành", 
+      value: statsData.completionRate.toString(), 
+      unit: "%",
+      change: "-2.1%", 
+      isUp: false,
+      icon: <PlayCircle className="text-amber-500" />
+    },
+    { 
+      title: "Lượt Xem Bài Giảng", 
+      value: statsData.lectureViews.toLocaleString('vi-VN'), 
+      unit: "Lượt",
+      change: "+24.0%", 
+      isUp: true,
+      icon: <TrendingUp className="text-purple-500" />
+    }
+  ];
+
   return (
     <div className="space-y-10">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -70,7 +151,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-3">
            <div className="px-5 py-2.5 rounded-xl bg-white border border-slate-100 flex items-center gap-3 shadow-sm">
               <Clock size={16} className="text-slate-300" />
-              <span className="text-xs font-bold text-slate-500 italic">21/04/2026 - 15:00</span>
+              <span className="text-xs font-bold text-slate-500 italic">{new Date().toLocaleString('vi-VN')}</span>
            </div>
            <button className="px-6 py-2.5 rounded-xl bg-accent-secondary text-white text-[10px] font-black uppercase tracking-widest shadow-lg hover:shadow-accent-secondary/30 transition-all">Xuất báo cáo</button>
         </div>
@@ -98,7 +179,9 @@ export default function AdminDashboard() {
             <div>
                <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 mb-1">{stat.title}</p>
                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black italic tracking-tighter text-slate-900">{stat.value}</span>
+                  <span className="text-3xl font-black italic tracking-tighter text-slate-900">
+                    {isLoading ? "..." : stat.value}
+                  </span>
                   <span className="text-[10px] font-bold text-slate-300 italic">{stat.unit}</span>
                </div>
             </div>
@@ -126,12 +209,16 @@ export default function AdminDashboard() {
                      </tr>
                   </thead>
                   <tbody>
-                     {recentOrders.map((order, i) => (
+                     {isLoading ? (
+                       <tr><td colSpan={5} className="py-10 text-center text-slate-300 italic font-bold">Đang tải dữ liệu...</td></tr>
+                     ) : recentOrders.length === 0 ? (
+                       <tr><td colSpan={5} className="py-10 text-center text-slate-300 italic font-bold">Chưa có giao dịch nào.</td></tr>
+                     ) : recentOrders.map((order, i) => (
                         <tr key={i} className="hover:bg-slate-50 transition-colors group">
-                           <td className="py-6 py-6 font-bold text-slate-900 text-xs italic">{order.id}</td>
+                           <td className="py-6 font-bold text-slate-900 text-xs italic">{order.id}</td>
                            <td className="py-6 text-sm font-bold text-slate-500">{order.user}</td>
                            <td className="py-6 text-xs font-black uppercase italic tracking-tight text-slate-400">{order.course}</td>
-                           <td className="py-6 text-right font-black italic text-slate-900 text-xs">{order.amount}đ</td>
+                           <td className="py-6 text-right font-black italic text-slate-900 text-xs">{order.amount.toLocaleString('vi-VN')}đ</td>
                            <td className="py-6 text-right">
                               <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase ${
                                  order.status === 'Hoàn tất' ? 'bg-emerald-50 text-emerald-600' : 
@@ -153,7 +240,7 @@ export default function AdminDashboard() {
                <div className="absolute top-0 right-0 w-32 h-32 bg-accent-secondary/20 blur-[60px]" />
                <Zap className="text-accent-secondary mb-8" size={32} />
                <h4 className="text-2xl font-black italic uppercase italic-glow mb-4">Hệ Thống <br />DRM SECURITY</h4>
-               <p className="text-slate-400 text-xs font-medium leading-relaxed mb-10">Tất cả video đang được bảo mật bằng công nghệ tVNDRM. Tỷ lệ can thu độ 0%.</p>
+               <p className="text-slate-400 text-xs font-medium leading-relaxed mb-10">Tất cả video đang được bảo mật bằng công nghệ TANLAB-DRM. Tỷ lệ can thiệp 0%.</p>
                <button className="w-full py-4 rounded-2x bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Kiểm tra hạ tầng</button>
             </div>
 
@@ -163,18 +250,18 @@ export default function AdminDashboard() {
                   {[1, 2, 3].map(i => (
                     <div key={i} className="flex items-center gap-4">
                        <div className="w-10 h-10 rounded-xl bg-slate-50 overflow-hidden border border-slate-100 p-1">
-                          <img src={`https://i.pravatar.cc/100?u=watching-${i}`} className="w-full h-full object-cover rounded-lg" />
+                          <img src={`https://i.pravatar.cc/100?u=watching-${i}`} alt="student" className="w-full h-full object-cover rounded-lg" />
                        </div>
                        <div className="flex-1">
                           <div className="flex justify-between items-center mb-1">
-                             <p className="text-[10px] font-black uppercase italic text-slate-900">Student {i}</p>
-                             <p className="text-[9px] font-bold text-emerald-500">Watching</p>
+                             <p className="text-[10px] font-black uppercase italic text-slate-900">Học viên {i}</p>
+                             <p className="text-[9px] font-bold text-emerald-500">Trực tuyến</p>
                           </div>
                           <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
                              <motion.div 
-                               initial={{ width: 0 }}
-                               animate={{ width: `${Math.random() * 80 + 20}%` }}
-                               className="h-full bg-accent-secondary"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.random() * 80 + 20}%` }}
+                                className="h-full bg-accent-secondary"
                              />
                           </div>
                        </div>
@@ -182,6 +269,13 @@ export default function AdminDashboard() {
                   ))}
                </div>
                <button className="w-full mt-10 py-4 border-t border-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-accent-secondary transition-colors">Xem hành trình học viên</button>
+            </div>
+         </div>
+      </div>
+    </div>
+  );
+}
+t text-slate-300 hover:text-accent-secondary transition-colors">Xem hành trình học viên</button>
             </div>
          </div>
       </div>
