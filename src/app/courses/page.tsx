@@ -54,9 +54,9 @@ export default async function CoursesPage() {
       <section className="container-lux pt-12 pb-12 md:pt-20">
         <SectionHeading
           as="h1"
-          eyebrow="Danh mục khóa học"
-          title="Học từ nền tảng kỹ thuật tới tư duy kinh doanh"
-          description="Mỗi khóa học đều có bài học thử miễn phí, truy cập trọn đời và hỗ trợ trực tiếp từ Minh Tấn."
+
+          title="Tất cả khóa học"
+          description="Từ nền tảng kỹ thuật tới tư duy kinh doanh. Mỗi khóa đều có bài học thử miễn phí, truy cập trọn đời và hỗ trợ trực tiếp từ Minh Tấn."
         />
       </section>
 
@@ -110,7 +110,7 @@ export default async function CoursesPage() {
         <div className="container-lux">
           <SectionHeading
             light
-            eyebrow="Đồng hành riêng"
+
             title="Coaching 1:1 cùng Minh Tấn"
             description="Khi bạn cần một người nhìn thẳng vào kênh của mình và chỉ ra bước tiếp theo."
           />

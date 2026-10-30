@@ -6,7 +6,7 @@
    ===================================================================== */
 @theme {
   /* Core palette */
-  --color-ivory: #FAFAF9;          /* page background */
+  --color-ivory: #F4F2EE;          /* page background: warm stone, one tone below white cards */
   --color-ink: #0C0A09;            /* main text */
   --color-onyx: #1C1917;           /* primary / dark surfaces */
   --color-stone: #44403C;          /* secondary */
@@ -15,7 +15,7 @@
   --color-gold-light: #E3B341;     /* accent on dark surfaces (8:1 on onyx) */
   --color-gold-soft: #FEF3C7;      /* tinted backgrounds, badges */
   --color-card: #FFFFFF;
-  --color-muted: #F5F5F4;
+  --color-muted: #EBE8E3;
   --color-muted-foreground: #57534E; /* 7:1 on ivory */
   --color-line: #E7E5E4;
   --color-line-strong: #D6D3D1;
@@ -35,65 +35,76 @@
   --font-sans: var(--font-montserrat), 'Montserrat', system-ui, sans-serif;
 
   /* Geometry & elevation */
-  --radius-card: 12px;
-  --radius-btn: 8px;
-  --shadow-soft: 0 1px 2px rgba(12, 10, 9, 0.05);
-  --shadow-card: 0 4px 6px rgba(12, 10, 9, 0.06), 0 1px 2px rgba(12, 10, 9, 0.04);
-  --shadow-lift: 0 20px 25px rgba(12, 10, 9, 0.10);
+  /* Square corners chosen once (taste-skill: square or fully round, never one medium radius) */
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius-card: 2px;
+  --radius-btn: 2px;
+  /* Resting surfaces carry no shadow; depth comes from tone steps. --shadow-lift is for overlays only */
+  --shadow-soft: none;
+  --shadow-card: none;
+  --shadow-lift: 0 24px 48px -12px rgba(12, 10, 9, 0.25);
 
   /* Motion: subtle and never instant */
   --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ---------- Base ---------- */
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
+/* ---------- Base (in a layer so Tailwind utilities on an element always win) ---------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
 
-body {
-  background-color: var(--color-ivory);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-  min-height: 100vh;
-}
+  body {
+    background-color: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
 
-h1, h2, h3, h4 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
-  color: inherit;
-  text-wrap: balance;
-}
-h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); }
-h2 { font-size: clamp(2rem, 4vw, 3rem); }
-h3 { font-size: clamp(1.375rem, 2.2vw, 1.75rem); }
-h4 { font-size: 1.25rem; }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    color: inherit;
+    text-wrap: balance;
+  }
+  h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); }
+  h2 { font-size: clamp(2rem, 4vw, 3rem); }
+  h3 { font-size: clamp(1.375rem, 2.2vw, 1.75rem); }
+  h4 { font-size: 1.25rem; }
 
-p { text-wrap: pretty; }
+  p { text-wrap: pretty; }
 
-::selection { background: var(--color-gold-soft); color: var(--color-ink); }
+  ::selection { background: var(--color-gold-soft); color: var(--color-ink); }
+  html { caret-color: var(--color-gold); accent-color: var(--color-gold); scrollbar-color: #A8A29E var(--color-ivory); }
+  a { text-underline-offset: 0.2em; }
+  table { font-variant-numeric: tabular-nums; }
 
-:focus-visible {
-  outline: 2px solid var(--color-gold);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
 
-a, button, [role="button"], summary, label[for], select { cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: 0.6; }
+  a, button, [role="button"], summary, label[for], select { cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: 0.6; }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -113,14 +124,13 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 
 /* ---------- Type helpers ---------- */
 @utility eyebrow {
+  /* Plain sentence-case label (tiny tracked capitals are a generated-page tell) */
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
   color: var(--color-gold);
 }
 
@@ -199,14 +209,14 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 /* ---------- Surfaces ---------- */
 @utility card {
   background-color: var(--color-card);
-  border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-soft);
 }
 
 @utility card-hover {
-  transition: box-shadow 250ms var(--ease-lux), transform 250ms var(--ease-lux), border-color 250ms var(--ease-lux);
-  &:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); border-color: var(--color-line-strong); }
+  transition: background-color 250ms var(--ease-lux);
+  &:hover { background-color: #FFFDF8; }
+  & img { transition: transform 600ms var(--ease-lux); }
+  &:hover img { transform: scale(1.03); }
 }
 
 @utility surface-dark {
@@ -263,10 +273,8 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 
 @utility auth-card {
   background-color: var(--color-card);
-  border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   padding: 2rem;
-  box-shadow: var(--shadow-card);
 }
 
 /* ---------- Scrollbars ---------- */

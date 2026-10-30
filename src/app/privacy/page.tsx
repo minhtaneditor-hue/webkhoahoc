@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'Chính sách bảo mật' };
 export default function PrivacyPage() {
   return (
     <LegalPage
-      eyebrow="Bảo vệ dữ liệu"
+
       title="Chính sách bảo mật"
       intro="Cam kết giữ an toàn thông tin cá nhân của học viên."
       updated="Tháng 4, 2026"

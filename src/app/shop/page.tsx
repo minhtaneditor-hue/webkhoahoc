@@ -96,9 +96,9 @@ export default function ShopPage() {
       <section className="container-lux pt-12 pb-10 md:pt-20">
         <SectionHeading
           as="h1"
-          eyebrow="Ebook & Preset"
-          title="Tài nguyên để làm video nhanh và đẹp hơn"
-          description="Ebook, preset màu, LUT và template do studio của Minh Tấn sử dụng hằng ngày. Mua một lần, tải về dùng mãi."
+
+          title="Ebook & Preset"
+          description="Tài nguyên để làm video nhanh và đẹp hơn: ebook, preset màu, LUT và template studio của Minh Tấn dùng hằng ngày. Mua một lần, tải về dùng mãi."
         />
 
         {categories.length > 2 && (

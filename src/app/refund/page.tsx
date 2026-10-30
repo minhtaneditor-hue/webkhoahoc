@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'Chính sách hoàn tiền' };
 export default function RefundPage() {
   return (
     <LegalPage
-      eyebrow="Quyền lợi học viên"
+
       title="Chính sách hoàn tiền"
       intro="Học thử yên tâm: hoàn 100% học phí trong 7 ngày nếu khóa học chưa phù hợp với bạn."
       updated="Tháng 4, 2026"

@@ -186,7 +186,7 @@ export default function Navbar() {
         <div id="mobile-menu" style={{ top: menuTop }} className="lg:hidden fixed inset-x-0 bottom-0 bg-ivory overflow-y-auto border-t border-line animate-fade-up">
           <div className="container-lux py-6 flex flex-col">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={`py-4 border-b border-line font-display text-2xl font-semibold ${isActive(link.href) ? 'text-gold' : 'text-ink'}`}>
+              <Link key={link.href} href={link.href} className={`py-3 font-display text-3xl font-semibold ${isActive(link.href) ? 'text-gold' : 'text-ink'}`}>
                 {link.name}
               </Link>
             ))}

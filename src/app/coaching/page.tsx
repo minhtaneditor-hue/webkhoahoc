@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { Check, Target, TrendingUp, Briefcase, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Check, ShieldCheck, ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { CONTACT } from '@/components/Footer';
 
@@ -43,9 +43,9 @@ const packages = [
 ];
 
 const pillars = [
-  { icon: Target, title: 'Chiến lược marketing', desc: 'Xây thương hiệu cá nhân đủ mạnh để nhãn hàng tự tìm đến bạn.' },
-  { icon: TrendingUp, title: 'Định hướng thu nhập', desc: 'Lộ trình từ 0 tới 1.000 USD đầu tiên và cách nhân bản con số đó.' },
-  { icon: Briefcase, title: 'Mô hình kinh doanh', desc: 'Đóng gói kiến thức thành sản phẩm số tạo thu nhập bền vững.' },
+  { title: 'Chiến lược marketing', desc: 'Xây thương hiệu cá nhân đủ mạnh để nhãn hàng tự tìm đến bạn.' },
+  { title: 'Định hướng thu nhập', desc: 'Lộ trình từ 0 tới 1.000 USD đầu tiên và cách nhân bản con số đó.' },
+  { title: 'Mô hình kinh doanh', desc: 'Đóng gói kiến thức thành sản phẩm số tạo thu nhập bền vững.' },
 ];
 
 export default function CoachingPage() {
@@ -55,10 +55,9 @@ export default function CoachingPage() {
       <section className="surface-dark">
         <div className="container-lux py-16 md:py-24 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
           <div>
-            <p className="eyebrow !text-gold-light">Coaching 1:1 · Số lượng giới hạn</p>
-            <h1 className="mt-4 text-white">Học cách kinh doanh bằng hình ảnh, không chỉ kỹ thuật quay dựng.</h1>
+            <h1 className="text-white">Coaching 1:1 cùng Minh Tấn</h1>
             <p className="mt-6 text-lg text-stone-300 leading-relaxed max-w-xl">
-              Chương trình đồng hành riêng để biến video thành cỗ máy tạo thu nhập và xây sự nghiệp tự do thực sự.
+              Học cách kinh doanh bằng hình ảnh trong một chương trình đồng hành riêng, để video trở thành nguồn thu nhập và sự nghiệp tự do thực sự.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <a href="#goi-coaching" className="btn btn-gold">Xem các gói đồng hành <ArrowRight size={18} aria-hidden="true" /></a>
@@ -75,39 +74,37 @@ export default function CoachingPage() {
       {/* Story */}
       <section className="section">
         <div className="container-lux max-w-3xl">
-          <p className="eyebrow">Câu chuyện của Minh Tấn</p>
-          <h2 className="mt-4">Hành trình thoát khỏi vòng xoáy</h2>
+          <h2>Hành trình thoát khỏi vòng xoáy</h2>
           <div className="mt-8 space-y-5 text-lg leading-relaxed text-stone">
             <p>Vài năm trước, tôi cũng như bạn: làm văn phòng 8–10 tiếng mỗi ngày, kiệt sức và bế tắc — cho tới khi phải nhập viện vì áp lực.</p>
             <p>Đó là lúc tôi bỏ việc và bắt đầu lại từ con số 0 với nghề làm phim. Gia đình phản đối, bạn bè hoài nghi, nhưng tôi tin video là tương lai.</p>
             <p>Sau nhiều năm, tôi nhận ra khác biệt giữa người làm phim nghiệp dư và người kinh doanh bằng hình ảnh không nằm ở chiếc máy quay, mà ở <strong className="text-ink">tư duy chiến lược</strong>.</p>
           </div>
-          <blockquote className="mt-10 border-l-2 border-gold pl-6 font-display text-3xl leading-snug text-ink">
+          <blockquote className="mt-10 font-display text-3xl leading-snug text-ink">
             Hôm nay, tôi ở đây để giúp bạn rút ngắn hành trình đó.
           </blockquote>
         </div>
       </section>
 
       {/* Pillars */}
-      <section className="section bg-card border-y border-line">
+      <section className="section bg-card">
         <div className="container-lux">
-          <SectionHeading eyebrow="Bạn sẽ được dẫn dắt" title="Ba trụ cột của chương trình" align="center" />
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {pillars.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="card p-7">
-                <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center"><Icon size={20} aria-hidden="true" /></span>
-                <h3 className="mt-5 text-2xl">{title}</h3>
-                <p className="mt-2 text-muted-foreground">{desc}</p>
+          <SectionHeading title="Ba trụ cột của chương trình" />
+          <dl className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-3">
+            {pillars.map(({ title, desc }) => (
+              <div key={title}>
+                <dt className="font-display text-3xl font-semibold text-ink">{title}</dt>
+                <dd className="mt-2 text-lg text-muted-foreground leading-relaxed">{desc}</dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
       </section>
 
       {/* Packages */}
       <section id="goi-coaching" className="section scroll-mt-20">
         <div className="container-lux">
-          <SectionHeading eyebrow="Chương trình đồng hành" title="Chọn gói phù hợp với bạn" align="center" description="Hoàn tiền trong 7 ngày đầu nếu chương trình chưa phù hợp." />
+          <SectionHeading title="Chọn gói phù hợp với bạn" align="center" description="Hoàn tiền trong 7 ngày đầu nếu chương trình chưa phù hợp." />
           <div className="mt-12 grid gap-6 lg:grid-cols-2 max-w-5xl mx-auto">
             {packages.map((pkg) => (
               <div key={pkg.name} className={`relative rounded-[var(--radius-card)] p-8 md:p-10 flex flex-col ${pkg.featured ? 'surface-dark shadow-[var(--shadow-lift)]' : 'card'}`}>

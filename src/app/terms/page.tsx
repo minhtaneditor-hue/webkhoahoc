@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'Điều khoản dịch vụ' };
 export default function TermsPage() {
   return (
     <LegalPage
-      eyebrow="Pháp lý"
+
       title="Điều khoản dịch vụ"
       intro="Quy định về việc sử dụng nội dung và quyền sở hữu trí tuệ tại Minh Tấn Academy."
       updated="Tháng 4, 2026"

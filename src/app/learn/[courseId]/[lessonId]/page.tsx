@@ -102,7 +102,7 @@ export default function LearningPortal() {
   const Curriculum = (
     <nav aria-label="Danh sách bài học" className="flex flex-col h-full">
       <div className="p-5 border-b border-white/10">
-        <p className="text-xs font-semibold tracking-[0.18em] uppercase text-gold-light">Lộ trình</p>
+        <p className="font-semibold text-gold-light">Lộ trình</p>
         <p className="mt-1 font-display text-xl text-white leading-snug">{course?.title}</p>
         <div className="mt-4">
           <div className="flex justify-between text-xs text-stone-400 mb-2"><span>Tiến độ</span><span className="text-gold-light font-semibold">{percent}%</span></div>

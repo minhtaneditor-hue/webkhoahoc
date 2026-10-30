@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Clapperboard, Users, BadgeCheck } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 
 export const metadata: Metadata = {
@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 };
 
 const values = [
-  { icon: Clapperboard, t: 'Kỹ năng thực chiến', d: 'Không dạy lý thuyết suông. Mọi bài học đều hướng tới kết quả bạn làm ra được từ chiếc smartphone.' },
-  { icon: Users, t: 'Cộng đồng đồng hành', d: 'Gia nhập mạng lưới nhà sáng tạo nội dung luôn sẵn sàng hỗ trợ và chia sẻ kinh nghiệm.' },
-  { icon: BadgeCheck, t: 'Kiến thức đã kiểm chứng', d: 'Đúc kết từ hơn 10 năm sản xuất truyền hình và các chiến dịch video cho thương hiệu lớn.' },
+  { t: 'Kỹ năng thực chiến', d: 'Không dạy lý thuyết suông. Mọi bài học đều hướng tới kết quả bạn làm ra được từ chiếc smartphone.' },
+  { t: 'Cộng đồng đồng hành', d: 'Gia nhập mạng lưới nhà sáng tạo nội dung luôn sẵn sàng hỗ trợ và chia sẻ kinh nghiệm.' },
+  { t: 'Kiến thức đã kiểm chứng', d: 'Đúc kết từ hơn 10 năm sản xuất truyền hình và các chiến dịch video cho thương hiệu lớn.' },
 ];
 
 export default function AboutPage() {
@@ -22,9 +22,9 @@ export default function AboutPage() {
         <div>
           <SectionHeading
             as="h1"
-            eyebrow="Về chúng tôi"
-            title="Giúp một triệu người kinh doanh làm chủ video"
-            description="Sứ mệnh của Minh Tấn Academy là giúp doanh nhân và nhà sáng tạo làm chủ kỹ năng video chuẩn điện ảnh, rồi biến nó thành phễu bán hàng tự động."
+
+            title="Về Minh Tấn Academy"
+            description="Sứ mệnh của chúng tôi là giúp một triệu doanh nhân và nhà sáng tạo làm chủ kỹ năng video chuẩn điện ảnh, rồi biến nó thành phễu bán hàng tự động."
           />
           <Link href="/courses" className="btn btn-gold mt-8">Khám phá khóa học <ArrowRight size={18} aria-hidden="true" /></Link>
         </div>
@@ -33,18 +33,17 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="section bg-card border-y border-line">
+      <section className="section bg-card">
         <div className="container-lux">
-          <SectionHeading eyebrow="Giá trị cốt lõi" title="Điều làm nên Minh Tấn Academy" align="center" />
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {values.map(({ icon: Icon, t, d }) => (
-              <div key={t} className="card p-7">
-                <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center"><Icon size={20} aria-hidden="true" /></span>
-                <h2 className="mt-5 text-2xl">{t}</h2>
-                <p className="mt-2 text-muted-foreground leading-relaxed">{d}</p>
+          <SectionHeading title="Điều làm nên Minh Tấn Academy" />
+          <dl className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-3">
+            {values.map(({ t, d }) => (
+              <div key={t}>
+                <dt className="font-display text-3xl font-semibold text-ink">{t}</dt>
+                <dd className="mt-2 text-lg text-muted-foreground leading-relaxed">{d}</dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
       </section>
 

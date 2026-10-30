@@ -49,7 +49,7 @@ export default function WorkPage() {
   return (
     <main>
       <section className="container-lux pt-12 pb-10 md:pt-20">
-        <SectionHeading as="h1" eyebrow="Portfolio" title="Dự án tiêu biểu" description="Những tác phẩm đầu tư về câu chuyện và hình ảnh, sản xuất cùng các đài truyền hình và nhãn hàng hàng đầu." />
+        <SectionHeading as="h1" title="Dự án tiêu biểu" description="Những tác phẩm đầu tư về câu chuyện và hình ảnh, sản xuất cùng các đài truyền hình và nhãn hàng hàng đầu." />
         {categories.length > 2 && (
           <div className="mt-8 flex gap-2 overflow-x-auto no-scrollbar -mx-5 px-5" role="tablist" aria-label="Lọc dự án">
             {categories.map((c) => (

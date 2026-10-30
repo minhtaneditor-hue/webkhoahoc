@@ -65,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <nav className="flex-1 overflow-y-auto p-3" aria-label="Menu quản trị">
         {sidebarItems.map((group) => (
           <div key={group.group} className="mb-6">
-            <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">{group.group}</p>
+            <p className="px-3 mb-2 text-sm font-semibold text-stone-500">{group.group}</p>
             <ul className="space-y-1">
               {group.items.map(({ title, icon: Icon, href }) => (
                 <li key={href}>

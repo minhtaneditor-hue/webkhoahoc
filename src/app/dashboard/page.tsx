@@ -108,8 +108,7 @@ export default function StudentDashboard() {
     <main className="container-lux py-10 md:py-14">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-line">
         <div>
-          <p className="eyebrow">Khu học tập</p>
-          <h1 className="mt-3 text-4xl md:text-5xl">Xin chào, {displayName}</h1>
+          <h1 className="text-4xl md:text-5xl">Xin chào, {displayName}</h1>
           <p className="mt-2 text-muted-foreground">{user?.email}</p>
         </div>
         <button onClick={handleSignOut} className="btn btn-outline self-start md:self-auto"><LogOut size={16} aria-hidden="true" /> Đăng xuất</button>

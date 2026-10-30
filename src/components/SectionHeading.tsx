@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
 
+// No eyebrow/kicker above the heading: both taste-skill and Impeccable ban it. The heading carries its own weight.
 export default function SectionHeading({
-  eyebrow,
   title,
   description,
   align = 'left',
   light = false,
   as: Tag = 'h2',
 }: {
-  eyebrow?: string;
   title: ReactNode;
   description?: ReactNode;
   align?: 'left' | 'center';
@@ -17,7 +16,6 @@ export default function SectionHeading({
 }) {
   return (
     <div className={`max-w-2xl ${align === 'center' ? 'mx-auto text-center' : ''}`}>
-      {eyebrow && <p className={`eyebrow mb-4 ${light ? '!text-gold-light' : ''}`}>{eyebrow}</p>}
       <Tag className={light ? 'text-white' : 'text-ink'}>{title}</Tag>
       {description && (
         <p className={`mt-4 text-lg leading-relaxed ${light ? 'text-stone-300' : 'text-muted-foreground'}`}>{description}</p>

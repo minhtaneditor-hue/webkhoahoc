@@ -143,8 +143,8 @@ export default function CourseDetails() {
             <Link href="/courses" className="flex w-fit items-center gap-1 text-sm text-stone-400 hover:text-white min-h-[44px]">
               <ChevronLeft size={16} aria-hidden="true" /> Tất cả khóa học
             </Link>
-            <p className="eyebrow !text-gold-light mt-4">Khóa học online · {lessons.length} bài học</p>
             <h1 className="mt-4 text-white">{course.title}</h1>
+            <p className="mt-3 text-gold-light font-semibold">Khóa học online · {lessons.length} bài học · truy cập trọn đời</p>
             <p className="mt-5 text-lg text-stone-300 leading-relaxed max-w-xl">
               {course.description || 'Hành trình thực chiến biến chiếc smartphone của bạn thành công cụ tạo ra thu nhập.'}
             </p>
@@ -185,26 +185,25 @@ export default function CourseDetails() {
           {/* Outcomes */}
           <section aria-labelledby="outcomes">
             <h2 id="outcomes" className="text-4xl">Bạn sẽ nhận được gì</h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+            <dl className="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2">
               {outcomes.map((o) => (
-                <li key={o.t} className="card p-6">
-                  <span className="w-8 h-8 rounded-full bg-gold-soft text-gold flex items-center justify-center"><Check size={16} aria-hidden="true" /></span>
-                  <h3 className="mt-4 text-2xl">{o.t}</h3>
-                  <p className="mt-1 text-muted-foreground">{o.d}</p>
-                </li>
+                <div key={o.t}>
+                  <dt className="font-display text-2xl font-semibold text-ink flex gap-3"><Check size={22} className="text-gold shrink-0 mt-1" aria-hidden="true" />{o.t}</dt>
+                  <dd className="mt-1 pl-[34px] text-muted-foreground">{o.d}</dd>
+                </div>
               ))}
-            </ul>
+            </dl>
           </section>
 
           {/* Curriculum */}
           <section aria-labelledby="curriculum-title" id="curriculum">
             <h2 id="curriculum-title" className="text-4xl">Lộ trình khóa học</h2>
             <p className="mt-2 text-muted-foreground">{lessons.length} bài học · bài có biểu tượng ▶ xem thử được miễn phí</p>
-            <ol className="mt-8 card divide-y divide-line overflow-hidden">
+            <ol className="mt-8 space-y-2">
               {lessons.map((lesson, idx) => {
                 const canWatch = lesson.is_free || enrolled;
                 return (
-                  <li key={lesson.id} className="flex items-center gap-4 p-4 md:p-5">
+                  <li key={lesson.id} className="card flex items-center gap-4 p-4 md:p-5">
                     <span className="font-display text-2xl text-muted-foreground w-8 shrink-0 text-center">{idx + 1}</span>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-ink">{lesson.title}</p>
@@ -222,7 +221,7 @@ export default function CourseDetails() {
                   </li>
                 );
               })}
-              {lessons.length === 0 && <li className="p-6 text-muted-foreground">Nội dung đang được cập nhật.</li>}
+              {lessons.length === 0 && <li className="card p-6 text-muted-foreground">Nội dung đang được cập nhật.</li>}
             </ol>
           </section>
         </div>
@@ -270,7 +269,7 @@ export default function CourseDetails() {
                 </button>
                 {payError && <p role="alert" className="mt-3 text-sm text-danger">{payError}</p>}
 
-                <ul className="mt-6 pt-6 border-t border-line space-y-3">
+                <ul className="mt-8 space-y-3">
                   {guarantees.map(({ icon: Icon, text }) => (
                     <li key={text} className="flex items-center gap-3 text-sm text-stone"><Icon size={18} className="text-gold shrink-0" aria-hidden="true" /> {text}</li>
                   ))}

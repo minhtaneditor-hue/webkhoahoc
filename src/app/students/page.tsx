@@ -34,7 +34,7 @@ export default async function StudentsPage() {
   return (
     <main>
       <section className="container-lux pt-12 pb-10 md:pt-20">
-        <SectionHeading as="h1" eyebrow="Học viên tiêu biểu" title="Kết quả thật từ những người đã học" description="Họ bắt đầu giống bạn — với một chiếc điện thoại và mong muốn làm video tốt hơn." />
+        <SectionHeading as="h1" title="Học viên tiêu biểu" description="Kết quả thật từ những người đã học. Họ bắt đầu giống bạn, với một chiếc điện thoại và mong muốn làm video tốt hơn." />
       </section>
 
       <section className="container-lux pb-20">
@@ -60,7 +60,7 @@ export default async function StudentsPage() {
 
       <section className="section surface-dark">
         <div className="container-lux">
-          <SectionHeading light eyebrow="Tin nhắn thật" title="Phản hồi từ học viên" description="Ảnh chụp tin nhắn học viên gửi cho Minh Tấn sau khóa học." />
+          <SectionHeading light title="Phản hồi từ học viên" description="Ảnh chụp tin nhắn học viên gửi cho Minh Tấn sau khóa học." />
           <ul className="mt-12 columns-2 md:columns-3 lg:columns-4 gap-4 [&>li]:mb-4">
             {FEEDBACK_IMAGES.map((img, i) => (
               <li key={img} className="break-inside-avoid rounded-md overflow-hidden border border-white/10 bg-white">

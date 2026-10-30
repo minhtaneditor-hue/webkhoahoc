@@ -19,7 +19,7 @@ export default function BlogPage() {
   return (
     <main>
       <section className="container-lux pt-12 pb-10 md:pt-20">
-        <SectionHeading as="h1" eyebrow="Blog" title="Ghi chép từ phòng dựng" description="Chiến thuật, tư duy và kỹ thuật mới nhất về video và bán hàng bằng nội dung." />
+        <SectionHeading as="h1" title="Ghi chép từ phòng dựng" description="Chiến thuật, tư duy và kỹ thuật mới nhất về video và bán hàng bằng nội dung." />
       </section>
 
       <section className="container-lux pb-20">
@@ -40,8 +40,7 @@ export default function BlogPage() {
       <section className="container-lux pb-24">
         <div className="surface-dark rounded-[var(--radius-card)] p-8 md:p-14 grid gap-8 lg:grid-cols-[1.3fr_1fr] items-center">
           <div>
-            <p className="eyebrow !text-gold-light">Muốn đi nhanh hơn?</p>
-            <h2 className="mt-4 text-white">Vượt xa kỹ thuật, làm chủ sự nghiệp</h2>
+            <h2 className="text-white">Vượt xa kỹ thuật, làm chủ sự nghiệp</h2>
             <p className="mt-4 text-stone-300">Đọc blog cho bạn kiến thức. Coaching 1:1 cho bạn một người đồng hành theo sát trong 4 tháng.</p>
           </div>
           <div className="flex flex-col gap-3">

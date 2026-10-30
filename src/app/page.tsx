@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Check, Users, FileText, Music, LayoutTemplate, Quote, PlayCircle } from 'lucide-react';
+import { ArrowRight, Check, Quote, PlayCircle } from 'lucide-react';
 import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import FaqList from '@/components/FaqList';
+import { ShutterImage, Reveal } from '@/components/motion/Motion';
+import ScrollReveal from '@/components/reactbits/ScrollReveal';
 
 export const revalidate = 300;
 
@@ -40,14 +42,14 @@ const outcomes = [
 ];
 
 const bonuses = [
-  { title: 'Kèm cặp 1:1 trọn đời', desc: 'Hỏi trực tiếp qua Zalo và nhóm kín — bạn không phải tự mò một mình.', icon: Users },
-  { title: 'Kho 100+ kịch bản', desc: 'Mẫu nội dung đã kiểm chứng, chỉ cần điền thông tin của bạn.', icon: FileText },
-  { title: 'Thư viện nhạc bản quyền', desc: 'Nhạc nền theo xu hướng, dùng thoải mái không lo bị gỡ video.', icon: Music },
-  { title: 'Template thiết kế', desc: 'Ảnh bìa và hiệu ứng chữ chuyên nghiệp từ studio của Minh Tấn.', icon: LayoutTemplate },
+  { title: 'Kèm cặp 1:1 trọn đời', desc: 'Hỏi trực tiếp qua Zalo và nhóm kín, không phải tự mò một mình.' },
+  { title: 'Kho 100+ kịch bản', desc: 'Mẫu nội dung đã kiểm chứng, chỉ cần điền thông tin của bạn.' },
+  { title: 'Thư viện nhạc bản quyền', desc: 'Nhạc nền theo xu hướng, dùng thoải mái không lo bị gỡ video.' },
+  { title: 'Template thiết kế', desc: 'Ảnh bìa và hiệu ứng chữ chuyên nghiệp từ studio của Minh Tấn.' },
 ];
 
 const faqs = [
-  { q: 'Điện thoại cũ có học được không?', a: 'Được. Khóa học dạy bạn làm chủ ánh sáng và góc máy để bù lại giới hạn của thiết bị — điện thoại vài năm tuổi vẫn cho ra hình đẹp.' },
+  { q: 'Điện thoại cũ có học được không?', a: 'Được. Khóa học dạy bạn làm chủ ánh sáng và góc máy để bù lại giới hạn của thiết bị; điện thoại vài năm tuổi vẫn cho ra hình đẹp.' },
   { q: 'Tôi ngại lên hình thì sao?', a: 'Bạn có thể làm video voice-over, quay tay, quay sản phẩm hoặc bối cảnh. Khóa học có riêng chiến lược cho người không muốn lộ mặt.' },
   { q: 'Học xong chưa ra kết quả thì sao?', a: 'Bạn được hỗ trợ 1:1 cho tới khi dựng xong phễu bán hàng đầu tiên. Ngoài ra có chính sách hoàn tiền trong 7 ngày.' },
   { q: 'Tôi học được bao lâu?', a: 'Truy cập trọn đời, bao gồm mọi bài học cập nhật sau này.' },
@@ -70,172 +72,160 @@ export default async function Home() {
 
   return (
     <main>
-      {/* Hero */}
-      <section className="container-lux pt-10 pb-16 md:pt-16 md:pb-24 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
-        <div className="animate-fade-up">
-          <p className="eyebrow mb-6"><span className="gold-rule" aria-hidden="true" /> Học viện video của Minh Tấn</p>
-          <h1 className="text-ink">
-            Video là <em className="text-gold not-italic font-semibold">tài sản</em>,<br className="hidden sm:block" /> không chỉ là nội dung.
-          </h1>
-          <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl">
-            Học quay, dựng và bán hàng bằng video từ người làm nghề truyền hình — chỉ với chiếc điện thoại của bạn.
+      {/* Hero: a short title, the portrait opens like a camera shutter (signature move) */}
+      <section className="container-lux pt-10 pb-16 md:pt-14 md:pb-24 grid gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
+        <Reveal stagger={0.1}>
+          <h1 className="text-ink text-[clamp(3rem,8vw,6rem)] leading-[0.95] tracking-[-0.02em]">Video là tài sản.</h1>
+          <p className="mt-6 text-xl md:text-2xl text-stone leading-snug max-w-xl">
+            Học quay, dựng và bán hàng bằng video từ người làm truyền hình, chỉ với chiếc điện thoại của bạn.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <div className="mt-9 flex flex-col sm:flex-row gap-3">
             <Link href={courseHref} className="btn btn-gold">
-              Xem khóa học nổi bật <ArrowRight size={18} aria-hidden="true" />
+              Xem khóa học 21 ngày <ArrowRight size={18} aria-hidden="true" />
             </Link>
             <Link href="/coaching" className="btn btn-outline">Đặt lịch coaching 1:1</Link>
           </div>
-          <dl className="mt-10 pt-8 border-t border-line grid grid-cols-3 gap-4 sm:gap-6 max-w-md">
-            {[
-              ['1.000+', 'Học viên'],
-              ['10+ năm', 'Làm truyền hình'],
-              ['Trọn đời', 'Truy cập khóa học'],
-            ].map(([value, label]) => (
-              <div key={label}>
-                <dt className="text-sm text-muted-foreground">{label}</dt>
-                <dd className="font-display text-2xl sm:text-3xl font-semibold text-ink mt-1 whitespace-nowrap">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+          <p className="mt-8 text-muted-foreground">
+            Hơn 1.000 học viên đã học. Người dạy đã tham gia sản xuất <span className="text-ink font-semibold">2 Ngày 1 Đêm</span> và <span className="text-ink font-semibold">Anh Trai Say Hi</span>.
+          </p>
+        </Reveal>
 
-        <div className="relative">
-          <div className="relative aspect-[4/5] rounded-[var(--radius-card)] overflow-hidden bg-onyx shadow-[var(--shadow-lift)]">
-            <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn — Video Advisor" fill priority sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-onyx/80 via-transparent to-transparent" aria-hidden="true" />
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-              <p className="text-xs font-semibold tracking-[0.25em] uppercase text-gold-light">Video Advisor</p>
-              <p className="font-display text-4xl font-semibold text-white mt-1">Minh Tấn</p>
-            </div>
-          </div>
-          <div className="hidden md:block absolute -left-6 top-10 card px-5 py-4 shadow-[var(--shadow-lift)]">
-            <p className="text-xs text-muted-foreground">Đã tham gia sản xuất</p>
-            <p className="font-display text-xl font-semibold">2 Ngày 1 Đêm · Anh Trai Say Hi</p>
-          </div>
+        <ShutterImage className="relative aspect-[4/5] overflow-hidden bg-onyx">
+          <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn, Video Advisor" fill priority sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" />
+          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-onyx/80 to-transparent" aria-hidden="true" />
+          <p className="absolute left-6 bottom-6 md:left-8 md:bottom-8 font-display text-4xl font-semibold text-white">Minh Tấn</p>
+        </ShutterImage>
+      </section>
+
+      {/* Partners: a quiet strip, no rules */}
+      <section aria-labelledby="partners-title" className="container-lux pb-16 md:pb-20">
+        <h2 id="partners-title" className="font-sans text-base font-medium text-muted-foreground">Đồng hành cùng các thương hiệu và đài truyền hình</h2>
+        <ul className="mt-6 grid grid-cols-3 md:grid-cols-5 gap-x-10 gap-y-6 items-center">
+          {partners.map((p) => (
+            <li key={p.name} className="relative h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300">
+              <Image src={p.logo} alt={p.name} fill sizes="160px" className="object-contain" />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Statement: words fill with ink as they rise through the screen (React Bits ScrollReveal) */}
+      <section className="bg-card">
+        <div className="container-lux py-20 md:py-28">
+          <ScrollReveal
+            baseOpacity={0.12}
+            enableBlur={false}
+            baseRotation={0}
+            containerClassName="max-w-4xl"
+            textClassName="font-display font-semibold text-[clamp(2rem,4.6vw,3.75rem)] leading-[1.15] text-ink"
+          >
+            Một video quay tử tế sẽ tiếp tục bán hàng cho bạn nhiều năm sau ngày đăng. Khóa học này dạy bạn làm ra những video như thế.
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* Partners */}
-      <section className="border-y border-line bg-card" aria-labelledby="partners-title">
-        <div className="container-lux py-10">
-          <p id="partners-title" className="text-center text-sm text-muted-foreground mb-8">Đồng hành cùng các thương hiệu và đài truyền hình</p>
-          <ul className="grid grid-cols-3 md:grid-cols-5 gap-x-8 gap-y-6 items-center">
-            {partners.map((p) => (
-              <li key={p.name} className="relative h-12 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition duration-300">
-                <Image src={p.logo} alt={p.name} fill sizes="160px" className="object-contain" />
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* Featured course */}
+      {/* Featured course: outcomes as a plain list beside a filled price panel */}
       <section className="section">
-        <div className="container-lux grid gap-12 lg:grid-cols-2 items-center">
+        <div className="container-lux grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-start">
           <div>
             <SectionHeading
-              eyebrow="Khóa học nổi bật"
               title={course?.title || '21 Ngày Biến Video Thành Tài Sản'}
               description={course?.description || 'Trại huấn luyện 21 ngày giúp bạn xây cỗ máy nội dung và thu nhập từ smartphone.'}
             />
-            <ul className="mt-8 space-y-4">
+            <Reveal as="ul" className="mt-10 space-y-5" from="left">
               {outcomes.map((o) => (
-                <li key={o} className="flex gap-3">
-                  <span className="mt-0.5 w-6 h-6 rounded-full bg-gold-soft text-gold flex items-center justify-center shrink-0"><Check size={14} aria-hidden="true" /></span>
-                  <span className="text-ink">{o}</span>
+                <li key={o} className="flex gap-4 text-xl text-ink leading-snug">
+                  <Check size={22} className="text-gold shrink-0 mt-1" aria-hidden="true" /> {o}
                 </li>
               ))}
-            </ul>
+            </Reveal>
           </div>
 
-          <div className="surface-dark rounded-[var(--radius-card)] p-8 md:p-10 shadow-[var(--shadow-lift)]">
-            <p className="eyebrow !text-gold-light">Học phí trọn gói</p>
-            <div className="mt-4 flex items-baseline gap-3 flex-wrap">
-              <p className="font-display text-5xl font-semibold text-white">{course ? formatVND(course.price) : 'Liên hệ'}</p>
+          <div className="surface-dark p-8 md:p-10">
+            <p className="text-gold-light font-semibold">Học phí trọn gói</p>
+            <div className="mt-3 flex items-baseline gap-3 flex-wrap">
+              <p className="font-display text-6xl font-semibold text-white">{course ? formatVND(course.price) : 'Liên hệ'}</p>
               {course?.old_price && Number(course.old_price) > Number(course.price) && (
                 <p className="text-lg text-stone-400 line-through">{formatVND(course.old_price)}</p>
               )}
             </div>
-            <ul className="mt-6 space-y-3 text-stone-300">
+            <ul className="mt-8 space-y-3 text-stone-300 text-lg">
               {['Truy cập trọn đời', 'Hỗ trợ 1:1 qua Zalo', 'Hoàn tiền trong 7 ngày', 'Thanh toán an toàn qua VNPay'].map((x) => (
-                <li key={x} className="flex gap-3"><Check size={18} className="text-gold-light shrink-0 mt-0.5" aria-hidden="true" /> {x}</li>
+                <li key={x} className="flex gap-3"><Check size={20} className="text-gold-light shrink-0 mt-1" aria-hidden="true" /> {x}</li>
               ))}
             </ul>
-            <Link href={courseHref} className="btn btn-gold w-full mt-8">
-              Xem lộ trình & đăng ký <ArrowRight size={18} aria-hidden="true" />
+            <Link href={courseHref} className="btn btn-gold w-full mt-10">
+              Xem lộ trình và đăng ký <ArrowRight size={18} aria-hidden="true" />
             </Link>
-            <Link href={courseHref} className="mt-4 flex items-center justify-center gap-2 text-sm text-gold-light hover:underline underline-offset-4 min-h-[44px]">
+            <Link href={courseHref} className="mt-3 flex items-center justify-center gap-2 text-gold-light hover:underline min-h-[44px]">
               <PlayCircle size={18} aria-hidden="true" /> Học thử miễn phí bài đầu tiên
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Bonuses */}
-      <section className="section bg-card border-y border-line">
-        <div className="container-lux">
-          <SectionHeading eyebrow="Đi kèm khóa học" title="Mọi thứ bạn cần để bắt đầu ngay" align="center" />
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {bonuses.map(({ title, desc, icon: Icon }) => (
-              <div key={title} className="card p-6">
-                <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center"><Icon size={20} aria-hidden="true" /></span>
-                <h3 className="mt-5 text-2xl">{title}</h3>
-                <p className="mt-2 text-muted-foreground leading-relaxed">{desc}</p>
+      {/* What comes with it: large type in two columns, no icon boxes */}
+      <section className="bg-card">
+        <div className="container-lux section grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+          <SectionHeading title="Đi kèm khóa học" description="Mọi thứ cần để bắt đầu ngay trong tuần đầu tiên." />
+          <Reveal as="dl" className="grid gap-x-12 gap-y-10 sm:grid-cols-2">
+            {bonuses.map((b) => (
+              <div key={b.title}>
+                <dt className="font-display text-3xl font-semibold text-ink">{b.title}</dt>
+                <dd className="mt-2 text-lg text-muted-foreground leading-relaxed">{b.desc}</dd>
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* Projects */}
-      <section className="section">
-        <div className="container-lux">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <SectionHeading eyebrow="Kinh nghiệm thực chiến" title="Dự án tiêu biểu" description="Những chương trình truyền hình và sự kiện Minh Tấn đã tham gia sản xuất." />
-            <Link href="/work" className="btn btn-outline self-start md:self-auto">Xem tất cả dự án</Link>
-          </div>
-          <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((p) => (
-              <li key={p.title}>
-                <Link href="/work" className="group block">
-                  <div className="relative aspect-[4/3] rounded-[var(--radius-card)] overflow-hidden bg-muted">
-                    <Image src={p.image} alt={p.title} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
-                  </div>
-                  <p className="mt-4 text-sm text-gold font-semibold">{p.category}</p>
-                  <h3 className="mt-1 text-2xl group-hover:text-gold transition-colors">{p.title}</h3>
-                </Link>
-              </li>
-            ))}
-          </ul>
+      {/* Projects: a drag row of large pictures (scroll-snap, no library) */}
+      <section className="section overflow-hidden">
+        <div className="container-lux flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <SectionHeading title="Từ phim trường truyền hình" description="Những chương trình Minh Tấn đã tham gia sản xuất. Kéo ngang để xem." />
+          <Link href="/work" className="btn btn-outline self-start md:self-auto">Xem tất cả dự án</Link>
         </div>
+        <ul
+          className="mt-12 flex gap-5 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-2 px-5 md:px-[max(2rem,calc((100vw-1200px)/2+2rem))] scroll-px-5 md:scroll-px-[max(2rem,calc((100vw-1200px)/2+2rem))]"
+          aria-label="Dự án tiêu biểu"
+          tabIndex={0}
+        >
+          {projects.map((p) => (
+            <li key={p.title} className="snap-start shrink-0 w-[78vw] sm:w-[46vw] lg:w-[34vw] max-w-[520px]">
+              <Link href="/work" className="group block">
+                <span className="relative block aspect-[4/5] overflow-hidden bg-muted">
+                  <Image src={p.image} alt={p.title} fill sizes="(min-width: 1024px) 34vw, (min-width: 640px) 46vw, 78vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                </span>
+                <span className="mt-4 block text-gold font-semibold">{p.category}</span>
+                <span className="mt-1 block font-display text-3xl font-semibold text-ink group-hover:text-gold transition-colors">{p.title}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
-      {/* Testimonials */}
-      <section className="section surface-dark">
-        <div className="container-lux">
-          <SectionHeading eyebrow="Học viên nói gì" title="Kết quả thật từ người đã học" align="center" light />
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+      {/* Testimonials on a dark field */}
+      <section className="surface-dark">
+        <div className="container-lux section">
+          <SectionHeading title="Kết quả thật từ người đã học" light />
+          <Reveal className="mt-14 grid gap-12 md:grid-cols-3" from="mask">
             {testimonials.map((t) => (
-              <figure key={t.name} className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-7 flex flex-col">
-                <div className="flex items-start justify-between gap-3">
-                  <Quote size={28} className="text-gold-light shrink-0" aria-hidden="true" />
-                  <span className="badge !bg-gold-light/15 !text-gold-light">{t.result}</span>
-                </div>
-                <blockquote className="mt-4 font-display text-2xl leading-snug text-white flex-1">“{t.quote}”</blockquote>
+              <figure key={t.name} className="flex flex-col">
+                <Quote size={32} className="text-gold-light" aria-hidden="true" />
+                <blockquote className="mt-4 font-display text-[1.75rem] leading-snug text-white flex-1">{t.quote}</blockquote>
                 <figcaption className="mt-8 flex items-center gap-4">
-                  <span className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
-                    <Image src={t.avatar} alt="" fill sizes="48px" className="object-cover" />
+                  <span className="relative w-14 h-14 rounded-full overflow-hidden shrink-0">
+                    <Image src={t.avatar} alt="" fill sizes="56px" className="object-cover" />
                   </span>
                   <span className="min-w-0">
                     <span className="block font-semibold text-white">{t.name}</span>
-                    <span className="block text-sm text-stone-400">{t.title}</span>
+                    <span className="block text-stone-400">{t.title} · <span className="text-gold-light">{t.result}</span></span>
                   </span>
                 </figcaption>
               </figure>
             ))}
-          </div>
-          <div className="mt-10 text-center">
+          </Reveal>
+          <div className="mt-14">
             <Link href="/students" className="btn btn-outline-light">Xem thêm câu chuyện học viên</Link>
           </div>
         </div>
@@ -244,19 +234,17 @@ export default async function Home() {
       {/* FAQ */}
       <section className="section">
         <div className="container-lux grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
-          <SectionHeading eyebrow="Câu hỏi thường gặp" title="Bạn còn băn khoăn?" description="Không thấy câu trả lời? Bấm nút Hỗ trợ ở góc phải để nhắn trực tiếp cho đội ngũ." />
+          <SectionHeading title="Bạn còn băn khoăn?" description="Không thấy câu trả lời? Bấm nút Hỗ trợ ở góc phải để nhắn trực tiếp cho đội ngũ." />
           <FaqList items={faqs} />
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="container-lux pb-20">
-        <div className="surface-dark rounded-[var(--radius-card)] px-6 py-14 md:px-16 md:py-20 text-center">
-          <p className="eyebrow !text-gold-light justify-center">Bắt đầu hôm nay</p>
-          <h2 className="mt-4 text-white max-w-2xl mx-auto">Video tiếp theo của bạn có thể là tài sản đầu tiên.</h2>
-          <p className="mt-4 text-stone-300 max-w-xl mx-auto">Học thử miễn phí bài đầu tiên — không cần thẻ thanh toán.</p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href={courseHref} className="btn btn-gold">Học thử miễn phí <ArrowRight size={18} aria-hidden="true" /></Link>
+      {/* Closing call to action */}
+      <section className="surface-dark">
+        <div className="container-lux py-20 md:py-28 grid gap-10 lg:grid-cols-[1.3fr_0.7fr] items-end">
+          <h2 className="text-white text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1]">Học thử bài đầu tiên, miễn phí.</h2>
+          <div className="flex flex-col gap-3">
+            <Link href={courseHref} className="btn btn-gold">Vào học thử <ArrowRight size={18} aria-hidden="true" /></Link>
             <Link href="/courses" className="btn btn-outline-light">Xem tất cả khóa học</Link>
           </div>
         </div>
