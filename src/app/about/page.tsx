@@ -1,57 +1,63 @@
-'use client';
-
-import { 
-  Users, 
-  Target, 
-  ShieldCheck, 
-  Zap, 
-  MessageSquare,
-  ArrowRight
-} from 'lucide-react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import Image from 'next/image';
+import { ArrowRight, Clapperboard, Users, BadgeCheck } from 'lucide-react';
+import SectionHeading from '@/components/SectionHeading';
+
+export const metadata: Metadata = {
+  title: 'Về Minh Tấn',
+  description: 'Sứ mệnh của Minh Tấn Academy: giúp người kinh doanh làm chủ kỹ năng video và xây phễu bán hàng tự động.',
+};
+
+const values = [
+  { icon: Clapperboard, t: 'Kỹ năng thực chiến', d: 'Không dạy lý thuyết suông. Mọi bài học đều hướng tới kết quả bạn làm ra được từ chiếc smartphone.' },
+  { icon: Users, t: 'Cộng đồng đồng hành', d: 'Gia nhập mạng lưới nhà sáng tạo nội dung luôn sẵn sàng hỗ trợ và chia sẻ kinh nghiệm.' },
+  { icon: BadgeCheck, t: 'Kiến thức đã kiểm chứng', d: 'Đúc kết từ hơn 10 năm sản xuất truyền hình và các chiến dịch video cho thương hiệu lớn.' },
+];
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-[#050507] text-white pt-48 pb-32 px-6">
-      <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-20 relative">
-          <div className="absolute inset-0 bg-accent-primary/10 blur-[120px] -z-10" />
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-6 border border-primary/20">
-             The Mission // 2026
-          </div>
-          <h1 className="text-5xl md:text-8xl font-black mb-8 italic tracking-tighter">KIẾN TẠO <span className="text-primary underline-accent">THE ELITES</span></h1>
-          <p className="max-w-2xl mx-auto text-xl text-text-muted font-medium leading-relaxed">
-             Sứ mệnh của chúng tôi là giúp 1,000,000 doanh nhân số làm chủ kỹ năng Video Cinematic và xây dựng phễu bán hàng tự động.
-          </p>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-32">
-           {[
-             { t: "Kỹ năng Thực chiến", d: "Chúng tôi không dạy lý thuyết. Chúng tôi dạy cách tạo ra kết quả từ chiếc smartphone của bạn.", i: <Zap /> },
-             { t: "Cộng đồng Elite", d: "Bạn sẽ gia nhập mạng lưới các nhà sáng tạo nội dung hàng đầu, hỗ trợ lẫn nhau 24/7.", i: <Users /> },
-             { t: "Bảo mật & Uy tín", d: "Mọi kiến thức được kiểm chứng bởi các chuyên gia thực chiến nhất trong ngách Marketing Video.", i: <ShieldCheck /> }
-           ].map((item, idx) => (
-             <div key={idx} className="p-10 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-primary/20 transition-all flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center text-primary mb-8 shadow-xl">
-                   {item.i}
-                </div>
-                <h4 className="text-2xl font-black mb-4 uppercase tracking-tight">{item.t}</h4>
-                <p className="text-text-muted leading-relaxed font-medium">{item.d}</p>
-             </div>
-           ))}
+    <main>
+      <section className="container-lux py-12 md:py-20 grid gap-12 lg:grid-cols-2 items-center">
+        <div>
+          <SectionHeading
+            as="h1"
+            eyebrow="Về chúng tôi"
+            title="Giúp một triệu người kinh doanh làm chủ video"
+            description="Sứ mệnh của Minh Tấn Academy là giúp doanh nhân và nhà sáng tạo làm chủ kỹ năng video chuẩn điện ảnh, rồi biến nó thành phễu bán hàng tự động."
+          />
+          <Link href="/courses" className="btn btn-gold mt-8">Khám phá khóa học <ArrowRight size={18} aria-hidden="true" /></Link>
         </div>
+        <div className="relative aspect-[4/3] rounded-[var(--radius-card)] overflow-hidden bg-muted">
+          <Image src="/asset/du_an_tieu_bieu/project_2n1d.webp" alt="Hậu trường show 2 Ngày 1 Đêm" fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+        </div>
+      </section>
 
-        <section className="p-12 md:p-20 rounded-[4rem] bg-gradient-to-br from-primary/20 to-secondary/20 border border-white/10 text-center">
-           <h2 className="text-4xl md:text-5xl font-black mb-8 italic">BẮT ĐẦU HÀNH TRÌNH CỦA BẠN</h2>
-           <p className="text-text-muted text-lg mb-12 max-w-xl mx-auto font-medium leading-relaxed">
-              Chiếc điện thoại của bạn đang chờ để được lên cấu hình mới. Bạn đã sẵn sàng để trở thành Elite tiếp theo?
-           </p>
-           <Link href="/courses" className="btn-premium px-12 py-5 rounded-full inline-flex items-center gap-4 font-black uppercase text-xs tracking-widest shadow-2xl">
-              KHÁM PHÁ KHÓA HỌC <ArrowRight size={18} />
-           </Link>
-        </section>
-      </div>
+      <section className="section bg-card border-y border-line">
+        <div className="container-lux">
+          <SectionHeading eyebrow="Giá trị cốt lõi" title="Điều làm nên Minh Tấn Academy" align="center" />
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {values.map(({ icon: Icon, t, d }) => (
+              <div key={t} className="card p-7">
+                <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center"><Icon size={20} aria-hidden="true" /></span>
+                <h2 className="mt-5 text-2xl">{t}</h2>
+                <p className="mt-2 text-muted-foreground leading-relaxed">{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="container-lux section">
+        <div className="surface-dark rounded-[var(--radius-card)] px-6 py-14 md:p-16 text-center">
+          <h2 className="text-white">Bắt đầu hành trình của bạn</h2>
+          <p className="mt-4 text-stone-300 max-w-xl mx-auto">Chiếc điện thoại của bạn đã đủ tốt. Thứ còn thiếu là phương pháp — và chúng tôi ở đây để trao nó cho bạn.</p>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/courses" className="btn btn-gold">Xem khóa học</Link>
+            <Link href="/coaching" className="btn btn-outline-light">Coaching 1:1</Link>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

@@ -3,181 +3,123 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
-import { 
-  BarChart3, 
-  Users, 
-  CreditCard, 
-  Settings, 
-  Menu,
-  X,
-  LogOut,
-  Bell,
-  Search,
-  ShieldCheck,
-  ChevronRight,
-  Database,
-  ShoppingBag,
-  Briefcase
-} from 'lucide-react';
+import { Logo } from '@/components/Navbar';
+import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2 } from 'lucide-react';
 
 const sidebarItems = [
-  { group: "Thống kê", items: [
-    { title: "Tổng quan", icon: <BarChart3 size={20} />, href: "/admin" },
+  { group: 'Tổng quan', items: [{ title: 'Bảng điều khiển', icon: BarChart3, href: '/admin' }] },
+  { group: 'Bán hàng', items: [
+    { title: 'Đơn hàng', icon: CreditCard, href: '/admin/orders' },
+    { title: 'Học viên', icon: Users, href: '/admin/students' },
   ]},
-  { group: "Học viên", items: [
-    { title: "Danh sách học viên", icon: <Users size={20} />, href: "/admin/students" },
+  { group: 'Nội dung', items: [
+    { title: 'Khóa học & bài học', icon: Database, href: '/admin/courses' },
+    { title: 'Ebook & Preset', icon: ShoppingBag, href: '/admin/shop' },
+    { title: 'Dự án', icon: Briefcase, href: '/admin/work' },
   ]},
-  { group: "Nội dung", items: [
-    { title: "Quản lý khóa học", icon: <Database size={20} />, href: "/admin/courses" },
-    { title: "Shop & Ebook", icon: <ShoppingBag size={20} />, href: "/admin/shop" },
-    { title: "Dự án tiêu biểu", icon: <Briefcase size={20} />, href: "/admin/work" },
-  ]},
-  { group: "Bán hàng", items: [
-    { title: "Đơn hàng", icon: <CreditCard size={20} />, href: "/admin/orders" },
-  ]},
-  { group: "Hệ thống", items: [
-    { title: "Cấu hình chung", icon: <Settings size={20} />, href: "/admin/settings" },
-  ]},
+  { group: 'Hệ thống', items: [{ title: 'Cấu hình website', icon: Settings, href: '/admin/settings' }] },
 ];
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [email, setEmail] = useState('');
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser();
-
       if (!user || !isAdmin(user.email)) {
         router.push('/auth?redirect=' + pathname);
         return;
       }
-      
+      setEmail(user.email || '');
       setIsAuthorized(true);
     }
     checkAuth();
   }, [router, pathname]);
 
+  // Close the mobile drawer when the route changes
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setMobileOpen(false);
+  }
+
   if (isAuthorized === null) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white font-black italic uppercase tracking-[0.5em] animate-pulse">
-        Verifying Security Protocol...
+      <div className="min-h-screen flex items-center justify-center gap-3 text-muted-foreground" aria-busy="true">
+        <Loader2 size={20} className="animate-spin" aria-hidden="true" /> Đang xác thực quyền quản trị…
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex">
-      {/* Sidebar */}
-      <motion.aside 
-        initial={false}
-        animate={{ width: isSidebarOpen ? 280 : 80 }}
-        className="fixed left-0 top-0 h-full bg-slate-950 text-white z-[100] border-r border-white/5 overflow-hidden flex flex-col"
-      >
-        <div className="p-8 pb-12 flex items-center justify-between">
-          {isSidebarOpen ? (
-            <Link href="/admin" className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-accent-secondary flex items-center justify-center">
-                <ShieldCheck size={20} className="text-white" />
-              </div>
-              <span className="font-black text-lg tracking-tighter italic italic-glow">TANLAB ADMIN</span>
-            </Link>
-          ) : (
-            <div className="w-10 h-10 rounded-lg bg-accent-secondary flex items-center justify-center mx-auto">
-               <ShieldCheck size={24} className="text-white" />
-            </div>
-          )}
-        </div>
+  const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname?.startsWith(href));
 
-        <nav className="flex-1 px-4 py-4 overflow-y-auto no-scrollbar">
-          {sidebarItems.map((group, gi) => (
-            <div key={gi} className="mb-10">
-              {isSidebarOpen && (
-                <p className="px-4 mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">{group.group}</p>
-              )}
-              <ul className="space-y-1">
-                {group.items.map((item, ii) => (
-                  <li key={ii}>
-                    <Link 
-                      href={item.href}
-                      className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all ${
-                        pathname === item.href 
-                          ? 'bg-accent-secondary text-white shadow-lg' 
-                          : 'text-white/40 hover:bg-white/5 hover:text-white'
-                      }`}
-                    >
-                      <span className="shrink-0">{item.icon}</span>
-                      {isSidebarOpen && <span className="text-sm font-bold">{item.title}</span>}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-white/5">
-           <button
-              onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}
-              className="w-full flex items-center gap-4 px-4 py-4 text-white/40 hover:text-red-400 transition-colors"
-           >
-              <LogOut size={20} />
-              {isSidebarOpen && <span className="text-sm font-bold">Đăng xuất</span>}
-           </button>
-        </div>
-      </motion.aside>
-
-      {/* Main Content Area */}
-      <main 
-        className="flex-1 flex flex-col transition-all duration-300"
-        style={{ marginLeft: isSidebarOpen ? 280 : 80 }}
-      >
-        {/* Top Header */}
-        <header className="h-20 bg-white/80 backdrop-blur-xl border-b border-slate-100 flex items-center justify-between px-10 sticky top-0 z-[50]">
-          <div className="flex items-center gap-6">
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="w-10 h-10 rounded-xl hover:bg-slate-50 flex items-center justify-center text-slate-400"
-            >
-              <Menu size={20} />
-            </button>
-            <div className="hidden md:flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 min-w-[300px]">
-               <Search size={16} className="text-slate-300" />
-               <input type="text" placeholder="Tìm kiếm nhanh..." className="bg-transparent border-none focus:ring-0 text-sm w-full outline-none" />
-            </div>
+  const Sidebar = (
+    <div className="flex flex-col h-full">
+      <div className="h-16 px-5 flex items-center border-b border-white/10"><Logo light /></div>
+      <nav className="flex-1 overflow-y-auto p-3" aria-label="Menu quản trị">
+        {sidebarItems.map((group) => (
+          <div key={group.group} className="mb-6">
+            <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">{group.group}</p>
+            <ul className="space-y-1">
+              {group.items.map(({ title, icon: Icon, href }) => (
+                <li key={href}>
+                  <Link href={href} aria-current={isActive(href) ? 'page' : undefined}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${isActive(href) ? 'bg-white/10 text-white' : 'text-stone-400 hover:bg-white/5 hover:text-white'}`}>
+                    <Icon size={18} className={isActive(href) ? 'text-gold-light' : ''} aria-hidden="true" /> {title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
+        ))}
+      </nav>
+      <div className="p-3 border-t border-white/10 space-y-1">
+        <Link href="/" target="_blank" className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-stone-400 hover:bg-white/5 hover:text-white">
+          <ExternalLink size={18} aria-hidden="true" /> Xem website
+        </Link>
+        <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-stone-400 hover:bg-white/5 hover:text-white">
+          <LogOut size={18} aria-hidden="true" /> Đăng xuất
+        </button>
+      </div>
+    </div>
+  );
 
-          <div className="flex items-center gap-6">
-            <button className="relative w-10 h-10 rounded-xl hover:bg-slate-50 flex items-center justify-center text-slate-400">
-               <Bell size={20} />
-               <span className="absolute top-2 right-2 w-2 h-2 bg-accent-secondary rounded-full border-2 border-white" />
+  return (
+    <div className="min-h-screen flex">
+      <aside className="hidden lg:block w-64 shrink-0 surface-dark h-screen sticky top-0">{Sidebar}</aside>
+
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-[500]" role="dialog" aria-modal="true" aria-label="Menu quản trị">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+          <aside className="absolute left-0 top-0 bottom-0 w-72 surface-dark animate-fade-up">
+            <button onClick={() => setMobileOpen(false)} className="absolute top-2.5 right-2 w-11 h-11 flex items-center justify-center text-stone-300" aria-label="Đóng menu">
+              <X size={20} aria-hidden="true" />
             </button>
-            <div className="flex items-center gap-4 border-l border-slate-100 pl-6">
-               <div className="text-right hidden sm:block">
-                  <p className="text-xs font-black uppercase italic tracking-tighter">Minh Tấn</p>
-                  <p className="text-[10px] font-bold text-slate-300">System Admin</p>
-               </div>
-               <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
-                  <img src="/asset/avatar/hero_expert.jpg" alt="admin" className="w-full h-full object-cover" />
-               </div>
-            </div>
+            {Sidebar}
+          </aside>
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0 flex flex-col">
+        <header className="h-16 px-4 md:px-8 flex items-center justify-between gap-4 bg-card border-b border-line sticky top-0 z-40">
+          <button onClick={() => setMobileOpen(true)} className="lg:hidden w-11 h-11 -ml-2 flex items-center justify-center rounded-md hover:bg-muted" aria-label="Mở menu">
+            <Menu size={20} aria-hidden="true" />
+          </button>
+          <p className="hidden lg:block text-sm text-muted-foreground">Khu vực quản trị Minh Tấn Academy</p>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:block text-sm text-muted-foreground">{email}</span>
+            <span className="w-9 h-9 rounded-full bg-onyx text-gold-light flex items-center justify-center font-display font-semibold">{email.charAt(0).toUpperCase()}</span>
           </div>
         </header>
-
-        {/* Content Section */}
-        <div className="p-10 flex-1 max-w-[1600px] mx-auto w-full">
-           {children}
-        </div>
-      </main>
+        <main className="flex-1 p-4 md:p-8 max-w-[1400px] w-full mx-auto">{children}</main>
+      </div>
     </div>
   );
 }

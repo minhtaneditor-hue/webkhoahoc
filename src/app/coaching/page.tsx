@@ -1,192 +1,132 @@
-'use client';
+import type { Metadata } from 'next';
+import Image from 'next/image';
+import { Check, Target, TrendingUp, Briefcase, ShieldCheck, ArrowRight } from 'lucide-react';
+import SectionHeading from '@/components/SectionHeading';
+import { CONTACT } from '@/components/Footer';
 
-import { 
-  Rocket, 
-  Target, 
-  MessageCircle, 
-  CheckCircle2, 
-  Zap, 
-  ChartBar, 
-  ShieldCheck, 
-  Star,
-  ChevronRight,
-  TrendingUp,
-  Briefcase
-} from 'lucide-react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
+export const metadata: Metadata = {
+  title: 'Coaching 1:1',
+  description: 'Chương trình đồng hành 1:1 cùng Minh Tấn: chiến lược nội dung, thương hiệu cá nhân và mô hình kinh doanh bằng video.',
+};
 
 const packages = [
   {
-    name: "Platinum Companion",
-    price: "2.000$",
-    duration: "1 THÁNG ĐỒNG HÀNH",
+    name: 'Platinum Companion',
+    price: '2.000 USD',
+    duration: '1 tháng đồng hành',
     features: [
-      "8 buổi học trực tiếp 1:1 cùng Mentor",
-      "Tư vấn MIỄN PHÍ định hướng & chiến lược mô hình kinh doanh",
-      "Combo tất cả khóa học Online (Vĩnh viễn)",
-      "CAM KẾT đạt được mục tiêu video cụ thể",
-      "Support trực tiếp qua Zalo/Zoom 24/7",
-      "FREE bộ tài nguyên Sound FX, Transitions, Overlays"
+      '8 buổi học trực tiếp 1:1 cùng mentor',
+      'Tư vấn định hướng chiến lược mô hình kinh doanh',
+      'Trọn bộ khóa học online (vĩnh viễn)',
+      'Cam kết đạt mục tiêu video cụ thể',
+      'Hỗ trợ trực tiếp qua Zalo/Zoom',
+      'Tặng bộ Sound FX, Transitions, Overlays',
     ],
-    cta: "TƯ VẤN MIỄN PHÍ",
-    color: "accent-primary"
+    cta: 'Đặt lịch tư vấn miễn phí',
+    featured: false,
   },
   {
-    name: "Elite Transformation",
-    price: "5.000$",
-    duration: "4 THÁNG ĐỒNG HÀNH",
+    name: 'Elite Transformation',
+    price: '5.000 USD',
+    duration: '4 tháng đồng hành',
     features: [
-      "Tất cả quyền lợi của gói Platinum",
-      "Đồng hành xây dựng kênh TikTok, YouTube trong 4 tháng",
-      "1 buổi Zoom chiến lược mỗi tuần",
-      "Giao bài tập & thúc đẩy hành động mỗi ngày",
-      "Định hướng thương hiệu cá nhân dài hạn",
-      "Đặc quyền tham gia các buổi quay thực tế cùng Mentor"
+      'Toàn bộ quyền lợi gói Platinum',
+      'Đồng hành xây kênh TikTok, YouTube trong 4 tháng',
+      '1 buổi Zoom chiến lược mỗi tuần',
+      'Giao bài tập và theo sát hành động mỗi ngày',
+      'Định hướng thương hiệu cá nhân dài hạn',
+      'Tham gia các buổi quay thực tế cùng mentor',
     ],
-    cta: "ĐĂNG KÝ XÉT TUYỂN",
-    color: "accent-secondary"
-  }
+    cta: 'Đăng ký xét tuyển',
+    featured: true,
+  },
+];
+
+const pillars = [
+  { icon: Target, title: 'Chiến lược marketing', desc: 'Xây thương hiệu cá nhân đủ mạnh để nhãn hàng tự tìm đến bạn.' },
+  { icon: TrendingUp, title: 'Định hướng thu nhập', desc: 'Lộ trình từ 0 tới 1.000 USD đầu tiên và cách nhân bản con số đó.' },
+  { icon: Briefcase, title: 'Mô hình kinh doanh', desc: 'Đóng gói kiến thức thành sản phẩm số tạo thu nhập bền vững.' },
 ];
 
 export default function CoachingPage() {
   return (
-    <main className="min-h-screen bg-[#050507] text-white pt-40 pb-24 overflow-hidden">
-      {/* Narrative Hero Section */}
-      <section className="max-w-5xl mx-auto px-6 text-center mb-32 relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[80vh] bg-accent-primary/5 blur-[120px] rounded-full -z-10" />
-        
-        <motion.div
-           initial={{ opacity: 0, y: 30 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.8 }}
-        >
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] font-black tracking-[0.4em] uppercase text-white/40 mb-10">
-            <Star size={12} className="text-secondary" />
-            Coaching Program // High-Ticket v1.0
+    <main>
+      {/* Hero */}
+      <section className="surface-dark">
+        <div className="container-lux py-16 md:py-24 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
+          <div>
+            <p className="eyebrow !text-gold-light">Coaching 1:1 · Số lượng giới hạn</p>
+            <h1 className="mt-4 text-white">Học cách kinh doanh bằng hình ảnh, không chỉ kỹ thuật quay dựng.</h1>
+            <p className="mt-6 text-lg text-stone-300 leading-relaxed max-w-xl">
+              Chương trình đồng hành riêng để biến video thành cỗ máy tạo thu nhập và xây sự nghiệp tự do thực sự.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <a href="#goi-coaching" className="btn btn-gold">Xem các gói đồng hành <ArrowRight size={18} aria-hidden="true" /></a>
+              <a href={CONTACT.zaloHref} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">Nhắn Zalo tư vấn</a>
+            </div>
+            <p className="mt-6 flex items-center gap-2 text-sm text-stone-400"><ShieldCheck size={16} className="text-gold-light" aria-hidden="true" /> Mỗi tháng chỉ nhận tối đa 2 học viên</p>
           </div>
-          <h1 className="text-5xl md:text-8xl font-black mb-8 leading-[0.9] tracking-tighter uppercase italic italic-glow">
-            Nơi Tiết Lộ <span className="text-accent-primary">Bí Mật</span> <br />
-            Doanh Nghiệp <span className="text-white/40">Online</span>
-          </h1>
-          <p className="max-w-3xl mx-auto text-text-muted text-xl md:text-2xl font-medium leading-relaxed mb-12">
-             Đừng chỉ học "kỹ thuật quay dựng". Hãy học cách biến video thành một cỗ máy in tiền và xây dựng sự nghiệp tự do thực sự.
-          </p>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-             <a href="#packages" className="btn-premium w-full md:w-auto">THAM GIA NGAY</a>
-             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-text-muted">
-                <ShieldCheck size={16} className="text-accent-primary" /> Cam kết hoàn tiền 7 ngày
-             </div>
+          <div className="relative aspect-[4/5] max-w-md w-full mx-auto rounded-[var(--radius-card)] overflow-hidden">
+            <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn" fill priority sizes="(min-width: 1024px) 40vw, 90vw" className="object-cover" />
           </div>
-        </motion.div>
-      </section>
-
-      {/* The Origin Story */}
-      <section className="max-w-4xl mx-auto px-6 mb-40">
-        <div className="p-12 md:p-20 rounded-[3rem] bg-white/[0.02] border border-white/5 relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-1 h-full bg-accent-primary opacity-20" />
-           <h2 className="text-3xl font-black mb-12 uppercase italic tracking-widest text-accent-primary">Hành trình thoát khỏi vòng xoáy...</h2>
-           
-           <div className="space-y-8 text-lg font-medium text-text-muted leading-relaxed italic">
-              <p>
-                 "3 năm trước, tôi cũng như bạn. Làm việc văn phòng 8-10 tiếng mỗi ngày, kiệt sức và bế tắc. Mọi thứ chỉ dừng lại khi tôi phải nhập viện vì áp lực quá tải."
-              </p>
-              <p>
-                 "Đó là lúc tôi quyết định bỏ việc, bắt đầu lại từ con số 0 với nghề làm phim. Gia đình phản đối, bạn bè hoài nghi. Nhưng tôi tin rằng Video chính là tương lai."
-              </p>
-              <p>
-                 "Sau nhiều năm đúc kết, tôi nhận ra sự khác biệt giữa một người làm phim nghiệp dư và một người kinh doanh bằng hình ảnh chuyên nghiệp không nằm ở chiếc máy ảnh, mà nằm ở **Tư duy chiến lược**."
-              </p>
-              <p className="text-white font-black text-2xl pt-6">
-                 Hôm nay, tôi ở đây để giúp bạn rút ngắn hành trình đó. Không còn những sai lầm, không còn sự bấp bênh.
-              </p>
-           </div>
         </div>
       </section>
 
-      {/* Strategy Hooks */}
-      <section className="max-w-7xl mx-auto px-6 mb-40">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {[
-            { icon: <Target className="text-accent-primary" />, title: "Chiến Lược Marketing", desc: "Xây dựng thương hiệu cá nhân để từ đó các nhãn hàng sẽ tự động tìm đến bạn." },
-            { icon: <TrendingUp className="text-accent-secondary" />, title: "Định Hướng Thu Nhập", desc: "Lộ trình từ 0 đến 1000$ cho người mới và cách nhân bản số tiền đó lên hàng trăm triệu." },
-            { icon: <Briefcase className="text-accent-primary" />, title: "Mô Hình Kinh Doanh", desc: "Học cách đóng gói kiến thức thành sản phẩm số để tạo nguồn thu nhập thụ động bền vững." }
-          ].map((hook, i) => (
-             <motion.div 
-               key={i}
-               whileHover={{ y: -10 }}
-               className="p-10 rounded-[2.5rem] bg-white/5 border border-white/10 hover:border-accent-primary/40 transition-all shadow-xl"
-             >
-                <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-8">{hook.icon}</div>
-                <h3 className="text-2xl font-black mb-4 uppercase italic tracking-tighter">{hook.title}</h3>
-                <p className="text-text-muted font-medium text-sm leading-relaxed">{hook.desc}</p>
-             </motion.div>
-          ))}
+      {/* Story */}
+      <section className="section">
+        <div className="container-lux max-w-3xl">
+          <p className="eyebrow">Câu chuyện của Minh Tấn</p>
+          <h2 className="mt-4">Hành trình thoát khỏi vòng xoáy</h2>
+          <div className="mt-8 space-y-5 text-lg leading-relaxed text-stone">
+            <p>Vài năm trước, tôi cũng như bạn: làm văn phòng 8–10 tiếng mỗi ngày, kiệt sức và bế tắc — cho tới khi phải nhập viện vì áp lực.</p>
+            <p>Đó là lúc tôi bỏ việc và bắt đầu lại từ con số 0 với nghề làm phim. Gia đình phản đối, bạn bè hoài nghi, nhưng tôi tin video là tương lai.</p>
+            <p>Sau nhiều năm, tôi nhận ra khác biệt giữa người làm phim nghiệp dư và người kinh doanh bằng hình ảnh không nằm ở chiếc máy quay, mà ở <strong className="text-ink">tư duy chiến lược</strong>.</p>
+          </div>
+          <blockquote className="mt-10 border-l-2 border-gold pl-6 font-display text-3xl leading-snug text-ink">
+            Hôm nay, tôi ở đây để giúp bạn rút ngắn hành trình đó.
+          </blockquote>
         </div>
       </section>
 
-      {/* Pricing Packages */}
-      <section id="packages" className="max-w-7xl mx-auto px-6 mb-40">
-         <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase mb-6 italic-glow leading-none">Chương Trình <span className="text-accent-primary">Đồng Hành</span></h2>
-            <p className="text-text-muted uppercase tracking-[0.4em] font-black text-[10px]">Chỉ nhận tối đa 2 học viên mỗi tháng</p>
-         </div>
-
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {packages.map((pkg, i) => (
-              <div 
-                key={i}
-                className={`flex flex-col p-12 md:p-16 rounded-[4rem] border relative overflow-hidden transition-all duration-700 ${
-                  i === 1 ? 'bg-white text-black border-white' : 'bg-white/[0.03] border-white/10'
-                }`}
-              >
-                 {i === 1 && (
-                    <div className="absolute top-10 right-10 px-6 py-2 rounded-full bg-accent-secondary text-white text-[10px] font-black uppercase tracking-widest shadow-xl">
-                       HIGHT-PERFORMANCE
-                    </div>
-                 )}
-                 
-                 <p className={`text-[10px] font-black uppercase tracking-[0.4em] mb-4 ${i === 1 ? 'text-black/40' : 'text-white/40'}`}>
-                    {pkg.duration}
-                 </p>
-                 <h3 className="text-4xl md:text-5xl font-black mb-2 italic tracking-tighter uppercase">{pkg.name}</h3>
-                 <p className={`text-4xl font-black mb-12 tracking-tighter ${i === 1 ? 'text-accent-secondary' : 'text-accent-primary'}`}>{pkg.price}</p>
-                 
-                 <div className="space-y-6 mb-16 flex-1">
-                    {pkg.features.map((f, fi) => (
-                       <div key={fi} className="flex items-start gap-4">
-                          <CheckCircle2 size={20} className={i === 1 ? 'text-accent-secondary shrink-0 mt-1' : 'text-accent-primary shrink-0 mt-1'} />
-                          <span className={`text-sm md:text-base font-bold ${i === 1 ? 'text-black/70 italic' : 'text-text-muted italic'}`}>{f}</span>
-                       </div>
-                    ))}
-                 </div>
-
-                 <Link 
-                   href="https://m.me/yourid" 
-                   className={`w-full py-6 rounded-2xl font-black text-center tracking-widest transition-all shadow-xl uppercase text-xs ${
-                     i === 1 ? 'bg-black text-white hover:bg-accent-secondary' : 'bg-white text-black hover:bg-accent-primary hover:text-white'
-                   }`}
-                 >
-                    {pkg.cta}
-                 </Link>
+      {/* Pillars */}
+      <section className="section bg-card border-y border-line">
+        <div className="container-lux">
+          <SectionHeading eyebrow="Bạn sẽ được dẫn dắt" title="Ba trụ cột của chương trình" align="center" />
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {pillars.map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="card p-7">
+                <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center"><Icon size={20} aria-hidden="true" /></span>
+                <h3 className="mt-5 text-2xl">{title}</h3>
+                <p className="mt-2 text-muted-foreground">{desc}</p>
               </div>
             ))}
-         </div>
+          </div>
+        </div>
       </section>
 
-      {/* FAQ Final Section */}
-      <section className="max-w-4xl mx-auto px-6 text-center">
-         <div className="p-16 rounded-[4rem] bg-accent-primary/5 border border-accent-primary/10">
-            <MessageCircle size={40} className="mx-auto mb-8 text-accent-primary" />
-            <h2 className="text-3xl font-black mb-6 uppercase italic tracking-tighter">Bạn còn thắc mắc?</h2>
-            <p className="text-text-muted font-medium mb-10 italic">"Học Online có hiệu quả bằng trực tiếp không? Liệu tôi có làm được không?"</p>
-            <p className="text-sm font-bold leading-relaxed mb-12">
-               Đừng lo lắng. Tôi đã dành hàng năm trời để kiện toàn giáo trình giúp bạn đạt hiệu quả 100% bất kể khoảng cách địa lý. Sự hỗ trợ 24/7 của tôi và team sẽ luôn ở bên bạn.
-            </p>
-            <Link href="/" className="text-text-muted hover:text-white transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
-               Quay lại Trang chủ <ChevronRight size={14} />
-            </Link>
-         </div>
+      {/* Packages */}
+      <section id="goi-coaching" className="section scroll-mt-20">
+        <div className="container-lux">
+          <SectionHeading eyebrow="Chương trình đồng hành" title="Chọn gói phù hợp với bạn" align="center" description="Hoàn tiền trong 7 ngày đầu nếu chương trình chưa phù hợp." />
+          <div className="mt-12 grid gap-6 lg:grid-cols-2 max-w-5xl mx-auto">
+            {packages.map((pkg) => (
+              <div key={pkg.name} className={`relative rounded-[var(--radius-card)] p-8 md:p-10 flex flex-col ${pkg.featured ? 'surface-dark shadow-[var(--shadow-lift)]' : 'card'}`}>
+                {pkg.featured && <span className="badge absolute -top-3 left-8 !bg-gold-light !text-onyx">Hiệu quả nhất</span>}
+                <p className={`text-sm font-semibold ${pkg.featured ? 'text-gold-light' : 'text-gold'}`}>{pkg.duration}</p>
+                <h3 className={`mt-2 text-3xl ${pkg.featured ? 'text-white' : ''}`}>{pkg.name}</h3>
+                <p className={`mt-4 font-display text-5xl font-semibold ${pkg.featured ? 'text-white' : ''}`}>{pkg.price}</p>
+                <ul className={`mt-8 space-y-3 flex-1 ${pkg.featured ? 'text-stone-300' : 'text-stone'}`}>
+                  {pkg.features.map((f) => (
+                    <li key={f} className="flex gap-3"><Check size={18} className={`shrink-0 mt-0.5 ${pkg.featured ? 'text-gold-light' : 'text-gold'}`} aria-hidden="true" /> {f}</li>
+                  ))}
+                </ul>
+                <a href={CONTACT.zaloHref} target="_blank" rel="noopener noreferrer" className={`btn mt-8 w-full ${pkg.featured ? 'btn-gold' : 'btn-dark'}`}>
+                  {pkg.cta} <ArrowRight size={18} aria-hidden="true" />
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
     </main>
   );

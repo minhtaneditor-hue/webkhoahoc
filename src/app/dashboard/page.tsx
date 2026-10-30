@@ -1,81 +1,60 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/utils/supabase';
-import { useRouter } from 'next/navigation';
-import { 
-  Folder, 
-  Video, 
-  CreditCard, 
-  User, 
-  LogOut, 
-  Loader2,
-  ChevronRight,
-  ExternalLink,
-  Zap,
-  ShieldCheck,
-  LayoutDashboard,
-  Target,
-  Award
-} from 'lucide-react';
 import Link from 'next/link';
-import { isAdmin } from '@/lib/admin';
-import Navbar from '@/components/Navbar';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/utils/supabase';
+import { formatVND } from '@/lib/supabase-public';
+import { Loader2, ArrowRight, BookOpen, ShieldCheck, ShoppingBag, Receipt, LogOut } from 'lucide-react';
+
+type Notice = { type: 'success' | 'error'; text: string } | null;
+
+const STATUS_LABEL: Record<string, string> = { success: 'Thành công', pending: 'Đang chờ', failed: 'Thất bại' };
 
 export default function StudentDashboard() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [factorId, setFactorId] = useState<string | null>(null);
   const [mfaStep, setMfaStep] = useState<'idle' | 'enrolling' | 'verifying'>('idle');
-  const router = useRouter();
+  const [notice, setNotice] = useState<Notice>(null);
 
   useEffect(() => {
-    async function checkUser() {
+    async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/auth?redirect=/dashboard');
         return;
       }
       setUser(user);
-      
-      const { data: enrollmentData } = await supabase
-        .from('enrollments')
-        .select(`
-          course_id,
-          status,
-          courses (
-            id,
-            title,
-            description
-          )
-        `)
-        .eq('user_id', user.id);
-        
+
+      const [{ data: enrollmentData }, { data: paymentData }, { data: mfaData }] = await Promise.all([
+        supabase.from('enrollments').select('course_id, status, enrolled_at, courses ( id, title, description )').eq('user_id', user.id),
+        supabase.from('payments').select('id, order_id, amount, status, created_at, courses ( title )').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+        supabase.auth.mfa.listFactors(),
+      ]);
+
       setEnrollments(enrollmentData || []);
+      setPayments(paymentData || []);
+      setMfaEnabled(!!mfaData?.all.find((f) => f.status === 'verified'));
 
-      const { data: mfaData } = await supabase.auth.mfa.listFactors();
-      const activeFactor = mfaData?.all.find(f => f.status === 'verified');
-      setMfaEnabled(!!activeFactor);
-
-      await supabase
-        .from('users')
-        .update({ last_active_at: new Date().toISOString() })
-        .eq('id', user.id);
-
+      await supabase.from('users').update({ last_active_at: new Date().toISOString() }).eq('id', user.id);
       setLoading(false);
     }
-    checkUser();
+    load();
   }, [router]);
 
   const enrollMfa = async () => {
+    setNotice(null);
     setMfaStep('enrolling');
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
     if (error) {
-      alert(error.message);
+      setNotice({ type: 'error', text: error.message });
       setMfaStep('idle');
       return;
     }
@@ -84,29 +63,28 @@ export default function StudentDashboard() {
     setMfaStep('verifying');
   };
 
-  const verifyMfa = async () => {
+  const verifyMfa = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!factorId) return;
-    const { error } = await supabase.auth.mfa.challengeAndVerify({
-      factorId,
-      code: verificationCode
-    });
+    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code: verificationCode });
     if (error) {
-      alert('Mã không chính xác, vui lòng thử lại.');
+      setNotice({ type: 'error', text: 'Mã không chính xác, vui lòng thử lại.' });
       return;
     }
     setMfaEnabled(true);
     setMfaStep('idle');
     setQrCode(null);
-    alert('Bảo mật 2 lớp đã được kích hoạt thành công!');
+    setVerificationCode('');
+    setNotice({ type: 'success', text: 'Đã bật bảo mật 2 lớp.' });
   };
 
   const unenrollMfa = async () => {
     const { data: factors } = await supabase.auth.mfa.listFactors();
-    const verifiedFactor = factors?.all.find(f => f.status === 'verified');
+    const verifiedFactor = factors?.all.find((f) => f.status === 'verified');
     if (verifiedFactor) {
       await supabase.auth.mfa.unenroll({ factorId: verifiedFactor.id });
       setMfaEnabled(false);
-      alert('Đã tắt bảo mật 2 lớp.');
+      setNotice({ type: 'success', text: 'Đã tắt bảo mật 2 lớp.' });
     }
   };
 
@@ -118,196 +96,122 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="animate-spin text-accent-secondary" size={48} />
-      </div>
+      <main className="container-lux py-24 flex items-center justify-center gap-3 text-muted-foreground" aria-busy="true">
+        <Loader2 className="animate-spin" size={20} aria-hidden="true" /> Đang tải khu học tập…
+      </main>
     );
   }
 
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0];
+
   return (
-    <main className="min-h-screen bg-[#f8fafc] flex flex-col md:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full md:w-80 border-r border-slate-100 bg-white p-8 flex flex-col gap-12 relative z-20 shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-accent-secondary rounded-2xl flex items-center justify-center font-black text-white shadow-lg shaodw-accent-secondary/20 italic">T</div>
-          <span className="font-black tracking-tighter text-2xl text-slate-900 italic">TANLAB</span>
+    <main className="container-lux py-10 md:py-14">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-line">
+        <div>
+          <p className="eyebrow">Khu học tập</p>
+          <h1 className="mt-3 text-4xl md:text-5xl">Xin chào, {displayName}</h1>
+          <p className="mt-2 text-muted-foreground">{user?.email}</p>
+        </div>
+        <button onClick={handleSignOut} className="btn btn-outline self-start md:self-auto"><LogOut size={16} aria-hidden="true" /> Đăng xuất</button>
+      </header>
+
+      {notice && (
+        <p role={notice.type === 'error' ? 'alert' : 'status'} className={`mt-6 p-4 rounded-md text-sm ${notice.type === 'error' ? 'bg-red-50 text-danger' : 'bg-gold-soft text-ink'}`}>{notice.text}</p>
+      )}
+
+      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_340px]">
+        <div className="space-y-12 min-w-0">
+          {/* Courses */}
+          <section aria-labelledby="my-courses">
+            <h2 id="my-courses" className="text-3xl">Khóa học của tôi</h2>
+            {enrollments.length === 0 ? (
+              <div className="mt-6 card p-8 text-center">
+                <BookOpen size={28} className="mx-auto text-gold" aria-hidden="true" />
+                <p className="mt-4 font-display text-2xl">Bạn chưa đăng ký khóa học nào</p>
+                <p className="mt-2 text-muted-foreground">Bắt đầu với bài học thử miễn phí trong mỗi khóa.</p>
+                <Link href="/courses" className="btn btn-gold mt-6">Khám phá khóa học</Link>
+              </div>
+            ) : (
+              <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+                {enrollments.map((en) => (
+                  <li key={en.course_id} className="card card-hover p-6 flex flex-col">
+                    <span className={`badge self-start ${en.status !== 'active' ? '!bg-muted !text-muted-foreground' : ''}`}>{en.status === 'active' ? 'Đang học' : 'Hết hạn'}</span>
+                    <h3 className="mt-4 text-2xl">{en.courses?.title}</h3>
+                    {en.courses?.description && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{en.courses.description}</p>}
+                    <Link href={`/courses/${en.course_id}`} className="btn btn-dark mt-6 self-start !min-h-[44px] text-sm">Vào học <ArrowRight size={16} aria-hidden="true" /></Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* Payments */}
+          <section aria-labelledby="payments-title">
+            <h2 id="payments-title" className="text-3xl flex items-center gap-3">Lịch sử thanh toán</h2>
+            {payments.length === 0 ? (
+              <p className="mt-4 text-muted-foreground">Chưa có giao dịch nào.</p>
+            ) : (
+              <div className="mt-6 card overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-muted-foreground border-b border-line">
+                    <tr><th className="p-4 font-semibold">Ngày</th><th className="p-4 font-semibold">Sản phẩm</th><th className="p-4 font-semibold text-right">Số tiền</th><th className="p-4 font-semibold">Trạng thái</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {payments.map((p) => (
+                      <tr key={p.id}>
+                        <td className="p-4 whitespace-nowrap">{new Date(p.created_at).toLocaleDateString('vi-VN')}</td>
+                        <td className="p-4">{p.courses?.title || 'Ebook / Preset'}</td>
+                        <td className="p-4 text-right whitespace-nowrap font-semibold">{formatVND(p.amount)}</td>
+                        <td className="p-4"><span className={`badge ${p.status === 'success' ? '!bg-green-50 !text-success' : p.status === 'failed' ? '!bg-red-50 !text-danger' : ''}`}>{STATUS_LABEL[p.status] || p.status}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </div>
 
-        <nav className="space-y-3 flex-grow">
-          <Link href="/dashboard" className="flex items-center gap-4 p-5 rounded-2xl bg-accent-primary/5 text-accent-primary border border-accent-primary/10 transition-all font-black uppercase text-[10px] tracking-widest shadow-sm">
-            <LayoutDashboard size={18} />
-            HỆ THỐNG CHÍNH
+        <aside className="space-y-6">
+          <Link href="/shop" className="card card-hover p-6 flex items-center gap-4">
+            <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center shrink-0"><ShoppingBag size={20} aria-hidden="true" /></span>
+            <span><span className="block font-semibold">Ebook & Preset</span><span className="block text-sm text-muted-foreground">Tải lại sản phẩm đã mua</span></span>
           </Link>
-          <button className="w-full flex items-center gap-4 p-5 rounded-2xl text-slate-300 hover:bg-slate-50 hover:text-slate-900 transition-all text-left font-black uppercase text-[10px] tracking-widest">
-            <Video size={18} />
-            PHÒNG HỌC TẬP
-          </button>
-          <button className="w-full flex items-center gap-4 p-5 rounded-2xl text-slate-300 hover:bg-slate-50 hover:text-slate-900 transition-all text-left font-black uppercase text-[10px] tracking-widest">
-            <Award size={18} />
-            CHỨNG NHẬN
-          </button>
-          <button className="w-full flex items-center gap-4 p-5 rounded-2xl text-slate-300 hover:bg-slate-50 hover:text-slate-900 transition-all text-left font-black uppercase text-[10px] tracking-widest">
-            <CreditCard size={18} />
-            THANH TOÁN
-          </button>
-          
-          {isAdmin(user?.email) && (
-            <Link href="/admin" className="flex items-center gap-4 p-5 rounded-2xl bg-accent-secondary/5 text-accent-secondary border border-accent-secondary/10 mt-6 transition-all font-black uppercase text-[10px] tracking-widest shadow-sm">
-              <ShieldCheck size={18} />
-              QUẢN TRỊ VIÊN
-            </Link>
-          )}
-        </nav>
 
-        <button 
-          onClick={handleSignOut}
-          className="flex items-center gap-4 p-5 rounded-2xl text-slate-300 hover:text-accent-secondary transition-all font-black uppercase text-[10px] tracking-widest mt-auto border border-slate-50"
-        >
-          <LogOut size={18} />
-          THOÁT HỆ THỐNG
-        </button>
-      </aside>
-
-      {/* Main Content */}
-      <section className="flex-grow p-8 md:p-16 overflow-y-auto relative z-10">
-        <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent-secondary/5 blur-[120px] rounded-full -z-10" />
-        
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black mb-3 italic tracking-tighter uppercase text-slate-900 leading-none">
-              CHÀO <span className="text-slate-300">{user?.email?.split('@')[0]}</span>
-            </h1>
-            <p className="text-slate-400 font-bold italic uppercase tracking-tight text-sm">Chào mừng bạn quay lại trung tâm điều hành tài sản.</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 shadow-xl flex items-center justify-center text-accent-secondary">
-              <User size={24} />
+          <section className="card p-6" aria-labelledby="security-title">
+            <div className="flex items-center gap-3">
+              <ShieldCheck size={22} className={mfaEnabled ? 'text-success' : 'text-gold'} aria-hidden="true" />
+              <h2 id="security-title" className="text-2xl">Bảo mật 2 lớp</h2>
             </div>
-          </div>
-        </header>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {mfaEnabled ? 'Đang bật. Tài khoản của bạn được bảo vệ bằng ứng dụng xác thực.' : 'Bảo vệ tài khoản bằng Google Authenticator hoặc ứng dụng tương tự.'}
+            </p>
 
-        {/* Highlight Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
-          <div className="p-10 rounded-[3rem] bg-white border border-slate-100 shadow-2xl flex flex-col justify-center">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">KHÓA HỌC SỞ HỮU</span>
-              <Target size={20} className="text-accent-secondary" />
-            </div>
-            <div className="text-5xl font-black text-slate-900 italic tracking-tighter">{enrollments.length}</div>
-          </div>
-          <div className="p-10 rounded-[3rem] bg-white border border-slate-100 shadow-2xl flex flex-col justify-center md:col-span-3">
-             <div className="flex items-center gap-3 text-accent-secondary mb-4">
-                <Zap size={20} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Trạng thái hệ thống</span>
-             </div>
-             <p className="text-slate-500 font-bold italic tracking-tight uppercase">Mọi hệ thống đang hoạt động tối ưu. Hãy tiếp tục lộ trình kiến tạo tài sản của bạn.</p>
-          </div>
-        </div>
+            {mfaStep === 'verifying' && qrCode ? (
+              <form onSubmit={verifyMfa} className="mt-5 space-y-4">
+                <p className="text-sm">Quét mã QR bằng ứng dụng xác thực, sau đó nhập mã 6 số.</p>
+                {/* eslint-disable-next-line @next/next/no-img-element -- data: URI from Supabase */}
+                <img src={qrCode} alt="Mã QR bảo mật 2 lớp" className="w-44 h-44 mx-auto rounded-md border border-line bg-white p-2" />
+                <label htmlFor="otp" className="field-label">Mã xác thực</label>
+                <input id="otp" className="input text-center tracking-[0.4em] font-semibold" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
+                       value={verificationCode} onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))} />
+                <button type="submit" disabled={verificationCode.length !== 6} className="btn btn-gold w-full">Xác nhận</button>
+              </form>
+            ) : mfaEnabled ? (
+              <button onClick={unenrollMfa} className="btn btn-outline w-full mt-5">Tắt bảo mật 2 lớp</button>
+            ) : (
+              <button onClick={enrollMfa} disabled={mfaStep === 'enrolling'} className="btn btn-dark w-full mt-5">
+                {mfaStep === 'enrolling' && <Loader2 size={16} className="animate-spin" aria-hidden="true" />} Bật bảo mật 2 lớp
+              </button>
+            )}
+          </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Security Hub */}
-          <div className="lg:col-span-1 space-y-8">
-             <h2 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-3 text-slate-900">
-               <ShieldCheck className="text-accent-secondary" size={20} />
-               TRUNG TÂM BẢO MẬT
-             </h2>
-             
-             <div className="p-10 rounded-[3rem] bg-white border border-slate-100 shadow-xl">
-                <div className="flex items-center justify-between mb-8">
-                   <div className="text-[10px] font-black uppercase tracking-widest text-slate-300">TRẠNG THÁI 2FA</div>
-                   <div className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${mfaEnabled ? 'bg-green-500 text-white shadow-lg' : 'bg-accent-secondary text-white shadow-lg'}`}>
-                      {mfaEnabled ? 'ĐÃ KÍCH HOẠT' : 'CHƯA BẢO VỆ'}
-                   </div>
-                </div>
-                <h3 className="text-lg font-black mb-4 uppercase italic">BẢO MẬT 2 LỚP</h3>
-                <p className="text-slate-400 text-sm font-medium leading-relaxed mb-10 italic">Yêu cầu mã xác thực từ điện thoại để ngăn chặn truy cập trái phép vào tài khoản của bạn.</p>
-                
-                {mfaStep === 'idle' ? (
-                  <button 
-                    onClick={mfaEnabled ? unenrollMfa : enrollMfa}
-                    className={`w-full py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${mfaEnabled ? 'bg-slate-50 text-slate-300 hover:text-red-500' : 'bg-slate-900 text-white shadow-xl hover:bg-accent-secondary'}`}
-                  >
-                    {mfaEnabled ? 'TẮT BẢO VỆ' : 'KÍCH HOẠT BẢO MẬT'}
-                  </button>
-                ) : (
-                  <div className="space-y-6 animate-fade-in text-center">
-                     {qrCode && (
-                       <div className="bg-slate-50 p-6 rounded-[2rem] inline-block shadow-inner">
-                          <img src={qrCode} alt="QR Code" className="w-32 h-32 opacity-80" />
-                       </div>
-                     )}
-                     <div className="space-y-4">
-                        <input 
-                          type="text" 
-                          maxLength={6}
-                          placeholder="MÃ XÁC THỰC"
-                          className="glass-input text-center text-xl tracking-[0.5em] font-black"
-                          value={verificationCode}
-                          onChange={(e) => setVerificationCode(e.target.value)}
-                        />
-                        <button 
-                          onClick={verifyMfa}
-                          className="w-full py-5 rounded-2xl bg-accent-secondary text-white font-black text-[10px] uppercase tracking-widest shadow-xl"
-                        >
-                          XÁC NHẬN KÍCH HOẠT
-                        </button>
-                     </div>
-                  </div>
-                )}
-             </div>
+          <div className="card p-6 flex items-center gap-4">
+            <Receipt size={20} className="text-gold shrink-0" aria-hidden="true" />
+            <p className="text-sm text-muted-foreground">Cần hoá đơn hoặc hỗ trợ hoàn tiền? Bấm nút <strong className="text-ink">Hỗ trợ</strong> ở góc phải.</p>
           </div>
-
-          {/* Tactical Operations (Course List) */}
-          <div className="lg:col-span-2 space-y-8">
-             <h2 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-3 text-slate-900">
-               <Video className="text-accent-secondary" size={20} />
-               CÁC KHÓA HỌC ĐANG HỌC
-             </h2>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               {enrollments.map((enrollment: any) => (
-                 <Link 
-                   key={enrollment.courses.id} 
-                   href={`/courses/${enrollment.courses.id}`}
-                   className="group p-8 rounded-[3rem] bg-white border border-slate-100 shadow-xl hover:border-accent-secondary/30 transition-all relative overflow-hidden"
-                 >
-                   <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                     <ExternalLink size={20} className="text-accent-secondary" />
-                   </div>
-                   
-                   <h3 className="text-xl font-black mb-3 group-hover:text-accent-secondary transition-colors uppercase italic text-slate-900 leading-tight">
-                     {enrollment.courses.title}
-                   </h3>
-                   <p className="text-slate-400 text-xs font-medium line-clamp-2 mb-10 italic leading-relaxed">
-                     {enrollment.courses.description}
-                   </p>
-                   
-                   <div className="flex items-center justify-between text-[10px] font-black text-slate-300 uppercase tracking-widest pt-6 border-t border-slate-50">
-                     <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-accent-secondary animate-pulse" />
-                        TRẠNG THÁI: {enrollment.status === 'active' ? 'ĐANG HỌC' : enrollment.status}
-                     </span>
-                     <ChevronRight size={16} />
-                   </div>
-                 </Link>
-               ))}
-
-               {enrollments.length === 0 && (
-                 <div className="col-span-full p-20 rounded-[4rem] border-2 border-dashed border-slate-100 bg-white/50 flex flex-col items-center text-center shadow-inner">
-                   <div className="w-20 h-20 rounded-[2rem] bg-white shadow-xl flex items-center justify-center text-slate-200 mb-6 border border-slate-50">
-                     <Video size={40} />
-                   </div>
-                   <h3 className="text-2xl font-black text-slate-900 uppercase italic mb-3">CHƯA CÓ DỮ LIỆU</h3>
-                   <p className="text-slate-400 font-medium italic mb-10 max-w-sm">Hãy khám phá danh mục để bắt đầu lộ trình kiến tạo tài sản của bạn.</p>
-                   <Link href="/courses" className="btn-premium px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl">
-                     XEM DANH MỤC KHÓA HỌC
-                   </Link>
-                 </div>
-               )}
-             </div>
-          </div>
-        </div>
-      </section>
+        </aside>
+      </div>
     </main>
   );
 }

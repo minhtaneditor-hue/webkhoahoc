@@ -1,57 +1,64 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle } from "lucide-react";
-import { Hero1 } from "./ui/hero-1";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { MessageCircle, X, Phone, Mail, Send } from "lucide-react";
+import { CONTACT } from "./Footer";
+import { isAppShellRoute } from "./Navbar";
 
+// Floating "Hỗ trợ" button: real contact channels instead of a non-functional AI box.
 export default function AIChatAssistant() {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    panelRef.current?.querySelector<HTMLElement>("a")?.focus();
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  if (isAppShellRoute(pathname)) return null;
+
+  const channels = [
+    { label: "Nhắn Zalo", detail: CONTACT.phone, href: CONTACT.zaloHref, icon: Send, external: true },
+    { label: "Gọi hotline", detail: CONTACT.phone, href: CONTACT.phoneHref, icon: Phone },
+    { label: "Gửi email", detail: CONTACT.email, href: `mailto:${CONTACT.email}`, icon: Mail },
+  ];
 
   return (
-    <>
-      {/* Floating Action Button */}
-      <motion.button
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsExpanded(true)}
-        className="fixed bottom-8 right-8 z-[9999] w-16 h-16 rounded-full bg-accent-secondary text-white shadow-2xl flex items-center justify-center cursor-pointer group"
+    <div className="fixed bottom-5 right-5 z-[900] flex flex-col items-end gap-3">
+      {open && (
+        <div ref={panelRef} role="dialog" aria-label="Liên hệ hỗ trợ" className="card w-[min(320px,calc(100vw-2.5rem))] p-5 shadow-[var(--shadow-lift)] animate-fade-up">
+          <p className="font-display text-2xl font-semibold">Cần tư vấn?</p>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">Đội ngũ phản hồi trong giờ hành chính, thường dưới 30 phút.</p>
+          <ul className="space-y-2">
+            {channels.map(({ label, detail, href, icon: Icon, external }) => (
+              <li key={label}>
+                <a href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                   className="flex items-center gap-3 p-3 rounded-md border border-line hover:border-gold hover:bg-gold-soft/40 transition-colors">
+                  <span className="w-10 h-10 rounded-md bg-onyx text-gold-light flex items-center justify-center shrink-0"><Icon size={18} aria-hidden="true" /></span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-ink">{label}</span>
+                    <span className="block text-xs text-muted-foreground truncate">{detail}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-label={open ? "Đóng hỗ trợ" : "Mở hỗ trợ"}
+        className="h-14 pl-4 pr-5 rounded-full bg-onyx text-white shadow-[var(--shadow-lift)] flex items-center gap-2 hover:bg-ink transition-colors"
       >
-        <div className="absolute inset-0 rounded-full bg-accent-secondary animate-ping opacity-20 group-hover:hidden" />
-        <MessageCircle className="w-8 h-8 relative z-10" />
-      </motion.button>
-
-      {/* Expanded Interface */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[10000] flex items-center justify-center p-0 md:p-12 overflow-hidden"
-          >
-            {/* Backdrop Blur */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-2xl"
-              onClick={() => setIsExpanded(false)}
-            />
-
-            {/* Content Container */}
-            <motion.div 
-              className="relative w-full h-full max-w-7xl max-auto rounded-none md:rounded-[3rem] overflow-hidden border-0 md:border border-white/10 shadow-lux shadow-black/80"
-              layoutId="chat-expand"
-            >
-              <Hero1 onClose={() => setIsExpanded(false)} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+        {open ? <X size={20} aria-hidden="true" /> : <MessageCircle size={20} className="text-gold-light" aria-hidden="true" />}
+        <span className="text-sm font-semibold">{open ? "Đóng" : "Hỗ trợ"}</span>
+      </button>
+    </div>
   );
 }

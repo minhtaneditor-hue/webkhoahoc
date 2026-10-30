@@ -1,26 +1,20 @@
-import type { Metadata } from "next";
-import { Inter, Manrope, Cabin, Instrument_Serif } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Cormorant, Montserrat } from "next/font/google";
 import "@/styles/globals.css";
 
-const inter = Inter({
+// Design system (design-system/minh-tan-academy/MASTER.md): Cormorant headings + Montserrat body
+const cormorant = Cormorant({
   subsets: ["latin", "vietnamese"],
-  variable: "--font-inter",
+  weight: ["500", "600", "700"],
+  variable: "--font-cormorant",
+  display: "swap",
 });
 
-const manrope = Manrope({
+const montserrat = Montserrat({
   subsets: ["latin", "vietnamese"],
-  variable: "--font-manrope",
-});
-
-const cabin = Cabin({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-cabin",
-});
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-instrument-serif",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-montserrat",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -38,6 +32,10 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#1C1917",
+};
+
 import Navbar from "@/components/Navbar";
 import GlobalTicker from "@/components/GlobalTicker";
 import Footer from "@/components/Footer";
@@ -49,11 +47,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${inter.variable} ${manrope.variable} ${cabin.variable} ${instrumentSerif.variable}`}>
-      <body className="antialiased">
+    <html lang="vi" className={`${cormorant.variable} ${montserrat.variable}`}>
+      <body>
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[3000] btn btn-dark">
+          Bỏ qua tới nội dung chính
+        </a>
         <GlobalTicker />
         <Navbar />
-        {children}
+        <div id="main">{children}</div>
         <Footer />
         <AIChatAssistant />
       </body>

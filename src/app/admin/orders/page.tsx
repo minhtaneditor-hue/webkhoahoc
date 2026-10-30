@@ -1,165 +1,95 @@
 "use client";
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  CreditCard, 
-  Search, 
-  Filter, 
-  Download, 
-  ChevronLeft, 
-  ChevronRight,
-  ExternalLink,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Banknote,
-  Smartphone
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/utils/supabase';
+import { formatVND } from '@/lib/supabase-public';
+import { Receipt, Search, Download } from 'lucide-react';
+import { PageHeader, LoadingRow, EmptyState, StatusBadge, thClass, tdClass } from '@/components/admin/AdminUI';
 
-const mockOrders = [
-  { id: "ORD-9281", user: "Trần Thành Tân", email: "tan@tanlab.vn", course: "21 Ngày Video Tài Sản", amount: "1,999,000", method: "VNPay", status: "Success", date: "21/04/2026 10:30" },
-  { id: "ORD-9280", user: "Nguyễn Đăng Hạnh", email: "hanh@bakery.com", course: "Video Strategy Audit", amount: "999,000", method: "Bank Transfer", status: "Pending", date: "21/04/2026 09:15" },
-  { id: "ORD-9279", user: "Lê Minh Tấn", email: "tan@academy.com", course: "Premium Coaching 1:1", amount: "12,000,000", method: "VNPay", status: "Success", date: "21/04/2026 08:45" },
-  { id: "ORD-9278", user: "Phạm Gia Bảo", email: "bao@creative.vn", course: "21 Ngày Video Tài Sản", amount: "1,999,000", method: "MoMo", status: "Failed", date: "21/04/2026 07:20" },
-  { id: "ORD-9277", user: "Trương Thị Như Hằng", email: "hang@food.vn", course: "21 Ngày Video Tài Sản", amount: "1,999,000", method: "Bank Transfer", status: "Success", date: "20/04/2026 18:10" },
+const TABS = [
+  { key: 'all', label: 'Tất cả' },
+  { key: 'success', label: 'Thành công' },
+  { key: 'pending', label: 'Đang chờ' },
+  { key: 'failed', label: 'Thất bại' },
 ];
 
 export default function OrdersManagement() {
-  const [activeTab, setActiveTab] = useState("Tất cả");
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('all');
+  const [query, setQuery] = useState('');
 
-  const tabs = ["Tất cả", "Thành công", "Chờ xử lý", "Thất bại"];
+  useEffect(() => {
+    supabase
+      .from('payments')
+      .select('id, order_id, amount, status, payment_method, transaction_id, created_at, users ( email ), courses ( title ), digital_assets ( title )')
+      .order('created_at', { ascending: false })
+      .limit(500)
+      .then(({ data }) => { setOrders(data || []); setLoading(false); });
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return orders.filter((o) =>
+      (tab === 'all' || o.status === tab) &&
+      (!q || [o.order_id, o.users?.email, o.courses?.title, o.digital_assets?.title].some((v) => v?.toLowerCase().includes(q))));
+  }, [orders, tab, query]);
+
+  const exportCsv = () => {
+    const header = ['Mã đơn', 'Thời gian', 'Email', 'Sản phẩm', 'Số tiền', 'Trạng thái', 'Mã giao dịch'];
+    const rows = filtered.map((o) => [o.order_id, new Date(o.created_at).toLocaleString('vi-VN'), o.users?.email || '', o.courses?.title || o.digital_assets?.title || '', o.amount, o.status, o.transaction_id || '']);
+    const csv = [header, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: `don-hang-${new Date().toISOString().slice(0, 10)}.csv` });
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="space-y-10">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mb-2">Quản lý bán hàng</p>
-           <h1 className="text-4xl font-black italic tracking-tighter uppercase text-slate-900 leading-none">Lịch Sử <span className="text-slate-300">Giao Dịch</span></h1>
-        </div>
-        <div className="flex items-center gap-3">
-           <button className="px-8 py-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-slate-900 transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-sm">
-              <Download size={16} /> Xuất báo cáo CSV
-           </button>
-        </div>
-      </header>
+    <div className="space-y-6">
+      <PageHeader
+        title="Đơn hàng"
+        description="Mọi giao dịch qua VNPay. Đơn thành công tự động mở khóa học cho học viên."
+        actions={<button onClick={exportCsv} disabled={filtered.length === 0} className="btn btn-outline"><Download size={16} aria-hidden="true" /> Xuất CSV</button>}
+      />
 
-      {/* Stats Quick View */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-         <div className="p-8 rounded-[3rem] bg-emerald-50 border border-emerald-100 shadow-sm flex items-center justify-between group">
-            <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60 mb-1">Thành công (Tháng)</p>
-               <p className="text-2xl font-black italic text-emerald-600">84,500,000đ</p>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-500 shadow-sm"><CheckCircle2 size={24} /></div>
-         </div>
-         <div className="p-8 rounded-[3rem] bg-amber-50 border border-amber-100 shadow-sm flex items-center justify-between group">
-            <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-amber-600/60 mb-1">Đang chờ xử lý</p>
-               <p className="text-2xl font-black italic text-amber-600">12,200,000đ</p>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-amber-500 shadow-sm"><Clock size={24} /></div>
-         </div>
-         <div className="p-8 rounded-[3rem] bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between group">
-            <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Tổng đơn hàng</p>
-               <p className="text-2xl font-black italic text-white">1,542 đơn</p>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-white shadow-sm"><Smartphone size={24} /></div>
-         </div>
+      <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar" role="tablist" aria-label="Lọc theo trạng thái">
+          {TABS.map((t) => (
+            <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
+                    className={`shrink-0 min-h-[44px] px-4 rounded-md text-sm font-semibold border transition-colors ${tab === t.key ? 'bg-onyx text-white border-onyx' : 'bg-card border-line-strong text-stone hover:border-ink'}`}>
+              {t.label} <span className="opacity-60">({t.key === 'all' ? orders.length : orders.filter((o) => o.status === t.key).length})</span>
+            </button>
+          ))}
+        </div>
+        <div className="relative md:w-80">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <label htmlFor="order-search" className="sr-only">Tìm đơn hàng</label>
+          <input id="order-search" className="input pl-9" placeholder="Mã đơn, email, sản phẩm…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        </div>
       </div>
 
-      {/* Main Table Container */}
-      <div className="bg-white p-10 rounded-[4rem] border border-slate-100 shadow-xl space-y-10">
-         <div className="flex flex-wrap items-center justify-between gap-6">
-            <div className="flex items-center gap-2 p-1 bg-slate-50 rounded-2xl border border-slate-100">
-               {tabs.map(tab => (
-                 <button 
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                 >
-                   {tab}
-                 </button>
-               ))}
-            </div>
-
-            <div className="flex items-center gap-4 flex-1 max-w-sm">
-               <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                  <input type="text" placeholder="Tìm mã đơn, tên..." className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-0 outline-none" />
-               </div>
-            </div>
-         </div>
-
-         <div className="overflow-x-auto">
-            <table className="w-full text-left">
-               <thead>
-                  <tr className="border-b border-slate-50">
-                     <th className="pb-6 text-[10px] font-black uppercase tracking-widest text-slate-300">Đơn hàng</th>
-                     <th className="pb-6 text-[10px] font-black uppercase tracking-widest text-slate-300">Khách hàng</th>
-                     <th className="pb-6 text-[10px] font-black uppercase tracking-widest text-slate-300">Hình thức</th>
-                     <th className="pb-6 text-[10px] font-black uppercase tracking-widest text-slate-300 text-right">Số tiền</th>
-                     <th className="pb-6 text-[10px] font-black uppercase tracking-widest text-slate-300 text-right">Ngày thanh toán</th>
-                     <th className="pb-6 text-[10px] font-black uppercase tracking-widest text-slate-300 text-right">Trạng thái</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  {mockOrders.map((order, i) => (
-                     <tr key={i} className="hover:bg-slate-50 transition-all group">
-                        <td className="py-6">
-                           <span className="text-xs font-black italic text-slate-900">{order.id}</span>
-                           <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 mt-1">{order.course}</p>
-                        </td>
-                        <td className="py-6">
-                           <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-600 underline-accent-secondary inline-block">{order.user}</span>
-                              <span className="text-[10px] font-medium text-slate-300">{order.email}</span>
-                           </div>
-                        </td>
-                        <td className="py-6">
-                           <div className="flex items-center gap-2 text-slate-400">
-                              <Banknote size={14} />
-                              <span className="text-[10px] font-black uppercase tracking-widest">{order.method}</span>
-                           </div>
-                        </td>
-                        <td className="py-6 text-right">
-                           <span className="text-sm font-black italic text-slate-900">{order.amount}đ</span>
-                        </td>
-                        <td className="py-6 text-right">
-                           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{order.date}</div>
-                        </td>
-                        <td className="py-6 text-right">
-                           <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase inline-flex items-center gap-2 shadow-sm ${
-                              order.status === 'Success' ? 'bg-emerald-50 text-emerald-600' : 
-                              order.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
-                           }`}>
-                              {order.status === 'Success' ? <CheckCircle2 size={10} /> : order.status === 'Pending' ? <Clock size={10} /> : <AlertCircle size={10} />}
-                              {order.status}
-                           </span>
-                        </td>
-                     </tr>
-                  ))}
-               </tbody>
-            </table>
-         </div>
-
-         {/* Pagination */}
-         <div className="flex items-center justify-between pt-10 border-t border-slate-50">
-            <p className="text-[10px] font-bold text-slate-300 italic">Page 1 of 54</p>
-            <div className="flex items-center gap-4">
-               <button className="w-10 h-10 rounded-xl border border-slate-100 flex items-center justify-center text-slate-300 hover:text-slate-900 transition-all">
-                  <ChevronLeft size={18} />
-               </button>
-               <button className="w-10 h-10 rounded-xl bg-accent-secondary text-white text-xs font-black shadow-lg">1</button>
-               <button className="w-10 h-10 rounded-xl border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all">
-                  <ChevronRight size={18} />
-               </button>
-            </div>
-         </div>
-      </div>
+      {loading ? <LoadingRow /> : filtered.length === 0 ? (
+        <EmptyState icon={Receipt} title="Không có đơn hàng" text={orders.length ? 'Thử đổi bộ lọc hoặc từ khóa.' : 'Đơn hàng sẽ xuất hiện khi học viên thanh toán.'} />
+      ) : (
+        <div className="card overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-line"><tr><th className={thClass}>Mã đơn</th><th className={thClass}>Thời gian</th><th className={thClass}>Học viên</th><th className={thClass}>Sản phẩm</th><th className={`${thClass} text-right`}>Số tiền</th><th className={thClass}>Trạng thái</th></tr></thead>
+            <tbody className="divide-y divide-line">
+              {filtered.map((o) => (
+                <tr key={o.id} className="hover:bg-muted/60">
+                  <td className={`${tdClass} font-mono text-xs`}>{o.order_id}</td>
+                  <td className={`${tdClass} whitespace-nowrap`}>{new Date(o.created_at).toLocaleString('vi-VN')}</td>
+                  <td className={tdClass}>{o.users?.email || '—'}</td>
+                  <td className={tdClass}>{o.courses?.title || o.digital_assets?.title || '—'}</td>
+                  <td className={`${tdClass} text-right font-semibold whitespace-nowrap`}>{formatVND(o.amount)}</td>
+                  <td className={tdClass}><StatusBadge status={o.status} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

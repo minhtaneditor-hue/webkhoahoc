@@ -1,175 +1,178 @@
 "use client";
 
 import { Suspense, useState } from 'react';
-import { supabase } from '@/utils/supabase';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  Mail, 
-  Lock, 
-  Loader2, 
-  ArrowRight, 
-  ChevronLeft,
-  Terminal,
-  ShieldCheck,
-  Zap,
-  Fingerprint
-} from 'lucide-react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
+import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { supabase } from '@/utils/supabase';
+import { Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+
+type Mode = 'login' | 'signup' | 'reset';
+
+const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+// Translate the most common Supabase auth errors into Vietnamese
+function friendlyError(message: string) {
+  const m = message.toLowerCase();
+  if (m.includes('invalid login credentials')) return 'Email hoặc mật khẩu không đúng.';
+  if (m.includes('email not confirmed')) return 'Email chưa được xác nhận. Vui lòng kiểm tra hộp thư.';
+  if (m.includes('already registered')) return 'Email này đã có tài khoản. Hãy đăng nhập.';
+  if (m.includes('rate limit')) return 'Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.';
+  return message;
+}
 
 function AuthForm() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const redirectTo = searchParams?.get('redirect') || '/dashboard';
+  const rawRedirect = searchParams?.get('redirect') || '/dashboard';
+  // Only allow same-site paths so ?redirect=https://evil.com can't be abused
+  const redirectTo = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard';
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const [mode, setMode] = useState<Mode>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const switchMode = (m: Mode) => { setMode(m); setError(null); setNotice(null); };
+
+  const passwordInvalid = mode === 'signup' && password.length > 0 && !PASSWORD_RULE.test(password);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccess(false);
+    setNotice(null);
 
     try {
-      if (!isLogin) {
-        // Tanlab Password Policy Enforcement
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-        if (!passwordRegex.test(password)) {
-          throw new Error("Mật khẩu phải tối thiểu 8 ký tự, bao gồm số, chữ thường và ít nhất 1 chữ hoa.");
-        }
-
-        const { error } = await supabase.auth.signUp({ 
-          email, 
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
-          }
+      if (mode === 'reset') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         });
         if (error) throw error;
-        alert('Đăng ký thành công! Bạn có thể đăng nhập ngay với mật khẩu vừa tạo.');
-        setIsLogin(true);
+        setNotice('Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư (cả mục Spam).');
         return;
+      }
+
+      if (mode === 'signup') {
+        if (!PASSWORD_RULE.test(password)) {
+          throw new Error('Mật khẩu cần tối thiểu 8 ký tự, có chữ hoa, chữ thường và số.');
+        }
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}` },
+        });
+        if (error) throw error;
+        if (!data.session) {
+          setNotice('Tạo tài khoản thành công! Hãy mở email xác nhận để kích hoạt, sau đó đăng nhập.');
+          setMode('login');
+          return;
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      
+
       router.push(redirectTo);
       router.refresh();
     } catch (err: any) {
-      setError(err.message);
+      setError(friendlyError(err.message || 'Đã có lỗi xảy ra.'));
     } finally {
       setLoading(false);
     }
   };
 
+  const titles: Record<Mode, { title: string; sub: string; cta: string }> = {
+    login: { title: 'Chào mừng trở lại', sub: 'Đăng nhập để tiếp tục khóa học của bạn.', cta: 'Đăng nhập' },
+    signup: { title: 'Tạo tài khoản', sub: 'Miễn phí — học thử ngay bài đầu tiên.', cta: 'Tạo tài khoản' },
+    reset: { title: 'Quên mật khẩu', sub: 'Nhập email, chúng tôi sẽ gửi link đặt lại mật khẩu.', cta: 'Gửi link đặt lại' },
+  };
+
   return (
-    <div className="w-full max-w-md relative z-10 pt-20">
-      <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors mb-10 group px-2 font-black uppercase text-[10px] tracking-widest">
-        <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-        QUAY LẠI CỔNG CHÍNH
-      </Link>
+    <div className="w-full max-w-md">
+      <h1 className="text-4xl md:text-5xl">{titles[mode].title}</h1>
+      <p className="mt-2 text-muted-foreground">{titles[mode].sub}</p>
 
-      <div className="auth-card">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-secondary/5 text-accent-secondary text-[10px] font-black mb-6 uppercase tracking-widest border border-accent-secondary/10">
-            <Fingerprint size={14} />
-            TRÌNH XÁC THỰC TANLAB
-          </div>
-          <h1 className="text-4xl font-black mb-3 italic tracking-tighter uppercase text-slate-900 leading-none">
-            {isLogin ? 'ĐĂNG NHẬP' : 'KHỞI TẠO'}
-          </h1>
-          <p className="text-slate-400 text-sm font-medium italic">
-            {isLogin ? 'Truy cập trung tâm điều hành của bạn.' : 'Thiết lập mật khẩu truy cập hệ thống.'}
-          </p>
+      {notice && (
+        <p role="status" className="mt-6 flex gap-3 p-4 rounded-md bg-gold-soft text-ink text-sm">
+          <CheckCircle2 size={18} className="text-gold shrink-0 mt-0.5" aria-hidden="true" /> {notice}
+        </p>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
+        <div>
+          <label htmlFor="email" className="field-label">Email</label>
+          <input id="email" type="email" required autoComplete="email" inputMode="email" className="input"
+                 value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ban@email.com" />
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-8">
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] ml-2">ĐỊA CHỈ EMAIL</label>
+        {mode !== 'reset' && (
+          <div>
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="field-label">Mật khẩu</label>
+              {mode === 'login' && (
+                <button type="button" onClick={() => switchMode('reset')} className="text-sm text-gold font-semibold hover:underline underline-offset-4 mb-1.5">Quên mật khẩu?</button>
+              )}
+            </div>
             <div className="relative">
-              <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-              <input 
-                type="email" 
-                placeholder="partner@tanlab.com"
-                className="glass-input pl-14"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <input id="password" type={showPassword ? 'text' : 'password'} required
+                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                     className="input pr-12" value={password} onChange={(e) => setPassword(e.target.value)}
+                     aria-invalid={passwordInvalid} aria-describedby={mode === 'signup' ? 'password-help' : undefined} />
+              <button type="button" onClick={() => setShowPassword((s) => !s)} aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-ink">
+                {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
             </div>
+            {mode === 'signup' && (
+              <p id="password-help" className={`mt-2 text-sm ${passwordInvalid ? 'text-danger' : 'text-muted-foreground'}`}>
+                Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số.
+              </p>
+            )}
           </div>
+        )}
 
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] ml-2">MẬT MÃ TRUY CẬP</label>
-            <div className="relative">
-              <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-              <input 
-                type="password" 
-                placeholder="••••••••"
-                className="glass-input pl-14"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+        {error && <p role="alert" className="p-4 rounded-md bg-red-50 text-danger text-sm">{error}</p>}
 
-          {error && (
-            <div className="p-5 rounded-2xl bg-accent-secondary/5 border border-accent-secondary/10 text-accent-secondary text-[11px] text-center font-black uppercase tracking-widest leading-relaxed">
-              {error}
-            </div>
-          )}
+        <button type="submit" disabled={loading || !email} className="btn btn-gold w-full">
+          {loading && <Loader2 size={18} className="animate-spin" aria-hidden="true" />}
+          {titles[mode].cta}
+        </button>
+      </form>
 
-          <div className="grid grid-cols-1 gap-4 mt-6">
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="btn-premium py-6 rounded-3xl flex items-center justify-center gap-4 shadow-2xl"
-            >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <ArrowRight size={20} />}
-              <span className="tracking-[0.2em]">{isLogin ? 'TIẾN VÀO HỆ THỐNG' : 'HOÀN TẤT THIẾT LẬP'}</span>
-            </button>
-            <button 
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-center text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-accent-secondary py-4 transition-colors"
-            >
-              {isLogin ? "BẠN LÀ THÀNH VIÊN MỚI? ĐĂNG KÝ NGAY" : "ĐÃ CÓ TÀI KHOẢN? QUAY LẠI ĐĂNG NHẬP"}
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-12 pt-8 border-t border-slate-50 grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2 text-[10px] font-black text-slate-200 uppercase tracking-widest">
-            <ShieldCheck size={14} className="text-accent-secondary" />
-            ENCRYPTED
-          </div>
-          <div className="flex items-center gap-2 text-[10px] font-black text-slate-200 justify-end uppercase tracking-widest">
-            <Zap size={14} className="text-accent-primary" />
-            V21.0 CORE
-          </div>
-        </div>
-      </div>
+      <p className="mt-8 text-center text-muted-foreground">
+        {mode === 'login' ? (
+          <>Chưa có tài khoản? <button onClick={() => switchMode('signup')} className="font-semibold text-gold hover:underline underline-offset-4 min-h-[44px]">Đăng ký miễn phí</button></>
+        ) : (
+          <>Đã có tài khoản? <button onClick={() => switchMode('login')} className="font-semibold text-gold hover:underline underline-offset-4 min-h-[44px]">Đăng nhập</button></>
+        )}
+      </p>
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        Bằng việc tiếp tục, bạn đồng ý với <Link href="/terms" className="underline">Điều khoản</Link> và <Link href="/privacy" className="underline">Chính sách bảo mật</Link>.
+      </p>
     </div>
   );
 }
 
 export default function AuthPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-white relative overflow-hidden">
-      
-      {/* Background Decor */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-primary/5 blur-[120px] rounded-full" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-accent-secondary/5 blur-[120px] rounded-full" />
-      
-      <Suspense fallback={<Loader2 className="animate-spin text-accent-secondary" />}>
-        <AuthForm />
-      </Suspense>
+    <main className="grid lg:grid-cols-2 min-h-[calc(100vh-112px)]">
+      <div className="flex items-center justify-center px-5 py-12 md:px-12">
+        <Suspense fallback={<Loader2 className="animate-spin text-gold" aria-label="Đang tải" />}>
+          <AuthForm />
+        </Suspense>
+      </div>
+      <div className="hidden lg:block relative surface-dark">
+        <Image src="/asset/avatar/hero_expert.jpg" alt="" fill sizes="50vw" className="object-cover opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-onyx via-onyx/40 to-transparent" aria-hidden="true" />
+        <blockquote className="absolute bottom-12 left-12 right-12">
+          <p className="font-display text-4xl leading-tight text-white">“Mỗi video bạn làm ra đều có thể trở thành một tài sản.”</p>
+          <footer className="mt-4 text-gold-light font-semibold">— Minh Tấn, Video Advisor</footer>
+        </blockquote>
+      </div>
     </main>
   );
 }

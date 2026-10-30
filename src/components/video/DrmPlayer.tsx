@@ -30,7 +30,7 @@ const DrmPlayer: React.FC<DrmPlayerProps> = ({
   // Initialize Security SDK
   useEffect(() => {
     const sdk = new SecuritySDK({
-      violationMessage: 'tVNDRM [PROTECTED]: Unauthorized activity detected.'
+      violationMessage: 'Phát hiện thao tác không được phép trên video.'
     });
     sdkRef.current = sdk;
 
@@ -80,24 +80,21 @@ const DrmPlayer: React.FC<DrmPlayerProps> = ({
   };
 
   return (
-    <div className="relative group rounded-3xl overflow-hidden bg-black border border-white/5 shadow-2xl min-h-[400px]">
+    <div className="relative group w-full h-full overflow-hidden bg-black">
       {/* Intro Overlay */}
       {!isLoaded && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl transition-all duration-700">
-          <div className="mb-8">
-            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center border border-white/10 animate-pulse">
-                <Lock className="text-white w-10 h-10" />
-            </div>
+          <div className="mb-6 w-16 h-16 rounded-full flex items-center justify-center border border-gold-light/40 text-gold-light">
+            <Lock className="w-7 h-7" aria-hidden="true" />
           </div>
-          <div className="text-center mb-10">
-            <h3 className="text-xl font-bold uppercase tracking-[0.3em] mb-2">tVNDRM Protected</h3>
-            <p className="text-white/40 text-[10px] font-mono tracking-widest uppercase">ENCRYPTED STREAM • ID: {videoId}</p>
-          </div>
-          <button 
+          <p className="text-white font-semibold mb-1">Video được bảo vệ bản quyền</p>
+          <p className="text-stone-400 text-sm mb-8 px-6 text-center">Video gắn dấu email của bạn để chống sao chép.</p>
+          <button
             onClick={handleStart}
-            className="px-10 py-4 bg-white text-black rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-all shadow-xl"
+            disabled={!token}
+            className="btn btn-gold"
           >
-            DECRYPT & WATCH
+            {token ? <><Play className="w-4 h-4" fill="currentColor" aria-hidden="true" /> Phát video</> : 'Đang chuẩn bị video…'}
           </button>
         </div>
       )}
@@ -117,11 +114,10 @@ const DrmPlayer: React.FC<DrmPlayerProps> = ({
       {/* Violation Shield */}
       {isViolated && (
         <div className="absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center p-12 text-center">
-            <ShieldAlert className="w-16 h-16 text-red-500 mb-6" />
-            <h3 className="text-2xl font-bold text-red-500 uppercase italic">Security Breach</h3>
-            <p className="text-white/60 mt-4 max-w-sm">
-                Developer tools or recording software detected. 
-                Playback restricted for security.
+            <ShieldAlert className="w-12 h-12 text-gold-light mb-5" aria-hidden="true" />
+            <p className="text-xl font-semibold text-white">Đã tạm dừng phát video</p>
+            <p className="text-stone-400 mt-3 max-w-sm">
+                Phát hiện công cụ nhà phát triển hoặc phần mềm quay màn hình. Hãy tắt chúng rồi tải lại trang.
             </p>
         </div>
       )}

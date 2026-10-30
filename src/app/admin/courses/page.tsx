@@ -1,182 +1,250 @@
 "use client";
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { 
-  Database, 
-  Plus, 
-  Search, 
-  Settings, 
-  PlayCircle, 
-  Layers, 
-  ChevronRight, 
-  MoreVertical, 
-  Eye, 
-  Video, 
-  Globe, 
-  DollarSign,
-  GripVertical,
-  CheckCircle2,
-  Users
-} from 'lucide-react';
+import Image from 'next/image';
+import { supabase } from '@/utils/supabase';
+import { formatVND } from '@/lib/supabase-public';
+import { Plus, Pencil, Trash2, Database, ListVideo, ExternalLink, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { PageHeader, LoadingRow, EmptyState, Modal, Field, StatusBadge } from '@/components/admin/AdminUI';
 
-const mockCourses = [
-  { 
-    id: "c1", 
-    title: "21 Ngày Biến Video Thành Tài Sản", 
-    slug: "21-ngay-video-tai-san",
-    price: "1,999,000", 
-    students: 1240, 
-    chapters: 5, 
-    lessons: 21,
-    status: "Published",
-    thumbnail: "/asset/hoc_vien/tan.jpg"
-  },
-  { 
-    id: "c2", 
-    title: "Video Strategy Audit", 
-    slug: "video-strategy-audit",
-    price: "0 (Consulting)", 
-    students: 450, 
-    chapters: 1, 
-    lessons: 3,
-    status: "Published",
-    thumbnail: "/asset/du_an_tieu_bieu/project_nhth.jpg"
-  },
-  { 
-    id: "c3", 
-    title: "Quy Trình Sản Xuất Truyền Hình", 
-    slug: "production-process",
-    price: "9,999,000", 
-    students: 85, 
-    chapters: 12, 
-    lessons: 48,
-    status: "Draft",
-    thumbnail: "/asset/du_an_tieu_bieu/project_2n1d.webp"
-  }
-];
+const emptyCourse = { title: '', slug: '', description: '', price: 0, old_price: '', thumbnail_url: '', is_published: false };
+const emptyLesson = { title: '', video_url: '', content: '', is_free: false };
+
+const slugify = (s: string) =>
+  s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+type Notice = { type: 'success' | 'error'; text: string } | null;
 
 export default function CourseManagement() {
-  const [activeTab, setActiveTab] = useState("Tất cả");
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState<Notice>(null);
+  const [editing, setEditing] = useState<any>(null); // course form state (null = closed)
+  const [lessonsFor, setLessonsFor] = useState<any>(null); // course whose lessons are open
+  const [lessons, setLessons] = useState<any[]>([]);
+  const [lessonForm, setLessonForm] = useState<any>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(
+    () => supabase.from('courses').select('*, lessons ( id )').order('created_at').then(({ data }) => {
+      setCourses(data || []);
+      setLoading(false);
+    }),
+    []
+  );
+
+  useEffect(() => { load(); }, [load]);
+
+  const loadLessons = useCallback(async (courseId: string) => {
+    const { data } = await supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index');
+    setLessons(data || []);
+  }, []);
+
+  async function saveCourse(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const payload = {
+      title: editing.title.trim(),
+      slug: editing.slug.trim() || slugify(editing.title),
+      description: editing.description || null,
+      price: Number(editing.price) || 0,
+      old_price: editing.old_price === '' || editing.old_price == null ? null : Number(editing.old_price),
+      thumbnail_url: editing.thumbnail_url || null,
+      is_published: !!editing.is_published,
+    };
+    const { error } = editing.id
+      ? await supabase.from('courses').update(payload).eq('id', editing.id)
+      : await supabase.from('courses').insert(payload);
+    setBusy(false);
+    if (error) return setNotice({ type: 'error', text: `Không lưu được: ${error.message}` });
+    setNotice({ type: 'success', text: `Đã lưu khóa học “${payload.title}”.` });
+    setEditing(null);
+    load();
+  }
+
+  async function togglePublish(course: any) {
+    const { error } = await supabase.from('courses').update({ is_published: !course.is_published }).eq('id', course.id);
+    if (error) return setNotice({ type: 'error', text: error.message });
+    load();
+  }
+
+  async function deleteCourse(course: any) {
+    if (!confirm(`Xóa khóa học “${course.title}” cùng toàn bộ bài học? Không thể hoàn tác.`)) return;
+    const { error } = await supabase.from('courses').delete().eq('id', course.id);
+    setNotice(error ? { type: 'error', text: error.message } : { type: 'success', text: 'Đã xóa khóa học.' });
+    load();
+  }
+
+  async function openLessons(course: any) {
+    setLessonsFor(course);
+    setLessonForm(null);
+    await loadLessons(course.id);
+  }
+
+  async function saveLesson(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const payload = {
+      title: lessonForm.title.trim(),
+      video_url: lessonForm.video_url.trim() || null,
+      content: lessonForm.content || null,
+      is_free: !!lessonForm.is_free,
+    };
+    const { error } = lessonForm.id
+      ? await supabase.from('lessons').update(payload).eq('id', lessonForm.id)
+      : await supabase.from('lessons').insert({ ...payload, course_id: lessonsFor.id, order_index: (lessons.at(-1)?.order_index ?? 0) + 1 });
+    setBusy(false);
+    if (error) return setNotice({ type: 'error', text: `Không lưu được bài học: ${error.message}` });
+    setLessonForm(null);
+    loadLessons(lessonsFor.id);
+    load();
+  }
+
+  async function deleteLesson(lesson: any) {
+    if (!confirm(`Xóa bài “${lesson.title}”?`)) return;
+    await supabase.from('lessons').delete().eq('id', lesson.id);
+    loadLessons(lessonsFor.id);
+    load();
+  }
+
+  async function moveLesson(index: number, dir: -1 | 1) {
+    const a = lessons[index];
+    const b = lessons[index + dir];
+    if (!a || !b) return;
+    await Promise.all([
+      supabase.from('lessons').update({ order_index: b.order_index }).eq('id', a.id),
+      supabase.from('lessons').update({ order_index: a.order_index }).eq('id', b.id),
+    ]);
+    loadLessons(lessonsFor.id);
+  }
 
   return (
-    <div className="space-y-10">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mb-2">Quản lý nội dung</p>
-           <h1 className="text-4xl font-black italic tracking-tighter uppercase text-slate-900 leading-none">Kiến Trúc <span className="text-slate-300">Khóa Học</span></h1>
-        </div>
-        <div className="flex items-center gap-3">
-           <button className="px-8 py-2.5 rounded-xl bg-accent-secondary text-white text-[10px] font-black uppercase tracking-widest shadow-lg hover:shadow-accent-secondary/30 transition-all flex items-center gap-2">
-              <Plus size={16} /> Tạo khóa học mới
-           </button>
-        </div>
-      </header>
+    <div className="space-y-6">
+      <PageHeader
+        title="Khóa học & bài học"
+        description="Tạo khóa học, sắp xếp lộ trình và chọn bài học thử miễn phí."
+        actions={<button onClick={() => setEditing({ ...emptyCourse })} className="btn btn-gold"><Plus size={16} aria-hidden="true" /> Tạo khóa học</button>}
+      />
 
-      {/* Course List Grid */}
-      <div className="grid grid-cols-1 gap-8">
-        {mockCourses.map((course, i) => (
-          <motion.div 
-            key={course.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-white rounded-[3rem] border border-slate-100 shadow-xl overflow-hidden flex flex-col lg:flex-row group"
-          >
-            {/* Thumbnail Area */}
-            <div className="lg:w-80 h-60 relative overflow-hidden shrink-0">
-               <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover grayscale brightness-110 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
-               <div className="absolute top-6 left-6 flex gap-2">
-                  <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl border border-white/20 backdrop-blur-md ${
-                     course.status === 'Published' ? 'bg-emerald-500/80 text-white' : 'bg-slate-500/80 text-white'
-                  }`}>
-                    {course.status === 'Published' ? <div className="flex items-center gap-2"><Globe size={10} /> Public</div> : 'Draft'}
-                  </span>
-               </div>
-               <div className="absolute inset-0 bg-gradient-to-r from-white via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      {notice && (
+        <p role={notice.type === 'error' ? 'alert' : 'status'} className={`p-4 rounded-md text-sm flex justify-between gap-4 ${notice.type === 'error' ? 'bg-red-50 text-danger' : 'bg-gold-soft text-ink'}`}>
+          {notice.text}<button onClick={() => setNotice(null)} aria-label="Đóng thông báo"><X size={16} aria-hidden="true" /></button>
+        </p>
+      )}
+
+      {loading ? <LoadingRow /> : courses.length === 0 ? (
+        <EmptyState icon={Database} title="Chưa có khóa học" action={<button onClick={() => setEditing({ ...emptyCourse })} className="btn btn-gold">Tạo khóa học đầu tiên</button>} />
+      ) : (
+        <ul className="space-y-4">
+          {courses.map((c) => (
+            <li key={c.id} className="card p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4">
+              <div className="relative w-full md:w-40 aspect-video rounded-md overflow-hidden bg-muted shrink-0">
+                <Image src={c.thumbnail_url || '/asset/hoc_vien/tan.jpg'} alt="" fill sizes="160px" className="object-cover" unoptimized={!!c.thumbnail_url?.startsWith('http')} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap"><StatusBadge status={c.is_published ? 'published' : 'draft'} /><span className="text-sm text-muted-foreground">{c.lessons?.length || 0} bài học</span></div>
+                <h2 className="mt-1 text-2xl truncate">{c.title}</h2>
+                <p className="text-sm text-muted-foreground">{formatVND(c.price)}{c.old_price ? ` · giá gốc ${formatVND(c.old_price)}` : ''}</p>
+              </div>
+              <div className="flex flex-wrap gap-2 shrink-0">
+                <button onClick={() => openLessons(c)} className="btn btn-dark !min-h-[40px] !px-3 text-sm"><ListVideo size={16} aria-hidden="true" /> Bài học</button>
+                <button onClick={() => setEditing({ ...c, old_price: c.old_price ?? '' })} className="btn btn-outline !min-h-[40px] !px-3 text-sm"><Pencil size={14} aria-hidden="true" /> Sửa</button>
+                <button onClick={() => togglePublish(c)} className="btn btn-outline !min-h-[40px] !px-3 text-sm">{c.is_published ? 'Ẩn' : 'Mở bán'}</button>
+                <Link href={`/courses/${c.id}`} target="_blank" className="w-10 h-10 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-ink" aria-label={`Xem trang ${c.title}`}><ExternalLink size={16} aria-hidden="true" /></Link>
+                <button onClick={() => deleteCourse(c)} className="w-10 h-10 rounded-md flex items-center justify-center text-muted-foreground hover:bg-red-50 hover:text-danger" aria-label={`Xóa ${c.title}`}><Trash2 size={16} aria-hidden="true" /></button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Course form */}
+      <Modal title={editing?.id ? 'Sửa khóa học' : 'Tạo khóa học'} open={!!editing} onClose={() => setEditing(null)}>
+        {editing && (
+          <form onSubmit={saveCourse} className="space-y-5">
+            <Field id="c-title" label="Tên khóa học">
+              <input id="c-title" className="input" required value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+            </Field>
+            <Field id="c-slug" label="Đường dẫn (slug)" hint="Để trống sẽ tự tạo từ tên khóa học.">
+              <input id="c-slug" className="input" value={editing.slug || ''} placeholder={slugify(editing.title)} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} />
+            </Field>
+            <Field id="c-desc" label="Mô tả ngắn">
+              <textarea id="c-desc" className="input min-h-[96px]" value={editing.description || ''} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="c-price" label="Học phí (VNĐ)">
+                <input id="c-price" type="number" min={0} step={1000} className="input" value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })} />
+              </Field>
+              <Field id="c-old" label="Giá gốc (gạch ngang)" hint="Không bắt buộc">
+                <input id="c-old" type="number" min={0} step={1000} className="input" value={editing.old_price} onChange={(e) => setEditing({ ...editing, old_price: e.target.value })} />
+              </Field>
             </div>
-
-            {/* Content Area */}
-            <div className="flex-1 p-10 flex flex-col">
-               <div className="flex justify-between items-start mb-6">
-                  <div>
-                     <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 mb-2 group-hover:text-accent-secondary transition-colors underline-accent">{course.title}</h3>
-                     <div className="flex items-center gap-4 text-slate-300 font-mono text-[10px] tracking-widest">
-                        <span className="flex items-center gap-1"><Layers size={12} /> {course.chapters} CHƯƠNG</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1"><PlayCircle size={12} /> {course.lessons} BÀI GIẢNG</span>
-                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                     <button className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-accent-secondary transition-all"><Settings size={18} /></button>
-                     <button className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"><MoreVertical size={18} /></button>
-                  </div>
-               </div>
-
-               <div className="mt-auto flex flex-wrap items-center justify-between gap-6 pt-10 border-t border-slate-50">
-                  <div className="flex items-center gap-10">
-                     <div className="flex flex-col">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 mb-1">Doanh thu / Giá</span>
-                        <span className="text-sm font-black italic tracking-tighter text-slate-900">{course.price}đ</span>
-                     </div>
-                     <div className="flex flex-col">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 mb-1">Học viên</span>
-                        <div className="flex items-center gap-2">
-                           <Users size={14} className="text-slate-300" />
-                           <span className="text-sm font-black italic tracking-tighter text-slate-900">{course.students}</span>
-                        </div>
-                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                     <button className="px-6 py-3 rounded-xl bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all flex items-center gap-2">
-                        <Video size={14} /> Chỉnh sửa Video
-                     </button>
-                     <Link href={`/courses/${course.id}`} className="px-6 py-3 rounded-xl bg-accent-secondary text-white text-[10px] font-black uppercase tracking-widest shadow-xl hover:shadow-accent-secondary/30 transition-all flex items-center gap-2">
-                        Chi tiết bài giảng <ChevronRight size={14} />
-                     </Link>
-                  </div>
-               </div>
+            <Field id="c-thumb" label="Link ảnh bìa" hint="Đường dẫn ảnh 16:9, ví dụ /asset/... hoặc https://...">
+              <input id="c-thumb" className="input" value={editing.thumbnail_url || ''} onChange={(e) => setEditing({ ...editing, thumbnail_url: e.target.value })} />
+            </Field>
+            <label className="flex items-center gap-3 min-h-[44px]">
+              <input type="checkbox" className="w-5 h-5 accent-[#A16207]" checked={!!editing.is_published} onChange={(e) => setEditing({ ...editing, is_published: e.target.checked })} />
+              <span className="font-semibold">Mở bán công khai</span>
+            </label>
+            <div className="flex justify-end gap-2 pt-2">
+              <button type="button" onClick={() => setEditing(null)} className="btn btn-outline">Hủy</button>
+              <button type="submit" disabled={busy || !editing.title.trim()} className="btn btn-gold">Lưu khóa học</button>
             </div>
-          </motion.div>
-        ))}
-      </div>
+          </form>
+        )}
+      </Modal>
 
-      {/* Global Course Settings (Stub) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
-         <div className="bg-slate-950 rounded-[4rem] p-12 text-white relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-accent-secondary/10 blur-[100px] pointer-events-none" />
-            <Globe size={40} className="text-accent-secondary mb-10" />
-            <h4 className="text-2xl font-black italic uppercase italic-glow mb-6">CẤU HÌNH SEO <br /> & ĐỊNH DANH</h4>
-            <div className="space-y-6">
-               <div className="flex items-center gap-4 text-xs font-bold text-slate-400 italic">
-                  <CheckCircle2 size={16} className="text-emerald-500" /> Tự động tạo Slug theo Title
-               </div>
-               <div className="flex items-center gap-4 text-xs font-bold text-slate-400 italic">
-                  <CheckCircle2 size={16} className="text-emerald-500" /> Meta description tối ưu AI
-               </div>
-               <div className="flex items-center gap-4 text-xs font-bold text-slate-400 italic">
-                  <CheckCircle2 size={16} className="text-emerald-500" /> Schema markup Course/FAQ
-               </div>
+      {/* Lessons manager */}
+      <Modal title={`Bài học — ${lessonsFor?.title || ''}`} open={!!lessonsFor} onClose={() => setLessonsFor(null)} wide>
+        {lessonForm ? (
+          <form onSubmit={saveLesson} className="space-y-5">
+            <Field id="l-title" label="Tên bài học">
+              <input id="l-title" className="input" required value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} />
+            </Field>
+            <Field id="l-video" label="Video" hint="Link YouTube/Vimeo, hoặc drm:MÃ-VIDEO cho video bảo vệ bằng DRM.">
+              <input id="l-video" className="input" value={lessonForm.video_url || ''} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} />
+            </Field>
+            <Field id="l-content" label="Nội dung / ghi chú bài học">
+              <textarea id="l-content" className="input min-h-[120px]" value={lessonForm.content || ''} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
+            </Field>
+            <label className="flex items-center gap-3 min-h-[44px]">
+              <input type="checkbox" className="w-5 h-5 accent-[#A16207]" checked={!!lessonForm.is_free} onChange={(e) => setLessonForm({ ...lessonForm, is_free: e.target.checked })} />
+              <span className="font-semibold">Cho học thử miễn phí</span>
+            </label>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setLessonForm(null)} className="btn btn-outline">Quay lại</button>
+              <button type="submit" disabled={busy || !lessonForm.title.trim()} className="btn btn-gold">Lưu bài học</button>
             </div>
-            <button className="mt-12 w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Quản lý SEO toàn trang</button>
-         </div>
-
-         <div className="bg-white rounded-[4rem] p-12 border border-slate-100 shadow-xl flex flex-col">
-            <DollarSign size={40} className="text-accent-secondary mb-10" />
-            <h4 className="text-2xl font-black italic uppercase tracking-tighter mb-6 text-slate-900">CHỈNH SỬA <br /> BẢNG GIÁ NHANH</h4>
-            <div className="flex-1 space-y-6">
-               {mockCourses.map(c => (
-                 <div key={c.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <span className="text-[10px] font-black uppercase truncate max-w-[200px]">{c.title}</span>
-                    <input type="text" defaultValue={c.price} className="w-24 text-right bg-transparent text-xs font-black italic outline-none text-slate-900" />
-                 </div>
-               ))}
-            </div>
-            <button className="mt-12 w-full py-5 rounded-2xl bg-accent-secondary text-white text-[10px] font-black uppercase tracking-widest shadow-xl hover:shadow-accent-secondary/30 transition-all">Cập nhật bảng giá</button>
-         </div>
-      </div>
+          </form>
+        ) : (
+          <div className="space-y-4">
+            {lessons.length === 0 ? (
+              <p className="text-muted-foreground">Khóa học chưa có bài học nào.</p>
+            ) : (
+              <ol className="divide-y divide-line border border-line rounded-md">
+                {lessons.map((l, i) => (
+                  <li key={l.id} className="flex items-center gap-3 p-3">
+                    <span className="w-7 text-center font-display text-xl text-muted-foreground">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{l.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{l.video_url || 'Chưa có video'}{l.is_free ? ' · Học thử' : ''}</p>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => moveLesson(i, -1)} disabled={i === 0} className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-muted disabled:opacity-30" aria-label="Chuyển lên"><ArrowUp size={16} aria-hidden="true" /></button>
+                      <button onClick={() => moveLesson(i, 1)} disabled={i === lessons.length - 1} className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-muted disabled:opacity-30" aria-label="Chuyển xuống"><ArrowDown size={16} aria-hidden="true" /></button>
+                      <button onClick={() => setLessonForm({ ...l })} className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-muted" aria-label={`Sửa ${l.title}`}><Pencil size={15} aria-hidden="true" /></button>
+                      <button onClick={() => deleteLesson(l)} className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-red-50 hover:text-danger" aria-label={`Xóa ${l.title}`}><Trash2 size={15} aria-hidden="true" /></button>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+            <button onClick={() => setLessonForm({ ...emptyLesson })} className="btn btn-gold"><Plus size={16} aria-hidden="true" /> Thêm bài học</button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
