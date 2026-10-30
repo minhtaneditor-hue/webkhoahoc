@@ -42,7 +42,7 @@ export default function Home() {
           { data: settingsData }
         ] = await Promise.all([
           supabase.auth.getUser(),
-          supabase.from('courses').select('*').order('created_at', { ascending: false }),
+          supabase.from('courses').select('*').eq('is_published', true).order('created_at', { ascending: false }),
           supabase.from('site_settings').select('*')
         ]);
 
@@ -71,15 +71,11 @@ export default function Home() {
       const response = await fetch('/api/payment/vnpay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseId,
-          amount,
-          courseTitle: title,
-          userId: user.id
-        })
+        body: JSON.stringify({ courseId })
       });
       const data = await response.json();
       if (data.url) window.location.href = data.url;
+      else alert('Lỗi: ' + data.error);
     } catch (err) {
       alert('Lỗi kết nối server');
     } finally {

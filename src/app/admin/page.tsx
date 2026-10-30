@@ -173,7 +173,7 @@ export default function AdminDashboard() {
                           <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
                              <motion.div 
                                initial={{ width: 0 }}
-                               animate={{ width: `${Math.random() * 80 + 20}%` }}
+                               animate={{ width: `${[72, 45, 88][i - 1]}%` }}
                                className="h-full bg-accent-secondary"
                              />
                           </div>

@@ -18,20 +18,40 @@ export default function ShopPage() {
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [purchasedIds, setPurchasedIds] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchAssets() {
-      const { data } = await supabase.from('digital_assets').select('*').order('created_at', { ascending: false });
+      // Public view without download_url — links are only handed out by /api/shop/download
+      const { data } = await supabase.from('digital_assets_public').select('*').order('created_at', { ascending: false });
       setAssets(data || []);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: paid } = await supabase
+          .from('payments')
+          .select('asset_id')
+          .eq('user_id', user.id)
+          .eq('status', 'success')
+          .not('asset_id', 'is', null);
+        setPurchasedIds((paid || []).map(p => p.asset_id));
+      }
       setLoading(false);
     }
     fetchAssets();
   }, []);
 
+  async function handleDownload(asset: any) {
+    const response = await fetch(`/api/shop/download?assetId=${asset.id}`);
+    const data = await response.json();
+    if (data.url) window.open(data.url, '_blank', 'noopener');
+    else alert('Lỗi: ' + data.error);
+  }
+
   async function handlePurchase(asset: any) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      window.location.href = `/auth?redirect=/shop`;
+      window.location.assign('/auth?redirect=/shop');
       return;
     }
 
@@ -39,15 +59,10 @@ export default function ShopPage() {
       const response = await fetch('/api/payment/vnpay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseId: asset.id, // Reusing courseId field for asset ID in simple logic
-          amount: asset.price,
-          courseTitle: `[ASSET] ${asset.title}`,
-          userId: user.id
-        })
+        body: JSON.stringify({ assetId: asset.id })
       });
       const data = await response.json();
-      if (data.url) window.location.href = data.url;
+      if (data.url) window.location.assign(data.url);
       else alert('Lỗi: ' + data.error);
     } catch (err) {
       alert('Lỗi kết nối thanh toán');
@@ -135,10 +150,11 @@ export default function ShopPage() {
                    </div>
                    
                    <button 
-                     onClick={() => handlePurchase(asset)}
+                     onClick={() => purchasedIds.includes(asset.id) || Number(asset.price) === 0 ? handleDownload(asset) : handlePurchase(asset)}
+                     title={purchasedIds.includes(asset.id) || Number(asset.price) === 0 ? 'Tải về' : 'Mua ngay'}
                      className="w-14 h-14 rounded-2xl bg-white text-black flex items-center justify-center hover:bg-accent-secondary hover:text-white transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_40px_rgba(255,165,0,0.2)]"
                    >
-                     <ShoppingBag size={22} />
+                     {purchasedIds.includes(asset.id) || Number(asset.price) === 0 ? <Download size={22} /> : <ShoppingBag size={22} />}
                    </button>
                 </div>
               </div>

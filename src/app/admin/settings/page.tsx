@@ -13,6 +13,13 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const router = useRouter();
 
+  async function fetchSettings() {
+    setLoading(true);
+    const { data } = await supabase.from('site_settings').select('*').order('group', { ascending: true });
+    setSettings(data || []);
+    setLoading(false);
+  }
+
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -24,13 +31,6 @@ export default function AdminSettingsPage() {
     }
     checkAuth();
   }, []);
-
-  async function fetchSettings() {
-    setLoading(true);
-    const { data } = await supabase.from('site_settings').select('*').order('group', { ascending: true });
-    setSettings(data || []);
-    setLoading(false);
-  }
 
   async function handleUpdate(key: string, value: string) {
     setSettings(prev => prev.map(s => s.key === key ? { ...s, value } : s));

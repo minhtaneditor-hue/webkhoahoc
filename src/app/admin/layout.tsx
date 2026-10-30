@@ -5,15 +5,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/utils/supabase';
+import { isAdmin } from '@/lib/admin';
 import { 
   BarChart3, 
   Users, 
-  PlayCircle, 
   CreditCard, 
   Settings, 
-  Mail, 
-  TrendingUp, 
-  FileText,
   Menu,
   X,
   LogOut,
@@ -21,28 +18,27 @@ import {
   Search,
   ShieldCheck,
   ChevronRight,
-  Database
+  Database,
+  ShoppingBag,
+  Briefcase
 } from 'lucide-react';
 
 const sidebarItems = [
   { group: "Thống kê", items: [
     { title: "Tổng quan", icon: <BarChart3 size={20} />, href: "/admin" },
-    { title: "Báo cáo doanh thu", icon: <TrendingUp size={20} />, href: "/admin/reports" },
   ]},
   { group: "Học viên", items: [
     { title: "Danh sách học viên", icon: <Users size={20} />, href: "/admin/students" },
-    { title: "Hành trình xem", icon: <PlayCircle size={20} />, href: "/admin/students/progress" },
   ]},
   { group: "Nội dung", items: [
     { title: "Quản lý khóa học", icon: <Database size={20} />, href: "/admin/courses" },
-    { title: "Bài giảng & Video", icon: <PlayCircle size={20} />, href: "/admin/courses/lessons" },
+    { title: "Shop & Ebook", icon: <ShoppingBag size={20} />, href: "/admin/shop" },
+    { title: "Dự án tiêu biểu", icon: <Briefcase size={20} />, href: "/admin/work" },
   ]},
   { group: "Bán hàng", items: [
     { title: "Đơn hàng", icon: <CreditCard size={20} />, href: "/admin/orders" },
-    { title: "Voucher & Giảm giá", icon: <FileText size={20} />, href: "/admin/marketing/vouchers" },
   ]},
   { group: "Hệ thống", items: [
-    { title: "Cấu hình Email", icon: <Mail size={20} />, href: "/admin/settings/email" },
     { title: "Cấu hình chung", icon: <Settings size={20} />, href: "/admin/settings" },
   ]},
 ];
@@ -60,13 +56,8 @@ export default function AdminLayout({
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      const ADMIN_EMAILS = [
-        'minhtaneditor@gmail.com',
-        'tan@tanlab.vn',
-      ].filter(Boolean);
 
-      if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
+      if (!user || !isAdmin(user.email)) {
         router.push('/auth?redirect=' + pathname);
         return;
       }
@@ -135,7 +126,10 @@ export default function AdminLayout({
         </nav>
 
         <div className="p-4 border-t border-white/5">
-           <button className="w-full flex items-center gap-4 px-4 py-4 text-white/40 hover:text-red-400 transition-colors">
+           <button
+              onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}
+              className="w-full flex items-center gap-4 px-4 py-4 text-white/40 hover:text-red-400 transition-colors"
+           >
               <LogOut size={20} />
               {isSidebarOpen && <span className="text-sm font-bold">Đăng xuất</span>}
            </button>

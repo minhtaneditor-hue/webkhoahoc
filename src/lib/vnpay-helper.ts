@@ -4,9 +4,13 @@ export function createVNPPaymentUrl(params: any) {
   const tmnCode = process.env.VNP_TMN_CODE!;
   const secretKey = process.env.VNP_HASH_SECRET!;
   const vnpUrl = process.env.VNP_URL!;
+  if (!tmnCode || !secretKey || !vnpUrl) {
+    throw new Error('Config Error: VNP_TMN_CODE / VNP_HASH_SECRET / VNP_URL is missing.');
+  }
   
   const date = new Date();
   const createDate = formatDate(date);
+  const expireDate = formatDate(new Date(date.getTime() + 15 * 60 * 1000)); // 15 minutes
   
   const vnp_Params: any = {
     vnp_Version: '2.1.0',
@@ -17,10 +21,11 @@ export function createVNPPaymentUrl(params: any) {
     vnp_TxnRef: params.orderId,
     vnp_OrderInfo: params.orderInfo,
     vnp_OrderType: 'other',
-    vnp_Amount: params.amount * 100, // VNPay expects amount * 100
+    vnp_Amount: Math.round(params.amount * 100), // VNPay expects amount * 100
     vnp_ReturnUrl: params.returnUrl,
     vnp_IpAddr: params.ipAddr,
     vnp_CreateDate: createDate,
+    vnp_ExpireDate: expireDate,
     ...params.extraParams
   };
 
@@ -37,7 +42,8 @@ export function createVNPPaymentUrl(params: any) {
 }
 
 export function verifyVNPCallback(vnp_Params: any) {
-  const secretKey = process.env.VNP_HASH_SECRET!;
+  const secretKey = process.env.VNP_HASH_SECRET;
+  if (!secretKey) return false;
   const secureHash = vnp_Params['vnp_SecureHash'];
 
   delete vnp_Params['vnp_SecureHash'];
@@ -49,7 +55,7 @@ export function verifyVNPCallback(vnp_Params: any) {
   const hmac = crypto.createHmac('sha512', secretKey);
   const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
-  return secureHash === signed;
+  return typeof secureHash === 'string' && secureHash.toLowerCase() === signed;
 }
 
 function sortObject(obj: any) {
@@ -61,12 +67,9 @@ function sortObject(obj: any) {
   return sorted;
 }
 
+// VNPay expects yyyyMMddHHmmss in Vietnam time (GMT+7), regardless of the server's timezone.
 function formatDate(date: Date) {
-  const y = date.getFullYear();
-  const m = ('0' + (date.getMonth() + 1)).slice(-2);
-  const d = ('0' + date.getDate()).slice(-2);
-  const h = ('0' + date.getHours()).slice(-2);
-  const min = ('0' + date.getMinutes()).slice(-2);
-  const s = ('0' + date.getSeconds()).slice(-2);
-  return `${y}${m}${d}${h}${min}${s}`;
+  const vn = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+  const pad = (n: number) => ('0' + n).slice(-2);
+  return `${vn.getUTCFullYear()}${pad(vn.getUTCMonth() + 1)}${pad(vn.getUTCDate())}${pad(vn.getUTCHours())}${pad(vn.getUTCMinutes())}${pad(vn.getUTCSeconds())}`;
 }

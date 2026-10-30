@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import DrmPlayer from '@/components/video/DrmPlayer';
+import { isAdmin } from '@/lib/admin';
 // Removed: client-side jsonwebtoken import for security
 
 export default function LearningPortal() {
@@ -31,6 +32,7 @@ export default function LearningPortal() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drmToken, setDrmToken] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('STUDENT');
+  const [hasAccess, setHasAccess] = useState(false);
 
   // Sercet key from user for DRM handshake
   // DRM configuration is now handled on the server-side (/api/drm/token)
@@ -47,10 +49,23 @@ export default function LearningPortal() {
 
       // Fetch course & lessons
       const { data: courseData } = await supabase.from('courses').select('*').eq('id', courseId).single();
-      const { data: lessonsData } = await supabase.from('lessons').select('*').eq('course_id', courseId).order('order', { ascending: true });
-      
+      const { data: lessonsData } = await supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index', { ascending: true });
+
+      // Access check: enrolled students and admins can watch everything; others only free lessons
+      const { data: enrollment } = await supabase
+        .from('enrollments')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .eq('status', 'active')
+        .maybeSingle();
+      setHasAccess(!!enrollment || isAdmin(user.email));
+
       // Fetch progress
-      const { data: progressData } = await supabase.from('lesson_progress').select('lesson_id').eq('user_id', user.id).eq('course_id', courseId);
+      const lessonIds = (lessonsData || []).map(l => l.id);
+      const { data: progressData } = lessonIds.length
+        ? await supabase.from('student_progress').select('lesson_id').eq('user_id', user.id).eq('is_completed', true).in('lesson_id', lessonIds)
+        : { data: [] as { lesson_id: string }[] };
       
       setCourse(courseData);
       setLessons(lessonsData || []);
@@ -64,7 +79,7 @@ export default function LearningPortal() {
         const lesson = lessonsData.find(l => l.id === lessonId);
         setCurrentLesson(lesson);
         
-        // Generate a temporary DRM token for the session
+        // Generate a temporary DRM token for the session (server re-checks enrollment)
         if (user && lesson && lesson.video_url?.includes('drm:')) {
            const vId = lesson.video_url.split('drm:')[1];
            fetch(`/api/drm/token?videoId=${vId}`)
@@ -86,13 +101,15 @@ export default function LearningPortal() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    if (progress.includes(id)) {
-      await supabase.from('lesson_progress').delete().eq('user_id', user.id).eq('lesson_id', id);
-      setProgress(prev => prev.filter(p => p !== id));
-    } else {
-      await supabase.from('lesson_progress').insert({ user_id: user.id, course_id: courseId, lesson_id: id });
-      setProgress(prev => [...prev, id]);
-    }
+    const isCompleted = !progress.includes(id);
+    const { error } = await supabase
+      .from('student_progress')
+      .upsert(
+        { user_id: user.id, lesson_id: id, is_completed: isCompleted, last_watched_at: new Date().toISOString() },
+        { onConflict: 'user_id,lesson_id' }
+      );
+    if (error) return;
+    setProgress(prev => isCompleted ? [...prev, id] : prev.filter(p => p !== id));
   }
 
   async function handleNext() {
@@ -168,7 +185,7 @@ export default function LearningPortal() {
                   <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
                      <div 
                         className="h-full bg-primary transition-all duration-1000" 
-                        style={{ width: `${(progress.length / lessons.length) * 100}%` }}
+                        style={{ width: `${lessons.length ? (progress.length / lessons.length) * 100 : 0}%` }}
                      />
                   </div>
                </div>
@@ -210,7 +227,14 @@ export default function LearningPortal() {
             <div className="space-y-10">
               {/* Video Player */}
               <div className="relative group/player rounded-[3rem] overflow-hidden border border-white/10 bg-black aspect-video shadow-2xl">
-                 {currentLesson.video_url && currentLesson.video_url.includes('drm:') ? (
+                 {!hasAccess && !currentLesson.is_free ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-6 bg-zinc-950 text-center px-6">
+                       <p className="text-sm font-black uppercase tracking-widest text-text-muted">Bài học này dành cho học viên đã đăng ký</p>
+                       <Link href={`/courses/${courseId}`} className="btn-premium px-8 py-4 rounded-full font-black text-xs tracking-widest">
+                          ĐĂNG KÝ KHÓA HỌC
+                       </Link>
+                    </div>
+                 ) : currentLesson.video_url && currentLesson.video_url.includes('drm:') ? (
                     <DrmPlayer 
                       videoId={currentLesson.video_url.split('drm:')[1]}
                       token={drmToken}
@@ -218,7 +242,7 @@ export default function LearningPortal() {
                     />
                  ) : currentLesson.video_url ? (
                     <iframe 
-                      src={currentLesson.video_url.includes('youtube') ? currentLesson.video_url.replace('watch?v=', 'embed/') : currentLesson.video_url}
+                      src={toEmbedUrl(currentLesson.video_url)}
                       className="w-full h-full"
                       allow="autoplay; fullscreen; picture-in-picture"
                       allowFullScreen
@@ -288,4 +312,10 @@ export default function LearningPortal() {
       </main>
     </div>
   );
+}
+
+// Converts YouTube watch/short links into embeddable URLs
+function toEmbedUrl(url: string) {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
 }

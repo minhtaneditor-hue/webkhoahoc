@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
+import { isAdmin } from '@/lib/admin';
+
+const base64url = (input: string) =>
+  btoa(input).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 
 // Simple JWT-like token signer using Web Crypto (no external deps)
 async function createToken(payload: Record<string, unknown>, secret: string): Promise<string> {
   const encoder = new TextEncoder();
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).replace(/=/g, '');
-  const body = btoa(JSON.stringify(payload)).replace(/=/g, '');
+  const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const body = base64url(JSON.stringify(payload));
   const data = `${header}.${body}`;
   
   const key = await crypto.subtle.importKey(
@@ -18,7 +21,7 @@ async function createToken(payload: Record<string, unknown>, secret: string): Pr
   );
   
   const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
-  const sig = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  const sig = base64url(String.fromCharCode(...new Uint8Array(signature)));
   
   return `${data}.${sig}`;
 }
@@ -32,33 +35,43 @@ export async function GET(request: Request) {
   }
 
   // 1. Verify user session with Supabase
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.set({ name, value: '', ...options });
-        },
-      },
-    }
-  );
-  const { data: { user }, error } = await supabase.auth.getUser();
-
-  if (error || !user) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // 2. Generate DRM License Token
-  const secret = process.env.DRM_SECRET || '291158ed-795b-4b28-917a-bf47c0f130da';
-  
+  const secret = process.env.DRM_SECRET;
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!secret || !supabaseAdmin) {
+    return NextResponse.json({ error: 'DRM_SECRET or SUPABASE_SERVICE_ROLE_KEY is missing.' }, { status: 500 });
+  }
+
+  // 2. Only issue a license if the user may watch this video: free lesson, enrolled, or admin
+  const { data: lesson } = await supabaseAdmin
+    .from('lessons')
+    .select('course_id, is_free')
+    .eq('video_url', `drm:${videoId}`)
+    .maybeSingle();
+
+  if (!lesson) {
+    return NextResponse.json({ error: 'Video not found' }, { status: 404 });
+  }
+
+  if (!lesson.is_free && !isAdmin(user.email)) {
+    const { data: enrollment } = await supabaseAdmin
+      .from('enrollments')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('course_id', lesson.course_id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!enrollment) {
+      return NextResponse.json({ error: 'Bạn chưa đăng ký khóa học này.' }, { status: 403 });
+    }
+  }
+
+  // 3. Generate DRM License Token
   // The token contains the user's email (for watermark verification on server) 
   // and the video ID to prevent token reuse for other videos.
   const token = await createToken(

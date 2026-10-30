@@ -1,35 +1,41 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/utils/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { Resend } from 'resend';
 import { getRetentionEmailTemplate } from '@/lib/retention-emails';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  // Resend's constructor throws without a key; the handler bails out below when RESEND_API_KEY is unset
+  const resend = new Resend(process.env.RESEND_API_KEY || 're_missing_key');
   try {
     // 1. Security Check (Manual trigger protection)
     const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized manual trigger attempt.' }, { status: 401 });
+    }
+
+    // Cron has no user session, so it must use the service-role client to read across users.
+    const supabase = getSupabaseAdmin();
+    if (!supabase || !process.env.RESEND_API_KEY) {
+      return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY or RESEND_API_KEY is missing.' }, { status: 500 });
     }
 
     const now = new Date();
     const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000)).toISOString();
-    const sevenDaysFromNow = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString();
 
     // 2. Scan for Inactive Students (3+ days)
     const { data: inactiveEnrollments } = await supabase
       .from('enrollments')
       .select(`
-        id,
         user_id,
         course_id,
         progress_percent,
         courses (title),
-        users (email, last_active_at)
+        users!inner (email, last_active_at)
       `)
-      .not('status', 'eq', 'completed')
+      .eq('status', 'active')
+      .lt('progress_percent', 100)
       .lt('users.last_active_at', threeDaysAgo);
 
     const sentInactivity = [];
@@ -59,7 +65,6 @@ export async function GET(req: Request) {
     const { data: expiringEnrollments } = await supabase
       .from('enrollments')
       .select(`
-        id,
         user_id,
         course_id,
         expires_at,
@@ -89,14 +94,16 @@ export async function GET(req: Request) {
       }
     }
 
-    // 4. Lead Nurturing (Registered but 0 enrollments after 24h)
+    // 4. Lead Nurturing (Registered 24-48h ago with 0 enrollments).
+    // The 24h window means each lead gets this email once, not every day forever.
     const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000)).toISOString();
-    
-    // Sub-query or filter to find users with no enrollments
+    const fortyEightHoursAgo = new Date(now.getTime() - (48 * 60 * 60 * 1000)).toISOString();
+
     const { data: potentialLeads } = await supabase
       .from('users')
       .select(`id, email, created_at`)
-      .lt('created_at', twentyFourHoursAgo);
+      .lt('created_at', twentyFourHoursAgo)
+      .gte('created_at', fortyEightHoursAgo);
 
     const sentLeads = [];
     if (potentialLeads) {

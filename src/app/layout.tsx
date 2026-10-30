@@ -3,17 +3,17 @@ import { Inter, Manrope, Cabin, Instrument_Serif } from "next/font/google";
 import "@/styles/globals.css";
 
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
   variable: "--font-inter",
 });
 
 const manrope = Manrope({
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
   variable: "--font-manrope",
 });
 
 const cabin = Cabin({
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
   variable: "--font-cabin",
 });
 
@@ -24,8 +24,18 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "AI-Integrated LMS | Premium Online Learning",
-  description: "Autonomous training system with AI agents, DRM security, and automated payments.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
+  title: {
+    default: "Minh Tấn Academy | Khóa học làm video & sáng tạo nội dung",
+    template: "%s | Minh Tấn Academy",
+  },
+  description: "Học làm video, xây dựng thương hiệu cá nhân và biến nội dung thành tài sản cùng Minh Tấn. Khóa học, ebook, preset và coaching 1:1.",
+  openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    siteName: "Minh Tấn Academy",
+    images: ["/asset/avatar/hero_expert.jpg"],
+  },
 };
 
 import Navbar from "@/components/Navbar";
@@ -39,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${manrope.variable} ${cabin.variable} ${instrumentSerif.variable}`}>
+    <html lang="vi" className={`${inter.variable} ${manrope.variable} ${cabin.variable} ${instrumentSerif.variable}`}>
       <body className="antialiased">
         <GlobalTicker />
         <Navbar />

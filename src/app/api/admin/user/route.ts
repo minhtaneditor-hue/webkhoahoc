@@ -1,42 +1,37 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/admin';
+import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
 
-// Initialize Supabase fallback or real admin
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-// Only initialize if key is present to prevent build crash
-let supabaseAdmin: any = null;
-if (serviceKey) {
-  supabaseAdmin = createClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  });
+// Verifies the caller from their session cookie (never from the request body).
+async function requireAdmin() {
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    return { error: NextResponse.json({ error: 'Config Error: SUPABASE_SERVICE_ROLE_KEY is missing.' }, { status: 500 }) };
+  }
+  const requester = await getSessionUser();
+  if (!requester || !isAdmin(requester.email)) {
+    return { error: NextResponse.json({ error: 'Unauthorized Access. Privileged session required.' }, { status: 403 }) };
+  }
+  return { supabaseAdmin };
 }
 
-
+// Sends the user a password-reset email instead of setting a shared default password.
 export async function POST(req: Request) {
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ error: 'Config Error: SUPABASE_SERVICE_ROLE_KEY is missing in .env.local' }, { status: 500 });
-    }
+    const { supabaseAdmin, error: authError } = await requireAdmin();
+    if (authError) return authError;
 
-    // 1. Verify if the requester is the Admin
-    const { userId, requesterEmail } = await req.json();
-    
-    if (!isAdmin(requesterEmail)) {
-      return NextResponse.json({ error: 'Unauthorized Access. Privileged session required.' }, { status: 403 });
-    }
+    const { userId } = await req.json();
+    const { data: target, error: findError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (findError || !target.user?.email) throw findError || new Error('User not found');
 
-    // 2. Reset Password for the target user
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(
-      userId,
-      { password: '21day12345' }
-    );
-
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || new URL(req.url).origin;
+    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(target.user.email, {
+      redirectTo: `${baseUrl}/auth/callback?next=/dashboard`,
+    });
     if (error) throw error;
 
-    return NextResponse.json({ message: 'Password reset to 21day12345 successful.' });
+    return NextResponse.json({ message: `Đã gửi email đặt lại mật khẩu tới ${target.user.email}.` });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -44,17 +39,11 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ error: 'Config Error: SUPABASE_SERVICE_ROLE_KEY is missing.' }, { status: 500 });
-    }
+    const { supabaseAdmin, error: authError } = await requireAdmin();
+    if (authError) return authError;
 
-    const { userId, requesterEmail } = await req.json();
+    const { userId } = await req.json();
 
-    if (!isAdmin(requesterEmail)) {
-      return NextResponse.json({ error: 'Unauthorized Access.' }, { status: 403 });
-    }
-
-    // 1. Delete user from Auth
     const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (error) throw error;
 

@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
 import { verifyVNPCallback } from '@/lib/vnpay-helper';
-import { supabase } from '@/utils/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  // Resend's constructor throws without a key; emails are skipped below when RESEND_API_KEY is unset
+  const resend = new Resend(process.env.RESEND_API_KEY || 're_missing_key');
   try {
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return NextResponse.json({ RspCode: '99', Message: 'Server not configured' });
+    }
+
     const { searchParams } = new URL(req.url);
     const vnp_Params = Object.fromEntries(searchParams.entries());
 
@@ -22,41 +28,50 @@ export async function GET(req: Request) {
     const amount = Number(vnp_Params['vnp_Amount']) / 100;
     const transactionId = vnp_Params['vnp_TransactionNo'];
 
-    // 2. Process success (ResponseCode 00)
-    if (responseCode === '00') {
-      // Find the payment record
-      const { data: payment, error: pError } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('order_id', orderId)
-        .single();
+    // 2. Find the payment record
+    const { data: payment, error: pError } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('order_id', orderId)
+      .single();
 
-      if (pError || !payment) {
-        return NextResponse.json({ RspCode: '01', Message: 'Order not found' });
-      }
+    if (pError || !payment) {
+      return NextResponse.json({ RspCode: '01', Message: 'Order not found' });
+    }
 
-      if (payment.status === 'success') {
-        return NextResponse.json({ RspCode: '02', Message: 'Order already confirmed' });
-      }
+    if (Number(payment.amount) !== amount) {
+      return NextResponse.json({ RspCode: '04', Message: 'Invalid amount' });
+    }
 
+    if (payment.status !== 'pending') {
+      return NextResponse.json({ RspCode: '02', Message: 'Order already confirmed' });
+    }
+
+    const isSuccess = responseCode === '00' && vnp_Params['vnp_TransactionStatus'] === '00';
+
+    if (isSuccess) {
       // 3. Update Payment Status
       await supabase
         .from('payments')
         .update({ status: 'success', transaction_id: transactionId })
         .eq('id', payment.id);
 
-      // 4. Auto-Enrollment
-      await supabase.from('enrollments').upsert({
-        user_id: payment.user_id,
-        course_id: payment.course_id,
-        status: 'active'
-      });
+      // 4. Auto-Enrollment (courses only — digital assets are unlocked via the successful payment row)
+      if (payment.course_id) {
+        await supabase.from('enrollments').upsert({
+          user_id: payment.user_id,
+          course_id: payment.course_id,
+          status: 'active'
+        });
+      }
 
       // 5. Send Email Notification
       const { data: user } = await supabase.from('users').select('email').eq('id', payment.user_id).single();
-      const { data: course } = await supabase.from('courses').select('title').eq('id', payment.course_id).single();
+      const { data: course } = payment.course_id
+        ? await supabase.from('courses').select('title').eq('id', payment.course_id).single()
+        : await supabase.from('digital_assets').select('title').eq('id', payment.asset_id).single();
 
-      if (user && course) {
+      if (user && course && process.env.RESEND_API_KEY) {
         await resend.emails.send({
           from: 'Minh Tan Academy <customer@minhtanacademy.com>',
           to: user.email,
@@ -75,7 +90,7 @@ export async function GET(req: Request) {
               <div style="background-color: rgba(255, 255, 255, 0.02); padding: 30px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 40px;">
                 <h3 style="font-size: 14px; font-weight: 900; color: #e32636; letter-spacing: 0.1em; margin-bottom: 20px; text-transform: uppercase;">Thông tin truy cập:</h3>
                 <p style="font-size: 14px; margin-bottom: 10px;">• <strong>Email:</strong> ${user.email}</p>
-                <p style="font-size: 14px; margin-bottom: 25px;">• <strong>Mật khẩu mặc định:</strong> <code style="background: rgba(245, 188, 27, 0.1); padding: 4px 8px; border-radius: 4px; color: #f5bc1b;">21day12345</code></p>
+                <p style="font-size: 14px; margin-bottom: 25px;">• <strong>Mật khẩu:</strong> mật khẩu bạn đã đặt khi đăng ký</p>
                 
                 <div style="padding: 15px; background-color: rgba(227, 38, 54, 0.05); border-left: 3px solid #e32636; font-size: 12px; color: #888888;">
                   <strong>Gợi ý bảo mật:</strong> Chúng tôi khuyên bạn nên truy cập vào mục "Security Hub" trong Dashboard để đổi mật khẩu hoặc kích hoạt xác thực 2 lớp (2FA) ngay lập tức.
@@ -96,7 +111,10 @@ export async function GET(req: Request) {
 
       return NextResponse.json({ RspCode: '00', Message: 'Confirm Success' });
     } else {
-      // Handle payment failure logic if needed
+      await supabase
+        .from('payments')
+        .update({ status: 'failed', transaction_id: transactionId })
+        .eq('id', payment.id);
       return NextResponse.json({ RspCode: '00', Message: 'Payment Failed or Canceled' });
     }
   } catch (error: any) {

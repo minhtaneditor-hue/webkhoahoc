@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { calculateDiscount } from '@/lib/promo';
 
 export default function CourseDetails() {
   const params = useParams();
@@ -42,13 +43,14 @@ export default function CourseDetails() {
       setUser(currentUser);
       
       const { data: courseData } = await supabase.from('courses').select('*').eq('id', id).single();
-      const { data: lessonsData } = await supabase.from('lessons').select('*').eq('course_id', id).order('order', { ascending: true });
+      // lesson_outline is a public view: titles for everyone, video_url only for free preview lessons
+      const { data: lessonsData } = await supabase.from('lesson_outline').select('*').eq('course_id', id).order('order_index', { ascending: true });
 
       setCourse(courseData);
       setLessons(lessonsData || []);
 
       if (currentUser) {
-        const { data: enrollmentData } = await supabase.from('enrollments').select('*').eq('user_id', currentUser.id).eq('course_id', id).single();
+        const { data: enrollmentData } = await supabase.from('enrollments').select('*').eq('user_id', currentUser.id).eq('course_id', id).eq('status', 'active').maybeSingle();
         setEnrolled(!!enrollmentData);
       }
       setLoading(false);
@@ -58,11 +60,7 @@ export default function CourseDetails() {
 
   const handleApplyPromo = () => {
     if (!course) return;
-    const code = promoCode.toUpperCase();
-    let discount = 0;
-    if (code === 'TANLAB') discount = 500000;
-    else if (code === 'GIAM10') discount = course.price * 0.1;
-    else if (code === 'CHALLENGE') discount = 1000000;
+    const discount = calculateDiscount(promoCode, Number(course.price) || 0);
 
     setAppliedDiscount(discount);
     if (discount > 0) alert(`Mã hợp lệ! Giảm ${new Intl.NumberFormat('vi-VN').format(discount)}đ`);
@@ -82,10 +80,7 @@ export default function CourseDetails() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           courseId: course.id,
-          amount: course.price,
-          courseTitle: course.title,
-          promoCode: appliedDiscount > 0 ? promoCode : undefined,
-          userId: user.id
+          promoCode: appliedDiscount > 0 ? promoCode : undefined
         })
       });
       const data = await response.json();
@@ -194,9 +189,11 @@ export default function CourseDetails() {
                     </div>
                   </div>
                   
-                  {lesson.is_free ? (
+                  {lesson.is_free || enrolled ? (
                     <button 
-                      onClick={() => setSelectedLesson(lesson)}
+                      onClick={() => lesson.video_url?.startsWith('drm:') || !lesson.video_url
+                        ? router.push(`/learn/${course.id}/${lesson.id}`)
+                        : setSelectedLesson(lesson)}
                       className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-lg"
                     >
                       <Play size={18} fill="currentColor" />
@@ -263,7 +260,7 @@ export default function CourseDetails() {
               <X size={24} />
             </button>
             <iframe 
-              src={selectedLesson.video_url.includes('youtube') ? selectedLesson.video_url.replace('watch?v=', 'embed/') : selectedLesson.video_url}
+              src={toEmbedUrl(selectedLesson.video_url)}
               className="w-full h-full"
               allowFullScreen
             />
@@ -272,6 +269,12 @@ export default function CourseDetails() {
       )}
     </div>
   );
+}
+
+// Converts YouTube watch/short links into embeddable URLs
+function toEmbedUrl(url: string) {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
 }
 
 function X({ size }: { size: number }) {
