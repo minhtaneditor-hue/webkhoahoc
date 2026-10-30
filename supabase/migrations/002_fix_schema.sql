@@ -21,7 +21,13 @@ $$;
 -- ---------------------------------------------------------------------
 -- 1. Users: profile row created automatically on sign-up
 -- ---------------------------------------------------------------------
+-- Older databases were created from an earlier schema.sql, so add any columns it lacked
 alter table public.users add column if not exists last_active_at timestamp with time zone;
+alter table public.users add column if not exists full_name text;
+alter table public.users add column if not exists avatar_url text;
+alter table public.users add column if not exists funnel_status text default 'new';
+alter table public.users add column if not exists referral_source text;
+alter table public.payments add column if not exists payment_method text;
 
 create or replace function public.handle_new_user()
 returns trigger

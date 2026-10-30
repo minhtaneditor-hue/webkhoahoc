@@ -107,25 +107,33 @@ alter table public.payments enable row level security;
 alter table public.site_settings enable row level security;
 
 -- Policies (Simplified for Admin access)
+drop policy if exists "Anyone can view published courses" on public.courses;
 create policy "Anyone can view published courses" on public.courses for select using (is_published = true);
+drop policy if exists "Admins can manage courses" on public.courses;
 create policy "Admins can manage courses" on public.courses for all using (
   exists (select 1 from public.users where id = auth.uid() and role = 'admin')
 );
 
+drop policy if exists "Admins can manage chapters" on public.chapters;
 create policy "Admins can manage chapters" on public.chapters for all using (
   exists (select 1 from public.users where id = auth.uid() and role = 'admin')
 );
 
+drop policy if exists "Admins can manage lessons" on public.lessons;
 create policy "Admins can manage lessons" on public.lessons for all using (
   exists (select 1 from public.users where id = auth.uid() and role = 'admin')
 );
 
+drop policy if exists "Users can update their own progress" on public.student_progress;
 create policy "Users can update their own progress" on public.student_progress for all using (user_id = auth.uid());
+drop policy if exists "Admins can view all progress" on public.student_progress;
 create policy "Admins can view all progress" on public.student_progress for select using (
   exists (select 1 from public.users where id = auth.uid() and role = 'admin')
 );
 
+drop policy if exists "Users can view their own payments" on public.payments;
 create policy "Users can view their own payments" on public.payments for select using (user_id = auth.uid());
+drop policy if exists "Admins can manage payments" on public.payments;
 create policy "Admins can manage payments" on public.payments for all using (
   exists (select 1 from public.users where id = auth.uid() and role = 'admin')
 );
