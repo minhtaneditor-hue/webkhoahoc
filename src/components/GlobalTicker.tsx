@@ -4,21 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { isAppShellRoute } from "./Navbar";
-
-const messages = [
-  "Khóa “21 Ngày Biến Video Thành Tài Sản” đang mở đăng ký",
-  "Học thử miễn phí bài đầu tiên",
-  "Truy cập trọn đời, hỗ trợ 1:1 qua Zalo",
-  "Hoàn tiền trong 7 ngày nếu chưa phù hợp",
-];
+import { useSiteSettings } from "./SiteContext";
 
 // Slow announcement marquee: pauses on hover, static under reduced motion (see .marquee-track).
 export default function GlobalTicker() {
   const pathname = usePathname();
+  const settings = useSiteSettings();
   if (isAppShellRoute(pathname)) return null;
+  // Edited in /admin/settings: one message per line
+  const messages = settings.ticker_messages.split(/\r?\n/).map((m) => m.trim()).filter(Boolean);
+  if (messages.length === 0) return null;
 
   return (
-    <Link href="/courses" className="block surface-dark text-[13px] overflow-hidden group" aria-label="Xem khóa học: 21 Ngày Biến Video Thành Tài Sản đang mở đăng ký">
+    <Link href="/courses" className="block surface-dark text-[13px] overflow-hidden group" aria-label={`Xem khóa học: ${messages[0]}`}>
       <div className="marquee-track py-2.5" style={{ ["--marquee-duration" as string]: "40s" }} aria-hidden="true">
         {[...messages, ...messages, ...messages, ...messages].map((m, i) => (
           <span key={i} className="flex items-center gap-3 px-6 whitespace-nowrap text-stone-300 group-hover:text-white transition-colors">

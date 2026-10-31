@@ -9,23 +9,13 @@ import ScrollReveal from '@/components/reactbits/ScrollReveal';
 import ShowreelVideo from '@/components/motion/ShowreelVideo';
 import CountUp from '@/components/motion/CountUp';
 import FeedbackMarquee from '@/components/FeedbackMarquee';
-import { FEATURED_STUDENTS } from '@/lib/students';
+import { getSiteSettings, getStudents, getFeedbackImages, getFaqs } from '@/lib/content';
+import { toYoutubeId } from '@/lib/site-settings';
 
 export const revalidate = 300;
 
 const FEATURED_COURSE_ID = 'd290f1ee-6c54-4b01-90e6-d701748f0851';
 
-// Showreel shown full-bleed after the hero: "TAN EDITOR – The Story Behind The Cuts" from Minh Tấn's channel.
-// Use `youtubeId`, or a self-hosted MP4 in public/video/ via `src` (H.264, 8–15 s, ≤ 8 MB, -movflags +faststart).
-// Leave both empty to hide the section.
-const SHOWREEL = {
-  youtubeId: 'CZdPDogA86Q',
-  youtubeStart: 10, // skip the opening title card so it doesn't collide with the caption
-  src: '',
-  // A dark behind-the-scenes frame from mid-video (the default thumbnail carries the video's own title text)
-  poster: 'https://i.ytimg.com/vi/CZdPDogA86Q/maxres2.jpg',
-  watchUrl: 'https://youtu.be/CZdPDogA86Q',
-};
 
 const partners = [
   { name: 'Phú Long', logo: '/asset/doi_tac/partner_phulong.webp' },
@@ -59,12 +49,6 @@ const bonuses = [
   { title: 'Template thiết kế', desc: 'Ảnh bìa và hiệu ứng chữ chuyên nghiệp từ studio của Minh Tấn.', icon: LayoutTemplate },
 ];
 
-const faqs = [
-  { q: 'Điện thoại cũ có học được không?', a: 'Được. Khóa học dạy bạn làm chủ ánh sáng và góc máy để bù lại giới hạn của thiết bị; điện thoại vài năm tuổi vẫn cho ra hình đẹp.' },
-  { q: 'Tôi ngại lên hình thì sao?', a: 'Bạn có thể làm video voice-over, quay tay, quay sản phẩm hoặc bối cảnh. Khóa học có riêng chiến lược cho người không muốn lộ mặt.' },
-  { q: 'Học xong chưa ra kết quả thì sao?', a: 'Bạn được hỗ trợ 1:1 cho tới khi dựng xong phễu bán hàng đầu tiên. Ngoài ra có chính sách hoàn tiền trong 7 ngày.' },
-  { q: 'Tôi học được bao lâu?', a: 'Truy cập trọn đời, bao gồm mọi bài học cập nhật sau này.' },
-];
 
 async function getFeaturedCourse() {
   const supabase = getPublicSupabase();
@@ -78,7 +62,17 @@ async function getFeaturedCourse() {
 }
 
 export default async function Home() {
-  const course = await getFeaturedCourse();
+  // Everything below is editable in /admin (falls back to built-in content when the tables are empty)
+  const [course, settings, students, feedback, faqs] = await Promise.all([
+    getFeaturedCourse(), getSiteSettings(), getStudents(), getFeedbackImages(), getFaqs(),
+  ]);
+  const youtubeId = toYoutubeId(settings.showreel_youtube_id);
+  const SHOWREEL = {
+    youtubeId,
+    youtubeStart: Number(settings.showreel_start) || 0,
+    poster: settings.showreel_poster || (youtubeId ? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg` : ''),
+    watchUrl: youtubeId ? `https://youtu.be/${youtubeId}` : '',
+  };
   const courseHref = course ? `/courses/${course.id}` : '/courses';
 
   return (
@@ -87,22 +81,22 @@ export default async function Home() {
       <section aria-labelledby="hero-title" className="container-lux pt-4 md:pt-6">
         {/* A wide, short banner: about 21:9 on desktop so it doesn't take over the first screen */}
         <div className="relative isolate overflow-hidden bg-onyx rounded-[var(--radius-xl)] min-h-[440px] md:min-h-0 md:h-[clamp(360px,34vw,460px)] flex items-end">
-          {(SHOWREEL.youtubeId || SHOWREEL.src) && (
-            <ShowreelVideo youtubeId={SHOWREEL.youtubeId || undefined} youtubeStart={SHOWREEL.youtubeStart} src={SHOWREEL.src || undefined} poster={SHOWREEL.poster || undefined} />
+          {SHOWREEL.youtubeId && (
+            <ShowreelVideo youtubeId={SHOWREEL.youtubeId || undefined} youtubeStart={SHOWREEL.youtubeStart} poster={SHOWREEL.poster || undefined} />
           )}
           {/* Scrims: darker toward the bottom-left where the title sits */}
           <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_bottom,rgb(28_25_23/.25)_0%,rgb(28_25_23/0)_30%,rgb(28_25_23/.55)_60%,rgb(28_25_23/.92)_100%)]" aria-hidden="true" />
           <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgb(28_25_23/.6),transparent_65%)]" aria-hidden="true" />
           <Reveal className="relative w-full px-6 md:px-12 pb-8 md:pb-10 max-w-2xl" stagger={0.1}>
-            <h1 id="hero-title" className="text-white text-[clamp(2.5rem,5vw,4rem)] leading-[1.02] tracking-[-0.02em]">Video là tài sản.</h1>
+            <h1 id="hero-title" className="text-white text-[clamp(2.5rem,5vw,4rem)] leading-[1.02] tracking-[-0.02em]">{settings.hero_title}</h1>
             <p className="mt-4 text-lg md:text-xl text-stone-200 leading-snug max-w-xl">
-              Học quay, dựng và bán hàng bằng video từ người làm truyền hình, chỉ với chiếc điện thoại của bạn.
+              {settings.hero_subtitle}
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Link href={courseHref} className="btn btn-gold">Xem khóa học 21 ngày <ArrowRight size={18} aria-hidden="true" /></Link>
-              <a href={SHOWREEL.watchUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">
+              {SHOWREEL.watchUrl && <a href={SHOWREEL.watchUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">
                 <PlayCircle size={18} aria-hidden="true" /> Xem showreel có tiếng
-              </a>
+              </a>}
             </div>
           </Reveal>
         </div>
@@ -125,7 +119,7 @@ export default async function Home() {
         <Reveal stagger={0.1}>
           <h2 id="advisor-title" className="text-ink text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.05]">Minh Tấn Video Advisor</h2>
           <p className="mt-6 text-xl text-stone leading-relaxed max-w-xl">
-            Hơn 10 năm làm truyền hình, từng tham gia sản xuất <span className="text-ink font-semibold">2 Ngày 1 Đêm</span> và <span className="text-ink font-semibold">Anh Trai Say Hi</span>. Giờ Minh Tấn dạy lại quy trình đó, rút gọn cho chiếc điện thoại của bạn.
+            {settings.advisor_bio}
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
             <Link href="/about" className="btn btn-dark">Câu chuyện của Minh Tấn <ArrowRight size={18} aria-hidden="true" /></Link>
@@ -145,29 +139,29 @@ export default async function Home() {
         <div className="container-lux pt-20 md:pt-28">
           <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
             <Reveal>
-              <h2 id="students-title" className="text-white text-[clamp(1.625rem,5vw,4rem)] leading-[1.1]">Học viên nói gì về Minh Tấn Video Advisor</h2>
-              <p className="mt-5 text-lg text-stone-300 max-w-xl">Họ bắt đầu giống bạn: một chiếc điện thoại và mong muốn làm video tốt hơn. Đây là kết quả của họ.</p>
+              <h2 id="students-title" className="text-white text-[clamp(1.625rem,5vw,4rem)] leading-[1.1]">{settings.students_title}</h2>
+              <p className="mt-5 text-lg text-stone-300 max-w-xl">{settings.students_subtitle}</p>
             </Reveal>
             <dl className="grid grid-cols-2 gap-6">
               <div className="rounded-[var(--radius-card)] bg-white/[0.05] p-6 flex flex-col-reverse">
                 <dt className="mt-2 text-stone-300">học viên đã theo học</dt>
-                <dd className="font-display text-5xl md:text-6xl font-bold text-gold-light"><CountUp to={1000} suffix="+" /></dd>
+                <dd className="font-display text-5xl md:text-6xl font-bold text-gold-light"><CountUp to={Number(settings.stat_students) || 0} suffix="+" /></dd>
               </div>
               <div className="rounded-[var(--radius-card)] bg-white/[0.05] p-6 flex flex-col-reverse">
                 <dt className="mt-2 text-stone-300">năm làm truyền hình</dt>
-                <dd className="font-display text-5xl md:text-6xl font-bold text-gold-light"><CountUp to={10} suffix="+" /></dd>
+                <dd className="font-display text-5xl md:text-6xl font-bold text-gold-light"><CountUp to={Number(settings.stat_years) || 0} suffix="+" /></dd>
               </div>
             </dl>
           </div>
 
           <Reveal as="ul" from="mask" className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURED_STUDENTS.map((st) => (
+            {students.slice(0, 4).map((st) => (
               <li key={st.id}>
                 <figure className="group h-full flex flex-col">
                   <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-img)] ring-hover">
-                    <Image src={st.avatar_url} alt={st.name} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.05]" />
+                    <Image src={st.avatar_url || '/asset/avatar/hero_expert.jpg'} alt={st.name} unoptimized={!!st.avatar_url?.startsWith('http')} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.05]" />
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-onyx/90 to-transparent" aria-hidden="true" />
-                    <span className="badge absolute top-4 left-4 !bg-gold-light !text-onyx">{st.results}</span>
+                    {st.results && <span className="badge absolute top-4 left-4 !bg-gold-light !text-onyx">{st.results}</span>}
                     <figcaption className="absolute left-5 right-5 bottom-5">
                       <span className="block font-display text-2xl font-bold text-white">{st.name}</span>
                       <span className="block text-sm text-stone-300">{st.title}</span>
@@ -184,7 +178,7 @@ export default async function Home() {
 
         <div className="mt-20">
           <p className="container-lux mb-6 font-semibold text-gold-light">Tin nhắn thật học viên gửi sau khóa học</p>
-          <FeedbackMarquee />
+          <FeedbackMarquee images={feedback} />
         </div>
 
         <div className="container-lux py-14 md:py-20 flex flex-col sm:flex-row gap-3">
@@ -203,7 +197,7 @@ export default async function Home() {
             containerClassName="max-w-4xl"
             textClassName="font-display font-bold text-[clamp(1.75rem,3.8vw,3.125rem)] leading-[1.25] text-ink"
           >
-            Một video quay tử tế sẽ tiếp tục bán hàng cho bạn nhiều năm sau ngày đăng. Khóa học này dạy bạn làm ra những video như thế.
+            {settings.statement}
           </ScrollReveal>
         </div>
       </section>

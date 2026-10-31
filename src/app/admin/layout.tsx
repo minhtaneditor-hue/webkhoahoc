@@ -6,20 +6,28 @@ import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import { Logo } from '@/components/Navbar';
-import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2 } from 'lucide-react';
+import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle } from 'lucide-react';
 
 const sidebarItems = [
-  { group: 'Tổng quan', items: [{ title: 'Bảng điều khiển', icon: BarChart3, href: '/admin' }] },
+  { group: 'Tổng quan', items: [
+    { title: 'Bảng điều khiển', icon: BarChart3, href: '/admin' },
+    { title: 'Doanh thu', icon: TrendingUp, href: '/admin/revenue' },
+  ]},
   { group: 'Bán hàng', items: [
     { title: 'Đơn hàng', icon: CreditCard, href: '/admin/orders' },
     { title: 'Học viên', icon: Users, href: '/admin/students' },
   ]},
-  { group: 'Nội dung', items: [
+  { group: 'Khóa học', items: [
     { title: 'Khóa học & bài học', icon: Database, href: '/admin/courses' },
     { title: 'Ebook & Preset', icon: ShoppingBag, href: '/admin/shop' },
+  ]},
+  { group: 'Trang chủ', items: [
+    { title: 'Nội dung & liên hệ', icon: Settings, href: '/admin/settings' },
+    { title: 'Học viên tiêu biểu', icon: Star, href: '/admin/testimonials' },
+    { title: 'Ảnh feedback', icon: MessageSquareQuote, href: '/admin/feedback' },
+    { title: 'Câu hỏi thường gặp', icon: HelpCircle, href: '/admin/faqs' },
     { title: 'Dự án', icon: Briefcase, href: '/admin/work' },
   ]},
-  { group: 'Hệ thống', items: [{ title: 'Cấu hình website', icon: Settings, href: '/admin/settings' }] },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

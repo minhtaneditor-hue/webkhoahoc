@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { CONTACT } from './Footer';
+import { getSiteSettings } from '@/lib/content';
+import { contactFrom } from '@/lib/site-settings';
 
 export type LegalSection = { title: string; body: ReactNode };
 
-export default function LegalPage({
+export default async function LegalPage({
   title,
   intro,
   updated,
@@ -15,6 +16,7 @@ export default function LegalPage({
   updated: string;
   sections: LegalSection[];
 }) {
+  const CONTACT = contactFrom(await getSiteSettings());
   return (
     <main className="container-lux py-12 md:py-20">
       <article className="max-w-3xl mx-auto">

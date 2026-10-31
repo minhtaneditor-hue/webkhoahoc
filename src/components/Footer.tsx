@@ -4,15 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Mail, Phone, MapPin, ShieldCheck, CreditCard, ArrowUp } from 'lucide-react';
 import { Reveal } from './motion/Motion';
+import { useSiteSettings } from './SiteContext';
+import { contactFrom } from '@/lib/site-settings';
 import { Logo, isAppShellRoute } from './Navbar';
 
-export const CONTACT = {
-  phone: '0922 255 861',
-  phoneHref: 'tel:0922255861',
-  zaloHref: 'https://zalo.me/0922255861',
-  email: 'tanlab@minhtanacademy.com',
-  address: 'Quận 1, TP. Hồ Chí Minh',
-};
 
 const columns = [
   {
@@ -50,6 +45,7 @@ const socials = [
 
 export default function Footer() {
   const pathname = usePathname();
+  const CONTACT = contactFrom(useSiteSettings());
   if (isAppShellRoute(pathname)) return null;
 
   const contacts = [

@@ -24,7 +24,7 @@ export default function AdminWorkPage() {
         { key: 'category', label: 'Thể loại', type: 'select', options: categories },
         { key: 'client_name', label: 'Khách hàng / Đài' },
         { key: 'description', label: 'Mô tả', type: 'textarea' },
-        { key: 'thumbnail_url', label: 'Link ảnh bìa', hint: 'Ảnh tỉ lệ 4:3.' },
+        { key: 'thumbnail_url', label: 'Ảnh bìa', type: 'image', hint: 'Ảnh tỉ lệ 4:3, tối đa 5 MB.' },
         { key: 'video_url', label: 'Link video', hint: 'YouTube hoặc Vimeo (không bắt buộc).' },
       ]}
       renderMeta={(row) => <>{categories.find((c) => c.value === row.category)?.label || row.category}{row.client_name ? ` · ${row.client_name}` : ''}</>}

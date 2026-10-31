@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { MessageCircle, X, Phone, Mail, Send } from "lucide-react";
-import { CONTACT } from "./Footer";
+import { useSiteSettings } from "./SiteContext";
+import { contactFrom } from "@/lib/site-settings";
 import { isAppShellRoute } from "./Navbar";
 
 // Floating "Hỗ trợ" button: real contact channels instead of a non-functional AI box.
 export default function AIChatAssistant() {
   const pathname = usePathname();
+  const CONTACT = contactFrom(useSiteSettings());
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 

@@ -41,23 +41,31 @@ import Navbar from "@/components/Navbar";
 import GlobalTicker from "@/components/GlobalTicker";
 import Footer from "@/components/Footer";
 import AIChatAssistant from "@/components/AIChatAssistant";
+import { SiteProvider } from "@/components/SiteContext";
+import { getSiteSettings } from "@/lib/content";
 
-export default function RootLayout({
+// Admin edits trigger revalidatePath('/', 'layout'); this is the fallback refresh window.
+export const revalidate = 300;
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSiteSettings();
   return (
     <html lang="vi" className={`${playfair.variable} ${beVietnam.variable}`}>
       <body>
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[3000] btn btn-dark">
           Bỏ qua tới nội dung chính
         </a>
-        <GlobalTicker />
-        <Navbar />
-        <div id="main">{children}</div>
-        <Footer />
-        <AIChatAssistant />
+        <SiteProvider settings={settings}>
+          <GlobalTicker />
+          <Navbar />
+          <div id="main">{children}</div>
+          <Footer />
+          <AIChatAssistant />
+        </SiteProvider>
       </body>
     </html>
   );

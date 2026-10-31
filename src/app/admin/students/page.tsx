@@ -2,28 +2,60 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Users, Search, Plus, KeyRound, Trash2, X } from 'lucide-react';
-import { PageHeader, LoadingRow, EmptyState, Modal, Field, StatusBadge, thClass, tdClass } from '@/components/admin/AdminUI';
+import { formatVND } from '@/lib/supabase-public';
+import { Users, Search, Plus, KeyRound, Trash2, X, Download, UserCheck, UserPlus, Moon } from 'lucide-react';
+import { PageHeader, LoadingRow, EmptyState, Modal, Field, StatusBadge, StatCard, thClass, tdClass } from '@/components/admin/AdminUI';
 
 type Notice = { type: 'success' | 'error'; text: string } | null;
+type Tab = 'all' | 'learning' | 'lead' | 'inactive';
+
+const DAY = 24 * 60 * 60 * 1000;
+const INACTIVE_DAYS = 14;
+
+const TABS: { key: Tab; label: string }[] = [
+  { key: 'all', label: 'Tất cả' },
+  { key: 'learning', label: 'Đang học' },
+  { key: 'lead', label: 'Chưa mua' },
+  { key: 'inactive', label: `Không hoạt động ${INACTIVE_DAYS} ngày` },
+];
+
+function ProgressBar({ value }: { value: number }) {
+  return (
+    <div className="flex items-center gap-2 min-w-[140px]">
+      <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
+        <div className="h-full bg-gold rounded-full" style={{ width: `${value}%` }} />
+      </div>
+      <span className="text-xs font-semibold tabular-nums w-9 text-right">{value}%</span>
+    </div>
+  );
+}
 
 export default function StudentsManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
+  const [progress, setProgress] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
+  const [tab, setTab] = useState<Tab>('all');
   const [notice, setNotice] = useState<Notice>(null);
   const [grantFor, setGrantFor] = useState<any>(null);
   const [grantCourse, setGrantCourse] = useState('');
+  const [detail, setDetail] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+  const [now] = useState(() => Date.now());
 
   const load = useCallback(
     () => Promise.all([
-      supabase.from('users').select('id, email, full_name, role, created_at, last_active_at, enrollments ( course_id, status, courses ( title ) )').order('created_at', { ascending: false }),
-      supabase.from('courses').select('id, title').order('created_at'),
-    ]).then(([{ data: userRows }, { data: courseRows }]) => {
-      setUsers(userRows || []);
-      setCourses(courseRows || []);
+      supabase.from('users').select('id, email, full_name, role, created_at, last_active_at, enrollments ( course_id, status, enrolled_at, courses ( title ) )').order('created_at', { ascending: false }),
+      supabase.from('courses').select('id, title, lessons ( id )').order('created_at'),
+      supabase.from('student_progress').select('user_id, lesson_id, last_watched_at, lessons ( course_id )').eq('is_completed', true),
+      supabase.from('payments').select('id, user_id, amount, status, created_at, order_id, courses ( title ), digital_assets ( title )').order('created_at', { ascending: false }),
+    ]).then(([u, c, p, pay]) => {
+      setUsers(u.data || []);
+      setCourses(c.data || []);
+      setProgress(p.data || []);
+      setPayments(pay.data || []);
       setLoading(false);
     }),
     []
@@ -31,10 +63,42 @@ export default function StudentsManagement() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Derived numbers per user: spend, course progress, last activity
+  const lessonCount = useMemo(() => Object.fromEntries(courses.map((c) => [c.id, c.lessons?.length || 0])), [courses]);
+  const rows = useMemo(() => users.map((u) => {
+    const done = progress.filter((p) => p.user_id === u.id);
+    const enrollments = (u.enrollments || []).map((en: any) => {
+      const completed = done.filter((p) => p.lessons?.course_id === en.course_id).length;
+      const total = lessonCount[en.course_id] || 0;
+      return { ...en, completed, total, percent: total ? Math.round((completed / total) * 100) : 0 };
+    });
+    const paid = payments.filter((p) => p.user_id === u.id && p.status === 'success');
+    const lastWatch = done.reduce((max, p) => (p.last_watched_at > max ? p.last_watched_at : max), '');
+    const lastActive = [u.last_active_at, lastWatch].filter(Boolean).sort().at(-1) || null;
+    return {
+      ...u,
+      enrollments,
+      spent: paid.reduce((s, p) => s + Number(p.amount), 0),
+      orders: payments.filter((p) => p.user_id === u.id),
+      lastActive,
+      isLearning: enrollments.some((e: any) => e.status === 'active'),
+      isInactive: !lastActive || now - new Date(lastActive).getTime() > INACTIVE_DAYS * DAY,
+    };
+  }), [users, progress, payments, lessonCount, now]);
+
+  const stats = useMemo(() => ({
+    total: rows.length,
+    learning: rows.filter((r) => r.isLearning).length,
+    newcomers: rows.filter((r) => now - new Date(r.created_at).getTime() < 30 * DAY).length,
+    inactive: rows.filter((r) => r.isLearning && r.isInactive).length,
+  }), [rows, now]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return users.filter((u) => !q || u.email?.toLowerCase().includes(q) || u.full_name?.toLowerCase().includes(q));
-  }, [users, query]);
+    return rows.filter((u) =>
+      (tab === 'all' || (tab === 'learning' && u.isLearning) || (tab === 'lead' && !u.isLearning) || (tab === 'inactive' && u.isInactive)) &&
+      (!q || u.email?.toLowerCase().includes(q) || u.full_name?.toLowerCase().includes(q)));
+  }, [rows, query, tab]);
 
   async function grant(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +117,7 @@ export default function StudentsManagement() {
     if (!confirm(`Thu hồi quyền học của ${email}?`)) return;
     const { error } = await supabase.from('enrollments').update({ status: 'expired' }).eq('user_id', userId).eq('course_id', courseId);
     setNotice(error ? { type: 'error', text: error.message } : { type: 'success', text: `Đã thu hồi quyền học của ${email}.` });
+    setDetail(null);
     load();
   }
 
@@ -61,12 +126,33 @@ export default function StudentsManagement() {
     const res = await fetch('/api/admin/user', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id }) });
     const data = await res.json();
     setNotice(res.ok ? { type: 'success', text: data.message } : { type: 'error', text: data.error });
-    if (res.ok && method === 'DELETE') load();
+    if (res.ok && method === 'DELETE') { setDetail(null); load(); }
   }
+
+  const exportCsv = () => {
+    const header = ['Email', 'Họ tên', 'Ngày đăng ký', 'Hoạt động gần nhất', 'Khóa học', 'Tiến độ', 'Tổng chi (VNĐ)'];
+    const lines = filtered.map((u) => [
+      u.email, u.full_name || '', new Date(u.created_at).toLocaleDateString('vi-VN'),
+      u.lastActive ? new Date(u.lastActive).toLocaleDateString('vi-VN') : '',
+      u.enrollments.map((e: any) => e.courses?.title).join(' | '),
+      u.enrollments.map((e: any) => `${e.percent}%`).join(' | '),
+      u.spent,
+    ]);
+    const csv = [header, ...lines].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+    Object.assign(document.createElement('a'), { href: url, download: `hoc-vien-${new Date().toISOString().slice(0, 10)}.csv` }).click();
+    URL.revokeObjectURL(url);
+  };
+
+  const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('vi-VN') : '—');
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Học viên" description={`${users.length} tài khoản đã đăng ký.`} />
+      <PageHeader
+        title="Học viên"
+        description="Theo dõi ai đang học, học tới đâu và đã chi bao nhiêu."
+        actions={<button onClick={exportCsv} disabled={filtered.length === 0} className="btn btn-outline"><Download size={16} aria-hidden="true" /> Xuất CSV</button>}
+      />
 
       {notice && (
         <p role={notice.type === 'error' ? 'alert' : 'status'} className={`p-4 rounded-md text-sm flex justify-between gap-4 ${notice.type === 'error' ? 'bg-red-50 text-danger' : 'bg-gold-soft text-ink'}`}>
@@ -75,44 +161,65 @@ export default function StudentsManagement() {
         </p>
       )}
 
-      <div className="relative md:w-96">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-        <label htmlFor="student-search" className="sr-only">Tìm học viên</label>
-        <input id="student-search" className="input pl-9" placeholder="Tìm theo email hoặc tên…" value={query} onChange={(e) => setQuery(e.target.value)} />
+      {!loading && (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Tổng tài khoản" value={stats.total} icon={Users} />
+          <StatCard label="Đang học" value={stats.learning} icon={UserCheck} hint="Có ít nhất 1 khóa đang mở" />
+          <StatCard label="Đăng ký mới 30 ngày" value={stats.newcomers} icon={UserPlus} />
+          <StatCard label="Cần nhắc học" value={stats.inactive} icon={Moon} hint={`Đang học nhưng ${INACTIVE_DAYS} ngày không vào`} />
+        </div>
+      )}
+
+      <div className="flex flex-col lg:flex-row gap-3 lg:items-center justify-between">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar" role="tablist" aria-label="Lọc học viên">
+          {TABS.map((t) => (
+            <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
+                    className={`shrink-0 min-h-[44px] px-4 rounded-md text-sm font-semibold border transition-colors ${tab === t.key ? 'bg-onyx text-white border-onyx' : 'bg-card border-line-strong text-stone hover:border-ink'}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative lg:w-80">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <label htmlFor="student-search" className="sr-only">Tìm học viên</label>
+          <input id="student-search" className="input pl-9" placeholder="Tìm theo email hoặc tên…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        </div>
       </div>
 
       {loading ? <LoadingRow /> : filtered.length === 0 ? (
-        <EmptyState icon={Users} title="Không tìm thấy học viên" />
+        <EmptyState icon={Users} title="Không có học viên phù hợp" text="Thử đổi bộ lọc hoặc từ khóa." />
       ) : (
         <div className="card overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-line"><tr><th className={thClass}>Học viên</th><th className={thClass}>Khóa học</th><th className={thClass}>Hoạt động gần nhất</th><th className={`${thClass} text-right`}>Thao tác</th></tr></thead>
+            <thead className="border-b border-line">
+              <tr><th className={thClass}>Học viên</th><th className={thClass}>Khóa học & tiến độ</th><th className={`${thClass} text-right`}>Đã chi</th><th className={thClass}>Hoạt động</th><th className={`${thClass} text-right`}>Thao tác</th></tr>
+            </thead>
             <tbody className="divide-y divide-line">
               {filtered.map((u) => (
                 <tr key={u.id} className="hover:bg-muted/60 align-top">
                   <td className={tdClass}>
-                    <p className="font-semibold">{u.full_name || u.email?.split('@')[0]}</p>
-                    <p className="text-muted-foreground">{u.email}</p>
+                    <button onClick={() => setDetail(u)} className="text-left group">
+                      <span className="block font-semibold group-hover:text-gold transition-colors">{u.full_name || u.email?.split('@')[0]}</span>
+                      <span className="block text-muted-foreground">{u.email}</span>
+                    </button>
                     {u.role === 'admin' && <span className="badge mt-1">Admin</span>}
                   </td>
                   <td className={tdClass}>
-                    {u.enrollments?.length ? (
-                      <ul className="space-y-1.5">
+                    {u.enrollments.length ? (
+                      <ul className="space-y-2">
                         {u.enrollments.map((en: any) => (
-                          <li key={en.course_id} className="flex items-center gap-2 flex-wrap">
-                            <span>{en.courses?.title}</span>
-                            <StatusBadge status={en.status} />
-                            {en.status === 'active' && (
-                              <button onClick={() => revoke(u.id, en.course_id, u.email)} className="text-xs text-muted-foreground hover:text-danger underline underline-offset-2">Thu hồi</button>
-                            )}
+                          <li key={en.course_id}>
+                            <div className="flex items-center gap-2 flex-wrap"><span>{en.courses?.title}</span>{en.status !== 'active' && <StatusBadge status={en.status} />}</div>
+                            <ProgressBar value={en.percent} />
                           </li>
                         ))}
                       </ul>
                     ) : <span className="text-muted-foreground">Chưa ghi danh</span>}
                   </td>
-                  <td className={`${tdClass} whitespace-nowrap text-muted-foreground`}>
-                    {u.last_active_at ? new Date(u.last_active_at).toLocaleDateString('vi-VN') : '—'}
-                    <p className="text-xs">Đăng ký {new Date(u.created_at).toLocaleDateString('vi-VN')}</p>
+                  <td className={`${tdClass} text-right font-semibold whitespace-nowrap`}>{u.spent ? formatVND(u.spent) : '—'}</td>
+                  <td className={`${tdClass} whitespace-nowrap`}>
+                    <span className={u.isInactive && u.isLearning ? 'text-danger font-semibold' : ''}>{fmtDate(u.lastActive)}</span>
+                    <span className="block text-xs text-muted-foreground">Đăng ký {fmtDate(u.created_at)}</span>
                   </td>
                   <td className={`${tdClass} text-right`}>
                     <div className="flex justify-end gap-1">
@@ -131,6 +238,58 @@ export default function StudentsManagement() {
           </table>
         </div>
       )}
+
+      {/* Student detail */}
+      <Modal title={detail?.full_name || detail?.email || 'Học viên'} open={!!detail} onClose={() => setDetail(null)} wide>
+        {detail && (
+          <div className="space-y-6">
+            <dl className="grid gap-4 sm:grid-cols-4 text-sm">
+              <div><dt className="text-muted-foreground">Email</dt><dd className="font-semibold break-all">{detail.email}</dd></div>
+              <div><dt className="text-muted-foreground">Ngày đăng ký</dt><dd className="font-semibold">{fmtDate(detail.created_at)}</dd></div>
+              <div><dt className="text-muted-foreground">Hoạt động gần nhất</dt><dd className="font-semibold">{fmtDate(detail.lastActive)}</dd></div>
+              <div><dt className="text-muted-foreground">Tổng đã chi</dt><dd className="font-semibold">{formatVND(detail.spent)}</dd></div>
+            </dl>
+
+            <section>
+              <h3 className="text-xl">Khóa học</h3>
+              {detail.enrollments.length === 0 ? <p className="mt-2 text-muted-foreground">Chưa ghi danh khóa nào.</p> : (
+                <ul className="mt-3 space-y-3">
+                  {detail.enrollments.map((en: any) => (
+                    <li key={en.course_id} className="p-4 rounded-md bg-muted">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <p className="font-semibold">{en.courses?.title}</p>
+                        <div className="flex items-center gap-2"><StatusBadge status={en.status} />
+                          {en.status === 'active' && <button onClick={() => revoke(detail.id, en.course_id, detail.email)} className="text-xs text-muted-foreground hover:text-danger underline underline-offset-2">Thu hồi</button>}
+                        </div>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">Ghi danh {fmtDate(en.enrolled_at)} · đã xong {en.completed}/{en.total} bài</p>
+                      <div className="mt-2"><ProgressBar value={en.percent} /></div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section>
+              <h3 className="text-xl">Lịch sử thanh toán</h3>
+              {detail.orders.length === 0 ? <p className="mt-2 text-muted-foreground">Chưa có giao dịch.</p> : (
+                <table className="mt-3 w-full text-sm">
+                  <tbody className="divide-y divide-line">
+                    {detail.orders.map((o: any) => (
+                      <tr key={o.id}>
+                        <td className="py-2 pr-3 whitespace-nowrap">{fmtDate(o.created_at)}</td>
+                        <td className="py-2 pr-3">{o.courses?.title || o.digital_assets?.title || '—'}</td>
+                        <td className="py-2 pr-3 text-right font-semibold whitespace-nowrap">{formatVND(o.amount)}</td>
+                        <td className="py-2"><StatusBadge status={o.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </section>
+          </div>
+        )}
+      </Modal>
 
       <Modal title="Ghi danh thủ công" open={!!grantFor} onClose={() => setGrantFor(null)}>
         <form onSubmit={grant} className="space-y-5">

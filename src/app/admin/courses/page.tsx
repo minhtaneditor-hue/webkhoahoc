@@ -7,6 +7,8 @@ import { supabase } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
 import { Plus, Pencil, Trash2, Database, ListVideo, ExternalLink, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, Modal, Field, StatusBadge } from '@/components/admin/AdminUI';
+import ImageUpload from '@/components/admin/ImageUpload';
+import { revalidateSite } from '@/lib/revalidate';
 
 const emptyCourse = { title: '', slug: '', description: '', price: 0, old_price: '', thumbnail_url: '', is_published: false };
 const emptyLesson = { title: '', video_url: '', content: '', is_free: false };
@@ -62,12 +64,14 @@ export default function CourseManagement() {
     setNotice({ type: 'success', text: `Đã lưu khóa học “${payload.title}”.` });
     setEditing(null);
     load();
+    revalidateSite();
   }
 
   async function togglePublish(course: any) {
     const { error } = await supabase.from('courses').update({ is_published: !course.is_published }).eq('id', course.id);
     if (error) return setNotice({ type: 'error', text: error.message });
     load();
+    revalidateSite();
   }
 
   async function deleteCourse(course: any) {
@@ -75,6 +79,7 @@ export default function CourseManagement() {
     const { error } = await supabase.from('courses').delete().eq('id', course.id);
     setNotice(error ? { type: 'error', text: error.message } : { type: 'success', text: 'Đã xóa khóa học.' });
     load();
+    revalidateSite();
   }
 
   async function openLessons(course: any) {
@@ -100,6 +105,7 @@ export default function CourseManagement() {
     setLessonForm(null);
     loadLessons(lessonsFor.id);
     load();
+    revalidateSite();
   }
 
   async function deleteLesson(lesson: any) {
@@ -107,6 +113,7 @@ export default function CourseManagement() {
     await supabase.from('lessons').delete().eq('id', lesson.id);
     loadLessons(lessonsFor.id);
     load();
+    revalidateSite();
   }
 
   async function moveLesson(index: number, dir: -1 | 1) {
@@ -118,6 +125,7 @@ export default function CourseManagement() {
       supabase.from('lessons').update({ order_index: a.order_index }).eq('id', b.id),
     ]);
     loadLessons(lessonsFor.id);
+    revalidateSite();
   }
 
   return (
@@ -181,8 +189,8 @@ export default function CourseManagement() {
                 <input id="c-old" type="number" min={0} step={1000} className="input" value={editing.old_price} onChange={(e) => setEditing({ ...editing, old_price: e.target.value })} />
               </Field>
             </div>
-            <Field id="c-thumb" label="Link ảnh bìa" hint="Đường dẫn ảnh 16:9, ví dụ /asset/... hoặc https://...">
-              <input id="c-thumb" className="input" value={editing.thumbnail_url || ''} onChange={(e) => setEditing({ ...editing, thumbnail_url: e.target.value })} />
+            <Field id="c-thumb" label="Ảnh bìa" hint="Ảnh ngang tỉ lệ 16:9, tối đa 5 MB.">
+              <ImageUpload id="c-thumb" folder="courses" value={editing.thumbnail_url || ''} onChange={(url) => setEditing((cur: any) => ({ ...cur, thumbnail_url: url }))} />
             </Field>
             <label className="flex items-center gap-3 min-h-[44px]">
               <input type="checkbox" className="w-5 h-5 accent-[#A16207]" checked={!!editing.is_published} onChange={(e) => setEditing({ ...editing, is_published: e.target.checked })} />

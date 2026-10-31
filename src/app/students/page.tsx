@@ -2,10 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Quote, ArrowRight } from 'lucide-react';
-import { getPublicSupabase } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
-import { FEATURED_STUDENTS, FEEDBACK_IMAGES } from '@/lib/students';
+import { getStudents, getFeedbackImages } from '@/lib/content';
 
 export const revalidate = 300;
 
@@ -15,15 +14,9 @@ export const metadata: Metadata = {
 };
 
 
-async function getStudents() {
-  const supabase = getPublicSupabase();
-  if (!supabase) return FEATURED_STUDENTS;
-  const { data } = await supabase.from('students').select('*').order('created_at', { ascending: false });
-  return [...FEATURED_STUDENTS, ...(data || [])];
-}
 
 export default async function StudentsPage() {
-  const students = await getStudents();
+  const [students, feedback] = await Promise.all([getStudents(), getFeedbackImages()]);
 
   return (
     <main>
@@ -56,9 +49,9 @@ export default async function StudentsPage() {
         <div className="container-lux">
           <SectionHeading light title="Phản hồi từ học viên" description="Ảnh chụp tin nhắn học viên gửi cho Minh Tấn sau khóa học." />
           <ul className="mt-12 columns-1 md:columns-2 gap-4 [&>li]:mb-4">
-            {FEEDBACK_IMAGES.map((img, i) => (
+            {feedback.map((img, i) => (
               <li key={img.src} className="break-inside-avoid overflow-hidden rounded-[var(--radius-img)] bg-white">
-                <Image src={img.src} alt={`Phản hồi học viên ${i + 1}`} width={img.width} height={img.height} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" className="w-full h-auto" />
+                <Image src={img.src} alt={`Phản hồi học viên ${i + 1}`} width={img.width} height={img.height} unoptimized={img.src.startsWith('http')} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" className="w-full h-auto" />
               </li>
             ))}
           </ul>

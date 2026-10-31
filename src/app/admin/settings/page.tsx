@@ -2,86 +2,95 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Settings, Save, Loader2 } from 'lucide-react';
-import { PageHeader, LoadingRow, EmptyState, Field } from '@/components/admin/AdminUI';
-
-const GROUP_LABELS: Record<string, string> = {
-  hero: 'Trang chủ',
-  branding: 'Thương hiệu',
-  contact: 'Liên hệ',
-  general: 'Chung',
-};
+import { revalidateSite } from '@/lib/revalidate';
+import { SETTING_FIELDS, SETTING_GROUPS, DEFAULT_SETTINGS, toYoutubeId, type SiteSettings } from '@/lib/site-settings';
+import { Save, Loader2, RotateCcw, ExternalLink } from 'lucide-react';
+import { PageHeader, LoadingRow, Field } from '@/components/admin/AdminUI';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<any[]>([]);
-  const [dirty, setDirty] = useState<Set<string>>(new Set());
+  const [values, setValues] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [saved, setSaved] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    supabase.from('site_settings').select('*').order('group', { ascending: true }).then(({ data }) => {
-      setSettings(data || []);
+    supabase.from('site_settings').select('key, value').then(({ data }) => {
+      const fromDb = Object.fromEntries((data || []).filter((r) => r.value).map((r) => [r.key, r.value as string]));
+      const merged = { ...DEFAULT_SETTINGS, ...fromDb };
+      setValues(merged);
+      setSaved(merged);
       setLoading(false);
     });
   }, []);
 
-  function handleUpdate(key: string, value: string) {
-    setSettings((prev) => prev.map((s) => (s.key === key ? { ...s, value } : s)));
-    setDirty((d) => new Set(d).add(key));
-    setNotice(null);
-  }
+  const dirtyKeys = SETTING_FIELDS.filter((f) => values[f.key] !== saved[f.key]).map((f) => f.key);
+  const set = (key: string, value: string) => { setValues((v) => ({ ...v, [key]: value })); setNotice(null); };
 
   async function saveAll() {
     setSaving(true);
-    const changed = settings.filter((s) => dirty.has(s.key));
-    const results = await Promise.all(changed.map((item) => supabase.from('site_settings').update({ value: item.value, updated_at: new Date().toISOString() }).eq('key', item.key)));
+    const rows = SETTING_FIELDS.filter((f) => dirtyKeys.includes(f.key)).map((f) => ({
+      key: f.key,
+      // store a clean YouTube id even when a full link was pasted
+      value: f.key === 'showreel_youtube_id' ? toYoutubeId(values[f.key]) || values[f.key] : values[f.key],
+      description: f.label,
+      group: f.group,
+      updated_at: new Date().toISOString(),
+    }));
+    const { error } = await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
     setSaving(false);
-    const failed = results.find((r) => r.error);
-    if (failed) return setNotice({ type: 'error', text: `Lỗi khi lưu: ${failed.error!.message}` });
-    setDirty(new Set());
-    setNotice({ type: 'success', text: `Đã lưu ${changed.length} thay đổi.` });
+    if (error) return setNotice({ type: 'error', text: `Lỗi khi lưu: ${error.message}` });
+    setSaved(values);
+    await revalidateSite();
+    setNotice({ type: 'success', text: `Đã lưu ${rows.length} thay đổi. Website đã được cập nhật.` });
   }
 
-  const groups = Array.from(new Set(settings.map((s) => s.group || 'general')));
+  const groups = Object.keys(SETTING_GROUPS) as (keyof typeof SETTING_GROUPS)[];
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Cấu hình website"
-        description="Các thông tin dùng chung trên website."
+        title="Nội dung trang chủ"
+        description="Chữ, video và thông tin liên hệ hiển thị trên website."
         actions={
-          <button onClick={saveAll} disabled={saving || dirty.size === 0} className="btn btn-gold">
-            {saving ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Save size={16} aria-hidden="true" />}
-            Lưu thay đổi{dirty.size ? ` (${dirty.size})` : ''}
-          </button>
+          <>
+            <a href="/" target="_blank" className="btn btn-outline"><ExternalLink size={16} aria-hidden="true" /> Xem website</a>
+            <button onClick={saveAll} disabled={saving || dirtyKeys.length === 0} className="btn btn-gold">
+              {saving ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Save size={16} aria-hidden="true" />}
+              Lưu thay đổi{dirtyKeys.length ? ` (${dirtyKeys.length})` : ''}
+            </button>
+          </>
         }
       />
 
       {notice && <p role={notice.type === 'error' ? 'alert' : 'status'} className={`p-4 rounded-md text-sm ${notice.type === 'error' ? 'bg-red-50 text-danger' : 'bg-gold-soft text-ink'}`}>{notice.text}</p>}
 
-      {loading ? <LoadingRow /> : settings.length === 0 ? (
-        <EmptyState icon={Settings} title="Chưa có mục cấu hình" text="Thêm dòng vào bảng site_settings (key, value, description, group) trong Supabase để chỉnh sửa tại đây." />
-      ) : (
-        groups.map((group) => (
-          <section key={group} className="card p-6" aria-labelledby={`g-${group}`}>
-            <h2 id={`g-${group}`} className="text-2xl">{GROUP_LABELS[group] || group}</h2>
-            <div className="mt-5 grid gap-5 md:grid-cols-2">
-              {settings.filter((s) => (s.group || 'general') === group).map((item) => (
-                <div key={item.key} className={(item.value || '').length > 100 ? 'md:col-span-2' : ''}>
-                  <Field id={`s-${item.key}`} label={item.description || item.key} hint={`Mã: ${item.key}`}>
-                    {(item.value || '').length > 100 ? (
-                      <textarea id={`s-${item.key}`} className="input min-h-[120px]" value={item.value || ''} onChange={(e) => handleUpdate(item.key, e.target.value)} />
-                    ) : (
-                      <input id={`s-${item.key}`} className="input" value={item.value || ''} onChange={(e) => handleUpdate(item.key, e.target.value)} />
-                    )}
-                  </Field>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))
-      )}
+      {loading ? <LoadingRow /> : groups.map((group) => (
+        <section key={group} className="card p-6" aria-labelledby={`g-${group}`}>
+          <h2 id={`g-${group}`} className="text-2xl">{SETTING_GROUPS[group]}</h2>
+          <div className="mt-5 grid gap-5 md:grid-cols-2">
+            {SETTING_FIELDS.filter((f) => f.group === group).map((f) => (
+              <div key={f.key} className={f.type === 'textarea' || f.type === 'image' ? 'md:col-span-2' : ''}>
+                <Field id={`s-${f.key}`} label={f.label} hint={f.hint}>
+                  {f.type === 'image' ? (
+                    <ImageUpload id={`s-${f.key}`} folder="site" value={values[f.key] || ''} onChange={(url) => set(f.key, url)} />
+                  ) : f.type === 'textarea' ? (
+                    <textarea id={`s-${f.key}`} className="input min-h-[110px]" value={values[f.key] || ''} onChange={(e) => set(f.key, e.target.value)} />
+                  ) : (
+                    <input id={`s-${f.key}`} className="input" value={values[f.key] || ''} onChange={(e) => set(f.key, e.target.value)} />
+                  )}
+                </Field>
+                {values[f.key] !== f.default && (
+                  <button type="button" onClick={() => set(f.key, f.default)} className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-ink">
+                    <RotateCcw size={12} aria-hidden="true" /> Về nội dung mặc định
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

@@ -3,7 +3,8 @@ import Image from 'next/image';
 import { Check, ShieldCheck, ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
-import { CONTACT } from '@/components/Footer';
+import { getSiteSettings } from '@/lib/content';
+import { contactFrom } from '@/lib/site-settings';
 
 export const metadata: Metadata = {
   title: 'Coaching 1:1',
@@ -49,7 +50,8 @@ const pillars = [
   { title: 'Mô hình kinh doanh', desc: 'Đóng gói kiến thức thành sản phẩm số tạo thu nhập bền vững.' },
 ];
 
-export default function CoachingPage() {
+export default async function CoachingPage() {
+  const CONTACT = contactFrom(await getSiteSettings());
   return (
     <main>
       {/* Hero */}
