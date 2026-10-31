@@ -6,10 +6,23 @@ import SectionHeading from '@/components/SectionHeading';
 import FaqList from '@/components/FaqList';
 import { ShutterImage, Reveal } from '@/components/motion/Motion';
 import ScrollReveal from '@/components/reactbits/ScrollReveal';
+import ShowreelVideo from '@/components/motion/ShowreelVideo';
 
 export const revalidate = 300;
 
 const FEATURED_COURSE_ID = 'd290f1ee-6c54-4b01-90e6-d701748f0851';
+
+// Showreel shown full-bleed after the hero: "TAN EDITOR – The Story Behind The Cuts" from Minh Tấn's channel.
+// Use `youtubeId`, or a self-hosted MP4 in public/video/ via `src` (H.264, 8–15 s, ≤ 8 MB, -movflags +faststart).
+// Leave both empty to hide the section.
+const SHOWREEL = {
+  youtubeId: 'CZdPDogA86Q',
+  youtubeStart: 10, // skip the opening title card so it doesn't collide with the caption
+  src: '',
+  // A dark behind-the-scenes frame from mid-video (the default thumbnail carries the video's own title text)
+  poster: 'https://i.ytimg.com/vi/CZdPDogA86Q/maxres2.jpg',
+  watchUrl: 'https://youtu.be/CZdPDogA86Q',
+};
 
 const partners = [
   { name: 'Phú Long', logo: '/asset/doi_tac/partner_phulong.webp' },
@@ -108,6 +121,21 @@ export default async function Home() {
           ))}
         </ul>
       </section>
+
+      {/* Showreel: real footage full-bleed, with an eased bottom scrim so the caption stays legible */}
+      {(SHOWREEL.youtubeId || SHOWREEL.src) && (
+        <section aria-labelledby="showreel-title" className="relative isolate overflow-hidden bg-onyx h-[70svh] md:h-[90svh] flex items-end">
+          <ShowreelVideo youtubeId={SHOWREEL.youtubeId || undefined} youtubeStart={SHOWREEL.youtubeStart} src={SHOWREEL.src || undefined} poster={SHOWREEL.poster || undefined} />
+          <div className="absolute inset-0 -z-0 pointer-events-none bg-[linear-gradient(to_bottom,rgb(28_25_23/0)_35%,rgb(28_25_23/.45)_55%,rgb(28_25_23/.82)_75%,rgb(28_25_23/.95)_100%)]" aria-hidden="true" />
+          <div className="relative container-lux pb-12 md:pb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <h2 id="showreel-title" className="text-white text-[clamp(2.25rem,5vw,4rem)] leading-[1]">Hình ảnh từ phim trường thật.</h2>
+            <div className="flex flex-col sm:flex-row gap-3 self-start md:self-auto">
+              <a href={SHOWREEL.watchUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold whitespace-nowrap">Xem showreel có tiếng</a>
+              <Link href="/work" className="btn btn-outline-light whitespace-nowrap">Xem các dự án</Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Statement: words fill with ink as they rise through the screen (React Bits ScrollReveal) */}
       <section className="bg-card">
