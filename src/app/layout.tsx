@@ -1,19 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant, Montserrat } from "next/font/google";
+import { Playfair_Display, Be_Vietnam_Pro } from "next/font/google";
 import "@/styles/globals.css";
 
-// Design system (design-system/minh-tan-academy/MASTER.md): Cormorant headings + Montserrat body
-const cormorant = Cormorant({
+// Two typefaces only: Playfair Display (bold, high-contrast serif) for headings,
+// Be Vietnam Pro (sturdy sans designed for Vietnamese) for everything else.
+const playfair = Playfair_Display({
   subsets: ["latin", "vietnamese"],
-  weight: ["500", "600", "700"],
-  variable: "--font-cormorant",
+  weight: ["600", "700", "800"],
+  variable: "--font-playfair",
   display: "swap",
 });
 
-const montserrat = Montserrat({
+const beVietnam = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-montserrat",
+  variable: "--font-be-vietnam",
   display: "swap",
 });
 
@@ -47,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${cormorant.variable} ${montserrat.variable}`}>
+    <html lang="vi" className={`${playfair.variable} ${beVietnam.variable}`}>
       <body>
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[3000] btn btn-dark">
           Bỏ qua tới nội dung chính

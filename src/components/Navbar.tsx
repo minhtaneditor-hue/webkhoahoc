@@ -43,7 +43,7 @@ export function Logo({ light = false }: { light?: boolean }) {
         M
       </span>
       <span className="leading-none">
-        <span className={`block font-display text-xl font-semibold tracking-tight ${light ? 'text-white' : 'text-ink'}`}>Minh Tấn</span>
+        <span className={`block font-display text-xl font-bold tracking-tight ${light ? 'text-white' : 'text-ink'}`}>Minh Tấn</span>
         <span className={`block text-[10px] font-semibold tracking-[0.25em] uppercase ${light ? 'text-gold-light' : 'text-gold'}`}>Academy</span>
       </span>
     </Link>
@@ -186,7 +186,7 @@ export default function Navbar() {
         <div id="mobile-menu" style={{ top: menuTop }} className="lg:hidden fixed inset-x-0 bottom-0 bg-ivory overflow-y-auto border-t border-line animate-fade-up">
           <div className="container-lux py-6 flex flex-col">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={`py-3 font-display text-3xl font-semibold ${isActive(link.href) ? 'text-gold' : 'text-ink'}`}>
+              <Link key={link.href} href={link.href} className={`py-3 font-display text-3xl font-bold ${isActive(link.href) ? 'text-gold' : 'text-ink'}`}>
                 {link.name}
               </Link>
             ))}

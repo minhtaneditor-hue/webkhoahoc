@@ -32,7 +32,7 @@ export default function AIChatAssistant() {
     <div className="fixed bottom-5 right-5 z-[900] flex flex-col items-end gap-3">
       {open && (
         <div ref={panelRef} role="dialog" aria-label="Liên hệ hỗ trợ" className="card w-[min(320px,calc(100vw-2.5rem))] p-5 shadow-[var(--shadow-lift)] animate-fade-up">
-          <p className="font-display text-2xl font-semibold">Cần tư vấn?</p>
+          <p className="font-display text-2xl font-bold">Cần tư vấn?</p>
           <p className="text-sm text-muted-foreground mt-1 mb-4">Đội ngũ phản hồi trong giờ hành chính, thường dưới 30 phút.</p>
           <ul className="space-y-2">
             {channels.map(({ label, detail, href, icon: Icon, external }) => (

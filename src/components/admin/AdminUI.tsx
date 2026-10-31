@@ -22,7 +22,7 @@ export function StatCard({ label, value, icon: Icon, hint }: { label: string; va
         <p className="text-sm text-muted-foreground">{label}</p>
         <span className="w-9 h-9 rounded-md bg-gold-soft text-gold flex items-center justify-center"><Icon size={18} aria-hidden="true" /></span>
       </div>
-      <p className="mt-3 font-display text-4xl font-semibold">{value}</p>
+      <p className="mt-3 font-display text-4xl font-bold">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );

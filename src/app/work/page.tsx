@@ -83,7 +83,7 @@ export default function WorkPage() {
                     )}
                   </span>
                   {p.client_name && <span className="mt-4 block text-sm text-gold font-semibold">{p.client_name}</span>}
-                  <span className="mt-1 block font-display text-2xl font-semibold group-hover:text-gold transition-colors">{p.title}</span>
+                  <span className="mt-1 block font-display text-2xl font-bold group-hover:text-gold transition-colors">{p.title}</span>
                 </button>
               </li>
             ))}

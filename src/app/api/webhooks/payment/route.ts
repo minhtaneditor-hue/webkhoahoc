@@ -77,7 +77,7 @@ export async function GET(req: Request) {
           to: user.email,
           subject: '🚀 CHÀO MỪNG BẠN GIA NHẬP MINH TAN ACADEMY!',
           html: `
-            <div style="background-color: #050507; color: #f5f5f5; font-family: 'Montserrat', sans-serif; padding: 40px; border-radius: 20px; border: 1px solid rgba(245, 188, 27, 0.1);">
+            <div style="background-color: #050507; color: #f5f5f5; font-family: 'Be Vietnam Pro', Arial, sans-serif; padding: 40px; border-radius: 20px; border: 1px solid rgba(245, 188, 27, 0.1);">
               <div style="text-align: center; margin-bottom: 40px;">
                 <div style="display: inline-block; padding: 10px 20px; background-color: rgba(245, 188, 27, 0.1); border-radius: 50px; font-size: 10px; font-weight: 900; color: #f5bc1b; letter-spacing: 0.3em;">
                   OFFICIAL ENROLLMENT // 2026

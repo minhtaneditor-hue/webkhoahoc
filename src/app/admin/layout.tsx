@@ -115,7 +115,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <p className="hidden lg:block text-sm text-muted-foreground">Khu vực quản trị Minh Tấn Academy</p>
           <div className="flex items-center gap-3">
             <span className="hidden sm:block text-sm text-muted-foreground">{email}</span>
-            <span className="w-9 h-9 rounded-full bg-onyx text-gold-light flex items-center justify-center font-display font-semibold">{email.charAt(0).toUpperCase()}</span>
+            <span className="w-9 h-9 rounded-full bg-onyx text-gold-light flex items-center justify-center font-display font-bold">{email.charAt(0).toUpperCase()}</span>
           </div>
         </header>
         <main className="flex-1 p-4 md:p-8 max-w-[1400px] w-full mx-auto">{children}</main>

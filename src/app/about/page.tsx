@@ -39,7 +39,7 @@ export default function AboutPage() {
           <dl className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-3">
             {values.map(({ t, d }) => (
               <div key={t}>
-                <dt className="font-display text-3xl font-semibold text-ink">{t}</dt>
+                <dt className="font-display text-3xl font-bold text-ink">{t}</dt>
                 <dd className="mt-2 text-lg text-muted-foreground leading-relaxed">{d}</dd>
               </div>
             ))}

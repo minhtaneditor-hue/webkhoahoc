@@ -6,23 +6,10 @@ import SectionHeading from '@/components/SectionHeading';
 import FaqList from '@/components/FaqList';
 import { ShutterImage, Reveal } from '@/components/motion/Motion';
 import ScrollReveal from '@/components/reactbits/ScrollReveal';
-import ShowreelVideo from '@/components/motion/ShowreelVideo';
 
 export const revalidate = 300;
 
 const FEATURED_COURSE_ID = 'd290f1ee-6c54-4b01-90e6-d701748f0851';
-
-// Showreel shown full-bleed after the hero: "TAN EDITOR – The Story Behind The Cuts" from Minh Tấn's channel.
-// Use `youtubeId`, or a self-hosted MP4 in public/video/ via `src` (H.264, 8–15 s, ≤ 8 MB, -movflags +faststart).
-// Leave both empty to hide the section.
-const SHOWREEL = {
-  youtubeId: 'CZdPDogA86Q',
-  youtubeStart: 10, // skip the opening title card so it doesn't collide with the caption
-  src: '',
-  // A dark behind-the-scenes frame from mid-video (the default thumbnail carries the video's own title text)
-  poster: 'https://i.ytimg.com/vi/CZdPDogA86Q/maxres2.jpg',
-  watchUrl: 'https://youtu.be/CZdPDogA86Q',
-};
 
 const partners = [
   { name: 'Phú Long', logo: '/asset/doi_tac/partner_phulong.webp' },
@@ -88,7 +75,7 @@ export default async function Home() {
       {/* Hero: a short title, the portrait opens like a camera shutter (signature move) */}
       <section className="container-lux pt-10 pb-16 md:pt-14 md:pb-24 grid gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
         <Reveal stagger={0.1}>
-          <h1 className="text-ink text-[clamp(3rem,8vw,6rem)] leading-[0.95] tracking-[-0.02em]">Video là tài sản.</h1>
+          <h1 className="text-ink text-[clamp(2.75rem,7vw,5.25rem)] leading-[1.02] tracking-[-0.02em]">Video là tài sản.</h1>
           <p className="mt-6 text-xl md:text-2xl text-stone leading-snug max-w-xl">
             Học quay, dựng và bán hàng bằng video từ người làm truyền hình, chỉ với chiếc điện thoại của bạn.
           </p>
@@ -106,7 +93,7 @@ export default async function Home() {
         <ShutterImage className="relative aspect-[4/5] overflow-hidden bg-onyx">
           <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn, Video Advisor" fill priority sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" />
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-onyx/80 to-transparent" aria-hidden="true" />
-          <p className="absolute left-6 bottom-6 md:left-8 md:bottom-8 font-display text-4xl font-semibold text-white">Minh Tấn</p>
+          <p className="absolute left-6 bottom-6 md:left-8 md:bottom-8 font-display text-4xl font-bold text-white">Minh Tấn</p>
         </ShutterImage>
       </section>
 
@@ -122,21 +109,6 @@ export default async function Home() {
         </ul>
       </section>
 
-      {/* Showreel: real footage full-bleed, with an eased bottom scrim so the caption stays legible */}
-      {(SHOWREEL.youtubeId || SHOWREEL.src) && (
-        <section aria-labelledby="showreel-title" className="relative isolate overflow-hidden bg-onyx h-[70svh] md:h-[90svh] flex items-end">
-          <ShowreelVideo youtubeId={SHOWREEL.youtubeId || undefined} youtubeStart={SHOWREEL.youtubeStart} src={SHOWREEL.src || undefined} poster={SHOWREEL.poster || undefined} />
-          <div className="absolute inset-0 -z-0 pointer-events-none bg-[linear-gradient(to_bottom,rgb(28_25_23/0)_35%,rgb(28_25_23/.45)_55%,rgb(28_25_23/.82)_75%,rgb(28_25_23/.95)_100%)]" aria-hidden="true" />
-          <div className="relative container-lux pb-12 md:pb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <h2 id="showreel-title" className="text-white text-[clamp(2.25rem,5vw,4rem)] leading-[1]">Hình ảnh từ phim trường thật.</h2>
-            <div className="flex flex-col sm:flex-row gap-3 self-start md:self-auto">
-              <a href={SHOWREEL.watchUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold whitespace-nowrap">Xem showreel có tiếng</a>
-              <Link href="/work" className="btn btn-outline-light whitespace-nowrap">Xem các dự án</Link>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Statement: words fill with ink as they rise through the screen (React Bits ScrollReveal) */}
       <section className="bg-card">
         <div className="container-lux py-20 md:py-28">
@@ -145,7 +117,7 @@ export default async function Home() {
             enableBlur={false}
             baseRotation={0}
             containerClassName="max-w-4xl"
-            textClassName="font-display font-semibold text-[clamp(2rem,4.6vw,3.75rem)] leading-[1.15] text-ink"
+            textClassName="font-display font-bold text-[clamp(1.75rem,3.8vw,3.125rem)] leading-[1.25] text-ink"
           >
             Một video quay tử tế sẽ tiếp tục bán hàng cho bạn nhiều năm sau ngày đăng. Khóa học này dạy bạn làm ra những video như thế.
           </ScrollReveal>
@@ -154,7 +126,7 @@ export default async function Home() {
 
       {/* Featured course: outcomes as a plain list beside a filled price panel */}
       <section className="section">
-        <div className="container-lux grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-start">
+        <div className="container-lux grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-start [&>*]:min-w-0">
           <div>
             <SectionHeading
               title={course?.title || '21 Ngày Biến Video Thành Tài Sản'}
@@ -169,10 +141,10 @@ export default async function Home() {
             </Reveal>
           </div>
 
-          <div className="surface-dark p-8 md:p-10">
+          <div className="surface-dark p-6 sm:p-8 md:p-10">
             <p className="text-gold-light font-semibold">Học phí trọn gói</p>
             <div className="mt-3 flex items-baseline gap-3 flex-wrap">
-              <p className="font-display text-6xl font-semibold text-white">{course ? formatVND(course.price) : 'Liên hệ'}</p>
+              <p className="font-display text-[2.75rem] sm:text-6xl font-bold whitespace-nowrap text-white">{course ? formatVND(course.price) : 'Liên hệ'}</p>
               {course?.old_price && Number(course.old_price) > Number(course.price) && (
                 <p className="text-lg text-stone-400 line-through">{formatVND(course.old_price)}</p>
               )}
@@ -199,7 +171,7 @@ export default async function Home() {
           <Reveal as="dl" className="grid gap-x-12 gap-y-10 sm:grid-cols-2">
             {bonuses.map((b) => (
               <div key={b.title}>
-                <dt className="font-display text-3xl font-semibold text-ink">{b.title}</dt>
+                <dt className="font-display text-3xl font-bold text-ink">{b.title}</dt>
                 <dd className="mt-2 text-lg text-muted-foreground leading-relaxed">{b.desc}</dd>
               </div>
             ))}
@@ -225,7 +197,7 @@ export default async function Home() {
                   <Image src={p.image} alt={p.title} fill sizes="(min-width: 1024px) 34vw, (min-width: 640px) 46vw, 78vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                 </span>
                 <span className="mt-4 block text-gold font-semibold">{p.category}</span>
-                <span className="mt-1 block font-display text-3xl font-semibold text-ink group-hover:text-gold transition-colors">{p.title}</span>
+                <span className="mt-1 block font-display text-3xl font-bold text-ink group-hover:text-gold transition-colors">{p.title}</span>
               </Link>
             </li>
           ))}

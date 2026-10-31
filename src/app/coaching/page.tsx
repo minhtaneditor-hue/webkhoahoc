@@ -93,7 +93,7 @@ export default function CoachingPage() {
           <dl className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-3">
             {pillars.map(({ title, desc }) => (
               <div key={title}>
-                <dt className="font-display text-3xl font-semibold text-ink">{title}</dt>
+                <dt className="font-display text-3xl font-bold text-ink">{title}</dt>
                 <dd className="mt-2 text-lg text-muted-foreground leading-relaxed">{desc}</dd>
               </div>
             ))}
@@ -111,7 +111,7 @@ export default function CoachingPage() {
                 {pkg.featured && <span className="badge absolute -top-3 left-8 !bg-gold-light !text-onyx">Hiệu quả nhất</span>}
                 <p className={`text-sm font-semibold ${pkg.featured ? 'text-gold-light' : 'text-gold'}`}>{pkg.duration}</p>
                 <h3 className={`mt-2 text-3xl ${pkg.featured ? 'text-white' : ''}`}>{pkg.name}</h3>
-                <p className={`mt-4 font-display text-5xl font-semibold ${pkg.featured ? 'text-white' : ''}`}>{pkg.price}</p>
+                <p className={`mt-4 font-display text-5xl font-bold ${pkg.featured ? 'text-white' : ''}`}>{pkg.price}</p>
                 <ul className={`mt-8 space-y-3 flex-1 ${pkg.featured ? 'text-stone-300' : 'text-stone'}`}>
                   {pkg.features.map((f) => (
                     <li key={f} className="flex gap-3"><Check size={18} className={`shrink-0 mt-0.5 ${pkg.featured ? 'text-gold-light' : 'text-gold'}`} aria-hidden="true" /> {f}</li>

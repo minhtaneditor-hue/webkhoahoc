@@ -188,7 +188,7 @@ export default function CourseDetails() {
             <dl className="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2">
               {outcomes.map((o) => (
                 <div key={o.t}>
-                  <dt className="font-display text-2xl font-semibold text-ink flex gap-3"><Check size={22} className="text-gold shrink-0 mt-1" aria-hidden="true" />{o.t}</dt>
+                  <dt className="font-display text-2xl font-bold text-ink flex gap-3"><Check size={22} className="text-gold shrink-0 mt-1" aria-hidden="true" />{o.t}</dt>
                   <dd className="mt-1 pl-[34px] text-muted-foreground">{o.d}</dd>
                 </div>
               ))}
@@ -239,7 +239,7 @@ export default function CourseDetails() {
               <>
                 <p className="eyebrow">Học phí trọn gói</p>
                 <div className="mt-3 flex items-baseline gap-3 flex-wrap">
-                  <p className="font-display text-5xl font-semibold">{formatVND(finalPrice)}</p>
+                  <p className="font-display text-5xl font-bold">{formatVND(finalPrice)}</p>
                   {(appliedDiscount > 0 || Number(course.old_price) > price) && (
                     <p className="text-muted-foreground line-through">{formatVND(appliedDiscount > 0 ? price : course.old_price)}</p>
                   )}

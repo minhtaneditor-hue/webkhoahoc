@@ -153,7 +153,7 @@ export default function ShopPage() {
                     <h2 className="text-2xl">{asset.title}</h2>
                     {asset.description && <p className="mt-2 text-muted-foreground line-clamp-3">{asset.description}</p>}
                     <div className="mt-auto pt-6 flex items-center justify-between gap-4">
-                      <p className="font-display text-2xl font-semibold">{Number(asset.price) > 0 ? formatVND(asset.price) : 'Miễn phí'}</p>
+                      <p className="font-display text-2xl font-bold">{Number(asset.price) > 0 ? formatVND(asset.price) : 'Miễn phí'}</p>
                       <button
                         onClick={() => (owned ? handleDownload(asset) : handlePurchase(asset))}
                         disabled={busyId === asset.id}

@@ -40,15 +40,10 @@
 
 ### Typography
 
-- **Heading Font:** Cormorant
-- **Body Font:** Montserrat
-- **Mood:** luxury, high-end, fashion, elegant, refined, premium
-- **Google Fonts:** [Cormorant + Montserrat](https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap)
-
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
-```
+- **Heading Font:** Playfair Display (600/700/800; headings at 700)
+- **Body Font:** Be Vietnam Pro (400/500/600/700; designed for Vietnamese)
+- **Rule:** only these two typefaces on the whole site. Loaded with next/font (latin + vietnamese subsets) in src/app/layout.tsx.
+- **Why:** user asked for two thick, readable, professional and luxurious fonts (2026-10-31); Cormorant was too thin.
 
 ### Spacing Variables
 

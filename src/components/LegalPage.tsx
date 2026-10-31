@@ -43,7 +43,7 @@ export default function LegalPage({
 
         <aside className="mt-14 card p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <p className="font-display text-2xl font-semibold">Cần hỗ trợ thêm?</p>
+            <p className="font-display text-2xl font-bold">Cần hỗ trợ thêm?</p>
             <p className="text-muted-foreground">Gửi email cho chúng tôi, phản hồi trong 1 ngày làm việc.</p>
           </div>
           <a href={`mailto:${CONTACT.email}`} className="btn btn-dark shrink-0">Gửi email hỗ trợ</a>

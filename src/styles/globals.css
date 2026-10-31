@@ -31,8 +31,8 @@
   --color-text-muted: var(--color-muted-foreground);
 
   /* Typography */
-  --font-display: var(--font-cormorant), 'Cormorant', Georgia, serif;
-  --font-sans: var(--font-montserrat), 'Montserrat', system-ui, sans-serif;
+  --font-display: var(--font-playfair), 'Playfair Display', Georgia, serif;
+  --font-sans: var(--font-be-vietnam), 'Be Vietnam Pro', system-ui, sans-serif;
 
   /* Geometry & elevation */
   /* Square corners chosen once (taste-skill: square or fully round, never one medium radius) */
@@ -71,15 +71,15 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
     color: inherit;
     text-wrap: balance;
   }
-  h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); }
-  h2 { font-size: clamp(2rem, 4vw, 3rem); }
-  h3 { font-size: clamp(1.375rem, 2.2vw, 1.75rem); }
+  h1 { font-size: clamp(2.25rem, 5.2vw, 4rem); }
+  h2 { font-size: clamp(1.75rem, 3.4vw, 2.625rem); }
+  h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); }
   h4 { font-size: 1.25rem; }
 
   p { text-wrap: pretty; }

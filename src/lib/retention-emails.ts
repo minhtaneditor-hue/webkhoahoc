@@ -2,7 +2,7 @@ export const getRetentionEmailTemplate = (type: 'inactivity' | 'expiry' | 'lead-
   const styles = `
     background-color: #050507;
     color: #f5f5f5;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Be Vietnam Pro', Arial, sans-serif;
     padding: 40px;
     border-radius: 24px;
     border: 1px solid rgba(227, 38, 54, 0.1);

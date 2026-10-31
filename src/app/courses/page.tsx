@@ -93,7 +93,7 @@ export default async function CoursesPage() {
                       <div className="mt-auto pt-6 flex items-end justify-between gap-4">
                         <div>
                           {hasDiscount && <p className="text-sm text-muted-foreground line-through">{formatVND(course.old_price)}</p>}
-                          <p className="font-display text-3xl font-semibold">{Number(course.price) > 0 ? formatVND(course.price) : 'Miễn phí'}</p>
+                          <p className="font-display text-3xl font-bold">{Number(course.price) > 0 ? formatVND(course.price) : 'Miễn phí'}</p>
                         </div>
                         <span className="btn btn-dark !min-h-[44px] text-sm">Xem chi tiết <ArrowRight size={16} aria-hidden="true" /></span>
                       </div>
