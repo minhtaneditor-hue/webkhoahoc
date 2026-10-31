@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { Check, ShieldCheck, ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
+import { Reveal } from '@/components/motion/Motion';
 import { CONTACT } from '@/components/Footer';
 
 export const metadata: Metadata = {
@@ -55,7 +56,7 @@ export default function CoachingPage() {
       <section className="surface-dark">
         <div className="container-lux py-16 md:py-24 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
           <div>
-            <h1 className="text-white">Coaching 1:1 cùng Minh Tấn</h1>
+            <h1 className="text-white text-[clamp(1.75rem,5.5vw,4rem)]">Coaching 1:1 cùng Minh Tấn Video Advisor</h1>
             <p className="mt-6 text-lg text-stone-300 leading-relaxed max-w-xl">
               Học cách kinh doanh bằng hình ảnh trong một chương trình đồng hành riêng, để video trở thành nguồn thu nhập và sự nghiệp tự do thực sự.
             </p>
@@ -105,7 +106,7 @@ export default function CoachingPage() {
       <section id="goi-coaching" className="section scroll-mt-20">
         <div className="container-lux">
           <SectionHeading title="Chọn gói phù hợp với bạn" align="center" description="Hoàn tiền trong 7 ngày đầu nếu chương trình chưa phù hợp." />
-          <div className="mt-12 grid gap-6 lg:grid-cols-2 max-w-5xl mx-auto">
+          <Reveal className="mt-12 grid gap-6 lg:grid-cols-2 max-w-5xl mx-auto">
             {packages.map((pkg) => (
               <div key={pkg.name} className={`relative rounded-[var(--radius-card)] p-8 md:p-10 flex flex-col ${pkg.featured ? 'surface-dark shadow-[var(--shadow-lift)]' : 'card'}`}>
                 {pkg.featured && <span className="badge absolute -top-3 left-8 !bg-gold-light !text-onyx">Hiệu quả nhất</span>}
@@ -122,7 +123,7 @@ export default function CoachingPage() {
                 </a>
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
     </main>

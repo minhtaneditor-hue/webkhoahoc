@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Check, Quote, PlayCircle } from 'lucide-react';
+import { ArrowRight, Check, Quote, PlayCircle, MessageCircle, FileText, Music, LayoutTemplate } from 'lucide-react';
 import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import FaqList from '@/components/FaqList';
 import { ShutterImage, Reveal } from '@/components/motion/Motion';
 import ScrollReveal from '@/components/reactbits/ScrollReveal';
 import ShowreelVideo from '@/components/motion/ShowreelVideo';
+import CountUp from '@/components/motion/CountUp';
+import FeedbackMarquee from '@/components/FeedbackMarquee';
+import { FEATURED_STUDENTS } from '@/lib/students';
 
 export const revalidate = 300;
 
@@ -41,11 +44,6 @@ const projects = [
   { title: 'Ký Ức Vui Vẻ', category: 'Sản xuất truyền hình', image: '/asset/du_an_tieu_bieu/project_kuvv.png' },
 ];
 
-const testimonials = [
-  { name: 'Trần Thành Tân', title: 'Cinematographer', quote: 'Tôi làm chủ được ngôn ngữ hình ảnh và có video đầu tiên lên top trending.', avatar: '/asset/hoc_vien/tan.jpg', result: 'Top 1 Trending' },
-  { name: 'Nguyễn Đăng Hạnh', title: 'Founder Chú Lùn Bakery', quote: 'Tiệm bánh nhỏ của tôi giờ có một cỗ máy nội dung chạy đều mỗi tuần.', avatar: '/asset/hoc_vien/hanh.jpg', result: '+300% doanh thu' },
-  { name: 'Nguyễn Tiến Dương', title: 'Founder Thành Đô', quote: 'Video chỉn chu giúp khách hàng tin dịch vụ của chúng tôi ngay từ lần xem đầu.', avatar: '/asset/hoc_vien/duong.jpg', result: 'Nâng tầm uy tín' },
-];
 
 const outcomes = [
   'Quay đẹp bằng chính chiếc điện thoại bạn đang có',
@@ -55,10 +53,10 @@ const outcomes = [
 ];
 
 const bonuses = [
-  { title: 'Kèm cặp 1:1 trọn đời', desc: 'Hỏi trực tiếp qua Zalo và nhóm kín, không phải tự mò một mình.' },
-  { title: 'Kho 100+ kịch bản', desc: 'Mẫu nội dung đã kiểm chứng, chỉ cần điền thông tin của bạn.' },
-  { title: 'Thư viện nhạc bản quyền', desc: 'Nhạc nền theo xu hướng, dùng thoải mái không lo bị gỡ video.' },
-  { title: 'Template thiết kế', desc: 'Ảnh bìa và hiệu ứng chữ chuyên nghiệp từ studio của Minh Tấn.' },
+  { title: 'Kèm cặp 1:1 trọn đời', desc: 'Hỏi trực tiếp qua Zalo và nhóm kín, không phải tự mò một mình.', icon: MessageCircle },
+  { title: 'Kho 100+ kịch bản', desc: 'Mẫu nội dung đã kiểm chứng, chỉ cần điền thông tin của bạn.', icon: FileText },
+  { title: 'Thư viện nhạc bản quyền', desc: 'Nhạc nền theo xu hướng, dùng thoải mái không lo bị gỡ video.', icon: Music },
+  { title: 'Template thiết kế', desc: 'Ảnh bìa và hiệu ứng chữ chuyên nghiệp từ studio của Minh Tấn.', icon: LayoutTemplate },
 ];
 
 const faqs = [
@@ -85,33 +83,33 @@ export default async function Home() {
 
   return (
     <main>
-      {/* Hero: a short title, the portrait opens like a camera shutter (signature move) */}
-      <section className="container-lux pt-10 pb-16 md:pt-14 md:pb-24 grid gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
-        <Reveal stagger={0.1}>
-          <h1 className="text-ink text-[clamp(2.75rem,7vw,5.25rem)] leading-[1.02] tracking-[-0.02em]">Video là tài sản.</h1>
-          <p className="mt-6 text-xl md:text-2xl text-stone leading-snug max-w-xl">
-            Học quay, dựng và bán hàng bằng video từ người làm truyền hình, chỉ với chiếc điện thoại của bạn.
-          </p>
-          <div className="mt-9 flex flex-col sm:flex-row gap-3">
-            <Link href={courseHref} className="btn btn-gold">
-              Xem khóa học 21 ngày <ArrowRight size={18} aria-hidden="true" />
-            </Link>
-            <Link href="/coaching" className="btn btn-outline">Đặt lịch coaching 1:1</Link>
-          </div>
-          <p className="mt-8 text-muted-foreground">
-            Hơn 1.000 học viên đã học. Người dạy đã tham gia sản xuất <span className="text-ink font-semibold">2 Ngày 1 Đêm</span> và <span className="text-ink font-semibold">Anh Trai Say Hi</span>.
-          </p>
-        </Reveal>
-
-        <ShutterImage className="relative aspect-[4/5] overflow-hidden bg-onyx">
-          <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn, Video Advisor" fill priority sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" />
-          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-onyx/80 to-transparent" aria-hidden="true" />
-          <p className="absolute left-6 bottom-6 md:left-8 md:bottom-8 font-display text-4xl font-bold text-white">Minh Tấn</p>
-        </ShutterImage>
+      {/* Video header: Minh Tấn's showreel plays behind the main title (stills on phones / reduced motion) */}
+      <section aria-labelledby="hero-title" className="container-lux pt-4 md:pt-6">
+        {/* A wide, short banner: about 21:9 on desktop so it doesn't take over the first screen */}
+        <div className="relative isolate overflow-hidden bg-onyx rounded-[var(--radius-xl)] min-h-[440px] md:min-h-0 md:h-[clamp(360px,34vw,460px)] flex items-end">
+          {(SHOWREEL.youtubeId || SHOWREEL.src) && (
+            <ShowreelVideo youtubeId={SHOWREEL.youtubeId || undefined} youtubeStart={SHOWREEL.youtubeStart} src={SHOWREEL.src || undefined} poster={SHOWREEL.poster || undefined} />
+          )}
+          {/* Scrims: darker toward the bottom-left where the title sits */}
+          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_bottom,rgb(28_25_23/.25)_0%,rgb(28_25_23/0)_30%,rgb(28_25_23/.55)_60%,rgb(28_25_23/.92)_100%)]" aria-hidden="true" />
+          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgb(28_25_23/.6),transparent_65%)]" aria-hidden="true" />
+          <Reveal className="relative w-full px-6 md:px-12 pb-8 md:pb-10 max-w-2xl" stagger={0.1}>
+            <h1 id="hero-title" className="text-white text-[clamp(2.5rem,5vw,4rem)] leading-[1.02] tracking-[-0.02em]">Video là tài sản.</h1>
+            <p className="mt-4 text-lg md:text-xl text-stone-200 leading-snug max-w-xl">
+              Học quay, dựng và bán hàng bằng video từ người làm truyền hình, chỉ với chiếc điện thoại của bạn.
+            </p>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <Link href={courseHref} className="btn btn-gold">Xem khóa học 21 ngày <ArrowRight size={18} aria-hidden="true" /></Link>
+              <a href={SHOWREEL.watchUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">
+                <PlayCircle size={18} aria-hidden="true" /> Xem showreel có tiếng
+              </a>
+            </div>
+          </Reveal>
+        </div>
       </section>
 
       {/* Partners: a quiet strip, no rules */}
-      <section aria-labelledby="partners-title" className="container-lux pb-16 md:pb-20">
+      <section aria-labelledby="partners-title" className="container-lux pt-10 md:pt-12 pb-16 md:pb-20">
         <h2 id="partners-title" className="font-sans text-base font-medium text-muted-foreground">Đồng hành cùng các thương hiệu và đài truyền hình</h2>
         <ul className="mt-6 grid grid-cols-3 md:grid-cols-5 gap-x-10 gap-y-6 items-center">
           {partners.map((p) => (
@@ -122,20 +120,78 @@ export default async function Home() {
         </ul>
       </section>
 
-      {/* Showreel: real footage full-bleed, with an eased bottom scrim so the caption stays legible */}
-      {(SHOWREEL.youtubeId || SHOWREEL.src) && (
-        <section aria-labelledby="showreel-title" className="relative isolate overflow-hidden bg-onyx h-[70svh] md:h-[90svh] flex items-end">
-          <ShowreelVideo youtubeId={SHOWREEL.youtubeId || undefined} youtubeStart={SHOWREEL.youtubeStart} src={SHOWREEL.src || undefined} poster={SHOWREEL.poster || undefined} />
-          <div className="absolute inset-0 -z-0 pointer-events-none bg-[linear-gradient(to_bottom,rgb(28_25_23/0)_35%,rgb(28_25_23/.45)_55%,rgb(28_25_23/.82)_75%,rgb(28_25_23/.95)_100%)]" aria-hidden="true" />
-          <div className="relative container-lux pb-12 md:pb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <h2 id="showreel-title" className="text-white text-[clamp(2.25rem,5vw,4rem)] leading-[1]">Hình ảnh từ phim trường thật.</h2>
-            <div className="flex flex-col sm:flex-row gap-3 self-start md:self-auto">
-              <a href={SHOWREEL.watchUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold whitespace-nowrap">Xem showreel có tiếng</a>
-              <Link href="/work" className="btn btn-outline-light whitespace-nowrap">Xem các dự án</Link>
-            </div>
+      {/* About the teacher: the portrait opens like a camera shutter (signature move) */}
+      <section aria-labelledby="advisor-title" className="container-lux pb-20 md:pb-28 grid gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
+        <Reveal stagger={0.1}>
+          <h2 id="advisor-title" className="text-ink text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.05]">Minh Tấn Video Advisor</h2>
+          <p className="mt-6 text-xl text-stone leading-relaxed max-w-xl">
+            Hơn 10 năm làm truyền hình, từng tham gia sản xuất <span className="text-ink font-semibold">2 Ngày 1 Đêm</span> và <span className="text-ink font-semibold">Anh Trai Say Hi</span>. Giờ Minh Tấn dạy lại quy trình đó, rút gọn cho chiếc điện thoại của bạn.
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+            <Link href="/about" className="btn btn-dark">Câu chuyện của Minh Tấn <ArrowRight size={18} aria-hidden="true" /></Link>
+            <Link href="/coaching" className="btn btn-outline">Đặt lịch coaching 1:1</Link>
           </div>
-        </section>
-      )}
+        </Reveal>
+
+        <ShutterImage className="relative aspect-[4/5] overflow-hidden bg-onyx rounded-[var(--radius-img)]">
+          <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn, Video Advisor" fill sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" />
+          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-onyx/80 to-transparent" aria-hidden="true" />
+          <p className="absolute left-6 bottom-6 md:left-8 md:bottom-8"><span className="block font-display text-4xl font-bold text-white">Minh Tấn</span><span className="block mt-1 text-gold-light font-semibold">Video Advisor</span></p>
+        </ShutterImage>
+      </section>
+
+      {/* Students & feedback: the heart of the page */}
+      <section aria-labelledby="students-title" className="surface-dark overflow-hidden">
+        <div className="container-lux pt-20 md:pt-28">
+          <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+            <Reveal>
+              <h2 id="students-title" className="text-white text-[clamp(1.625rem,5vw,4rem)] leading-[1.1]">Học viên nói gì về Minh Tấn Video Advisor</h2>
+              <p className="mt-5 text-lg text-stone-300 max-w-xl">Họ bắt đầu giống bạn: một chiếc điện thoại và mong muốn làm video tốt hơn. Đây là kết quả của họ.</p>
+            </Reveal>
+            <dl className="grid grid-cols-2 gap-6">
+              <div className="rounded-[var(--radius-card)] bg-white/[0.05] p-6 flex flex-col-reverse">
+                <dt className="mt-2 text-stone-300">học viên đã theo học</dt>
+                <dd className="font-display text-5xl md:text-6xl font-bold text-gold-light"><CountUp to={1000} suffix="+" /></dd>
+              </div>
+              <div className="rounded-[var(--radius-card)] bg-white/[0.05] p-6 flex flex-col-reverse">
+                <dt className="mt-2 text-stone-300">năm làm truyền hình</dt>
+                <dd className="font-display text-5xl md:text-6xl font-bold text-gold-light"><CountUp to={10} suffix="+" /></dd>
+              </div>
+            </dl>
+          </div>
+
+          <Reveal as="ul" from="mask" className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURED_STUDENTS.map((st) => (
+              <li key={st.id}>
+                <figure className="group h-full flex flex-col">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-img)] ring-hover">
+                    <Image src={st.avatar_url} alt={st.name} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.05]" />
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-onyx/90 to-transparent" aria-hidden="true" />
+                    <span className="badge absolute top-4 left-4 !bg-gold-light !text-onyx">{st.results}</span>
+                    <figcaption className="absolute left-5 right-5 bottom-5">
+                      <span className="block font-display text-2xl font-bold text-white">{st.name}</span>
+                      <span className="block text-sm text-stone-300">{st.title}</span>
+                    </figcaption>
+                  </div>
+                  <blockquote className="mt-5 text-lg text-stone-200 leading-relaxed">
+                    <Quote size={20} className="inline -mt-1 mr-2 text-gold-light" aria-hidden="true" />{st.quote}
+                  </blockquote>
+                </figure>
+              </li>
+            ))}
+          </Reveal>
+        </div>
+
+        <div className="mt-20">
+          <p className="container-lux mb-6 font-semibold text-gold-light">Tin nhắn thật học viên gửi sau khóa học</p>
+          <FeedbackMarquee />
+        </div>
+
+        <div className="container-lux py-14 md:py-20 flex flex-col sm:flex-row gap-3">
+          <Link href={courseHref} className="btn btn-gold">Bắt đầu như họ <ArrowRight size={18} aria-hidden="true" /></Link>
+          <Link href="/students" className="btn btn-outline-light">Xem tất cả câu chuyện học viên</Link>
+        </div>
+      </section>
 
       {/* Statement: words fill with ink as they rise through the screen (React Bits ScrollReveal) */}
       <section className="bg-card">
@@ -192,71 +248,56 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* What comes with it: large type in two columns, no icon boxes */}
-      <section className="bg-card">
-        <div className="container-lux section grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
-          <SectionHeading title="Đi kèm khóa học" description="Mọi thứ cần để bắt đầu ngay trong tuần đầu tiên." />
-          <Reveal as="dl" className="grid gap-x-12 gap-y-10 sm:grid-cols-2">
-            {bonuses.map((b) => (
-              <div key={b.title}>
-                <dt className="font-display text-3xl font-bold text-ink">{b.title}</dt>
-                <dd className="mt-2 text-lg text-muted-foreground leading-relaxed">{b.desc}</dd>
-              </div>
-            ))}
-          </Reveal>
+      {/* What comes with it: frosted-glass "notification" cards over a blurred warm photo */}
+      <section aria-labelledby="bonuses-title" className="container-lux pb-20 md:pb-28">
+        <div className="relative isolate overflow-hidden rounded-[var(--radius-xl)] bg-onyx px-5 py-14 md:px-12 md:py-20">
+          <Image src="/asset/avatar/hero_expert.jpg" alt="" fill sizes="100vw" aria-hidden="true" className="!rounded-none object-cover scale-125 blur-3xl opacity-70 -z-20" />
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_left,rgb(227_179_65/.25),transparent_55%),linear-gradient(to_bottom,rgb(28_25_23/.35),rgb(28_25_23/.75))]" aria-hidden="true" />
+          <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div>
+              <h2 id="bonuses-title" className="text-white">Đi kèm khóa học</h2>
+              <p className="mt-4 text-lg text-stone-200 leading-relaxed">Mọi thứ cần để bắt đầu ngay trong tuần đầu tiên, có sẵn khi bạn vào học.</p>
+            </div>
+            <Reveal as="ul" className="grid gap-4 sm:grid-cols-2" stagger={0.12}>
+              {bonuses.map(({ title, desc, icon: Icon }, i) => (
+                <li key={title} className={i % 2 === 1 ? 'sm:translate-y-8' : ''}>
+                  <div className="h-full flex gap-4 p-5 rounded-[var(--radius-card)] bg-white/10 backdrop-blur-xl ring-1 ring-white/20 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.6)] transition duration-300 hover:bg-white/[0.16] hover:-translate-y-1">
+                    <span className="w-11 h-11 rounded-full bg-gold-light text-onyx flex items-center justify-center shrink-0"><Icon size={20} aria-hidden="true" /></span>
+                    <span className="min-w-0 flex-1">
+                      {/* notification header line, like a phone alert */}
+                      <span className="flex items-center justify-between gap-3 text-xs text-stone-300">
+                        <span>Minh Tấn Academy</span>
+                        <span>Có sẵn</span>
+                      </span>
+                      <span className="mt-1 block font-semibold text-white leading-snug">{title}</span>
+                      <span className="mt-1 block text-sm text-stone-200 leading-relaxed">{desc}</span>
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </Reveal>
+          </div>
         </div>
       </section>
 
-      {/* Projects: a drag row of large pictures (scroll-snap, no library) */}
-      <section className="section overflow-hidden">
-        <div className="container-lux flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <SectionHeading title="Từ phim trường truyền hình" description="Những chương trình Minh Tấn đã tham gia sản xuất. Kéo ngang để xem." />
-          <Link href="/work" className="btn btn-outline self-start md:self-auto">Xem tất cả dự án</Link>
+      {/* Projects: a compact strip of small thumbnails (supporting proof, not the focus) */}
+      <section className="container-lux pb-16 md:pb-20">
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-2xl md:text-3xl">Đã tham gia sản xuất</h2>
+          <Link href="/work" className="link-underline text-sm font-semibold text-gold whitespace-nowrap">Xem tất cả dự án →</Link>
         </div>
-        <ul
-          className="mt-12 flex gap-5 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-2 px-5 md:px-[max(2rem,calc((100vw-1200px)/2+2rem))] scroll-px-5 md:scroll-px-[max(2rem,calc((100vw-1200px)/2+2rem))]"
-          aria-label="Dự án tiêu biểu"
-          tabIndex={0}
-        >
+        <Reveal as="ul" className="mt-6 grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4" stagger={0.05}>
           {projects.map((p) => (
-            <li key={p.title} className="snap-start shrink-0 w-[78vw] sm:w-[46vw] lg:w-[34vw] max-w-[520px]">
+            <li key={p.title}>
               <Link href="/work" className="group block">
-                <span className="relative block aspect-[4/5] overflow-hidden bg-muted">
-                  <Image src={p.image} alt={p.title} fill sizes="(min-width: 1024px) 34vw, (min-width: 640px) 46vw, 78vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                <span className="relative block aspect-video overflow-hidden rounded-[var(--radius-md)] bg-muted">
+                  <Image src={p.image} alt={p.title} fill sizes="(min-width: 768px) 16vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.08]" />
                 </span>
-                <span className="mt-4 block text-gold font-semibold">{p.category}</span>
-                <span className="mt-1 block font-display text-3xl font-bold text-ink group-hover:text-gold transition-colors">{p.title}</span>
+                <span className="mt-2 block text-xs md:text-sm font-medium text-stone leading-snug group-hover:text-gold transition-colors">{p.title}</span>
               </Link>
             </li>
           ))}
-        </ul>
-      </section>
-
-      {/* Testimonials on a dark field */}
-      <section className="surface-dark">
-        <div className="container-lux section">
-          <SectionHeading title="Kết quả thật từ người đã học" light />
-          <Reveal className="mt-14 grid gap-12 md:grid-cols-3" from="mask">
-            {testimonials.map((t) => (
-              <figure key={t.name} className="flex flex-col">
-                <Quote size={32} className="text-gold-light" aria-hidden="true" />
-                <blockquote className="mt-4 font-display text-[1.75rem] leading-snug text-white flex-1">{t.quote}</blockquote>
-                <figcaption className="mt-8 flex items-center gap-4">
-                  <span className="relative w-14 h-14 rounded-full overflow-hidden shrink-0">
-                    <Image src={t.avatar} alt="" fill sizes="56px" className="object-cover" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block font-semibold text-white">{t.name}</span>
-                    <span className="block text-stone-400">{t.title} · <span className="text-gold-light">{t.result}</span></span>
-                  </span>
-                </figcaption>
-              </figure>
-            ))}
-          </Reveal>
-          <div className="mt-14">
-            <Link href="/students" className="btn btn-outline-light">Xem thêm câu chuyện học viên</Link>
-          </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* FAQ */}

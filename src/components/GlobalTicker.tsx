@@ -2,24 +2,31 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Sparkles } from "lucide-react";
 import { isAppShellRoute } from "./Navbar";
 
-// Slim announcement bar. Static (no marquee) so it stays readable and motion-safe.
+const messages = [
+  "Khóa “21 Ngày Biến Video Thành Tài Sản” đang mở đăng ký",
+  "Học thử miễn phí bài đầu tiên",
+  "Truy cập trọn đời, hỗ trợ 1:1 qua Zalo",
+  "Hoàn tiền trong 7 ngày nếu chưa phù hợp",
+];
+
+// Slow announcement marquee: pauses on hover, static under reduced motion (see .marquee-track).
 export default function GlobalTicker() {
   const pathname = usePathname();
   if (isAppShellRoute(pathname)) return null;
 
   return (
-    <div className="surface-dark text-[13px]">
-      <div className="container-lux flex items-center justify-center sm:justify-between gap-4 min-h-[40px] py-2">
-        <p className="text-stone-300 text-center sm:text-left">
-          <span className="text-gold-light font-semibold">Khóa “21 Ngày Biến Video Thành Tài Sản”</span>
-          <span className="hidden sm:inline"> đang mở đăng ký — học trọn đời, hỗ trợ 1:1.</span>
-        </p>
-        <Link href="/courses" className="hidden sm:inline text-gold-light font-semibold underline-offset-4 hover:underline whitespace-nowrap">
-          Xem khóa học →
-        </Link>
+    <Link href="/courses" className="block surface-dark text-[13px] overflow-hidden group" aria-label="Xem khóa học: 21 Ngày Biến Video Thành Tài Sản đang mở đăng ký">
+      <div className="marquee-track py-2.5" style={{ ["--marquee-duration" as string]: "40s" }} aria-hidden="true">
+        {[...messages, ...messages, ...messages, ...messages].map((m, i) => (
+          <span key={i} className="flex items-center gap-3 px-6 whitespace-nowrap text-stone-300 group-hover:text-white transition-colors">
+            <Sparkles size={13} className="text-gold-light shrink-0" />
+            {m}
+          </span>
+        ))}
       </div>
-    </div>
+    </Link>
   );
 }

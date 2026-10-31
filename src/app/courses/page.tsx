@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { ArrowRight, BookOpen, Check, Compass, Crown } from 'lucide-react';
 import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
+import { Reveal } from '@/components/motion/Motion';
 
 export const revalidate = 300;
 
@@ -68,7 +69,7 @@ export default async function CoursesPage() {
             <p className="mt-2 text-muted-foreground">Bấm nút Hỗ trợ để nhận thông báo khi mở đăng ký.</p>
           </div>
         ) : (
-          <ul className="grid gap-8 md:grid-cols-2">
+          <Reveal as="ul" className="grid gap-8 md:grid-cols-2">
             {courses.map((course: any, i: number) => {
               const lessonCount = course.lesson_outline?.[0]?.count ?? 0;
               const hasDiscount = course.old_price && Number(course.old_price) > Number(course.price);
@@ -102,7 +103,7 @@ export default async function CoursesPage() {
                 </li>
               );
             })}
-          </ul>
+          </Reveal>
         )}
       </section>
 
@@ -111,7 +112,7 @@ export default async function CoursesPage() {
           <SectionHeading
             light
 
-            title="Coaching 1:1 cùng Minh Tấn"
+            title="Coaching 1:1 cùng Minh Tấn Video Advisor"
             description="Khi bạn cần một người nhìn thẳng vào kênh của mình và chỉ ra bước tiếp theo."
           />
           <div className="mt-12 grid gap-6 md:grid-cols-2">

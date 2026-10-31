@@ -22,14 +22,15 @@ export function ShutterImage({ children, className = '' }: { children: ReactNode
     mm.add(MOTION_OK, () => {
       const inner = root.current?.querySelector('[data-shutter-inner]');
       if (!root.current || !inner) return;
-      gsap.timeline({ defaults: { ease: 'expo.out' } })
-        .from(root.current, { clipPath: 'inset(0% 0% 0% 100%)', duration: 1.4 }, 0.15)
+      // Plays when the picture scrolls into view (it may sit below the first screen)
+      gsap.timeline({ defaults: { ease: 'expo.out' }, scrollTrigger: { trigger: root.current, start: 'top 85%', once: true } })
+        .from(root.current, { clipPath: 'inset(0% 0% 0% 100% round 16px)', duration: 1.4 }, 0.15)
         .from(inner, { scale: 1.12, duration: 2.2 }, 0.15);
     });
   }, { scope: root });
 
   return (
-    <div ref={root} className={className} style={{ clipPath: 'inset(0% 0% 0% 0%)' }}>
+    <div ref={root} className={className} style={{ clipPath: 'inset(0% 0% 0% 0% round 16px)' }}>
       <div data-shutter-inner className="absolute inset-0">{children}</div>
     </div>
   );

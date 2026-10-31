@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Mail, Phone, MapPin, ShieldCheck, CreditCard } from 'lucide-react';
+import { Mail, Phone, MapPin, ShieldCheck, CreditCard, ArrowUp } from 'lucide-react';
+import { Reveal } from './motion/Motion';
 import { Logo, isAppShellRoute } from './Navbar';
 
 export const CONTACT = {
@@ -51,19 +52,49 @@ export default function Footer() {
   const pathname = usePathname();
   if (isAppShellRoute(pathname)) return null;
 
+  const contacts = [
+    { icon: Phone, label: 'Hotline & Zalo', value: CONTACT.phone, href: CONTACT.phoneHref },
+    { icon: Mail, label: 'Email', value: CONTACT.email, href: `mailto:${CONTACT.email}` },
+    { icon: MapPin, label: 'Địa chỉ', value: CONTACT.address },
+  ];
+
   return (
-    <footer className="surface-dark">
-      <div className="container-lux pt-16 pb-10">
-        <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <footer className="surface-dark overflow-hidden">
+      <div className="container-lux pt-16 md:pt-20">
+        {/* Contact tiles */}
+        <Reveal as="ul" className="grid gap-4 md:grid-cols-3" stagger={0.08}>
+          {contacts.map(({ icon: Icon, label, value, href }) => {
+            const inner = (
+              <>
+                <span className="w-12 h-12 rounded-full bg-gold-light/10 text-gold-light flex items-center justify-center shrink-0 transition-colors group-hover:bg-gold-light group-hover:text-onyx"><Icon size={20} aria-hidden="true" /></span>
+                <span className="min-w-0">
+                  <span className="block text-sm text-stone-400">{label}</span>
+                  <span className="block font-semibold text-white break-words">{value}</span>
+                </span>
+              </>
+            );
+            return (
+              <li key={label}>
+                {href ? (
+                  <a href={href} className="group flex items-center gap-4 p-5 rounded-[var(--radius-card)] bg-white/[0.04] ring-1 ring-white/10 hover:ring-gold-light/60 hover:bg-white/[0.07] transition">{inner}</a>
+                ) : (
+                  <div className="group flex items-center gap-4 p-5 rounded-[var(--radius-card)] bg-white/[0.04] ring-1 ring-white/10">{inner}</div>
+                )}
+              </li>
+            );
+          })}
+        </Reveal>
+
+        <div className="mt-14 grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-sm">
             <Logo light />
             <p className="mt-5 text-stone-400 text-[15px] leading-relaxed">
-              Học làm video bài bản từ người làm nghề truyền hình — để mỗi video bạn quay ra đều trở thành tài sản.
+              Học làm video bài bản từ người làm nghề truyền hình, để mỗi video bạn quay ra đều trở thành tài sản.
             </p>
-            <div className="mt-6 flex gap-2">
+            <div className="mt-6 flex gap-3">
               {socials.map(({ label, href, icon: Icon }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                   className="w-11 h-11 rounded-md border border-white/15 flex items-center justify-center text-stone-300 hover:text-gold-light hover:border-gold-light transition-colors">
+                   className="w-11 h-11 rounded-full bg-white/[0.06] flex items-center justify-center text-stone-300 transition duration-300 hover:-translate-y-1 hover:bg-gold-light hover:text-onyx">
                   <Icon />
                 </a>
               ))}
@@ -76,26 +107,29 @@ export default function Footer() {
               <ul className="space-y-1">
                 {col.links.map((l) => (
                   <li key={l.href}>
-                    <Link href={l.href} className="inline-block py-1.5 text-[15px] text-stone-300 hover:text-white transition-colors">{l.name}</Link>
+                    <Link href={l.href} className="inline-block py-1.5 text-[15px] text-stone-300 hover:text-white transition-colors">
+                      <span className="link-underline">{l.name}</span>
+                    </Link>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
+      </div>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-3 border-t border-white/10 pt-8 text-[15px] text-stone-300">
-          <a href={CONTACT.phoneHref} className="flex items-center gap-3 hover:text-white"><Phone size={18} className="text-gold-light" aria-hidden="true" /> {CONTACT.phone} (Zalo)</a>
-          <a href={`mailto:${CONTACT.email}`} className="flex items-center gap-3 hover:text-white break-all"><Mail size={18} className="text-gold-light shrink-0" aria-hidden="true" /> {CONTACT.email}</a>
-          <p className="flex items-center gap-3"><MapPin size={18} className="text-gold-light" aria-hidden="true" /> {CONTACT.address}</p>
-        </div>
-
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between text-sm text-stone-400">
-          <p>© {new Date().getFullYear()} Minh Tấn Academy. Bảo lưu mọi quyền.</p>
-          <div className="flex items-center gap-5">
-            <span className="flex items-center gap-2"><ShieldCheck size={16} aria-hidden="true" /> Bảo mật SSL</span>
-            <span className="flex items-center gap-2"><CreditCard size={16} aria-hidden="true" /> Thanh toán VNPay</span>
-          </div>
+      <div className="container-lux mt-14 py-8 pb-24 sm:pb-8 sm:pr-40 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between text-sm text-stone-400">
+        <p>© {new Date().getFullYear()} Minh Tấn Academy. Bảo lưu mọi quyền.</p>
+        <div className="flex items-center gap-5 flex-wrap">
+          <span className="flex items-center gap-2"><ShieldCheck size={16} aria-hidden="true" /> Bảo mật SSL</span>
+          <span className="flex items-center gap-2"><CreditCard size={16} aria-hidden="true" /> Thanh toán VNPay</span>
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })}
+            className="group flex items-center gap-2 h-11 pl-4 pr-3 rounded-full bg-white/[0.06] text-stone-200 hover:bg-gold-light hover:text-onyx transition-colors"
+          >
+            Lên đầu trang <ArrowUp size={16} className="transition-transform group-hover:-translate-y-0.5" aria-hidden="true" />
+          </button>
         </div>
       </div>
     </footer>
