@@ -174,11 +174,14 @@ async function emailAssetBuyer(supabase: SupabaseClient, resend: Resend, payment
     to = user?.email || null;
   }
   const { data: asset } = await supabase.from('digital_assets').select('title').eq('id', payment.asset_id).single();
-  if (!to || !asset || !process.env.RESEND_API_KEY) return;
+  if (!to || !asset || !process.env.RESEND_API_KEY) {
+    console.warn(`Buyer email skipped for ${payment.order_id}: to=${!!to} asset=${!!asset} key=${!!process.env.RESEND_API_KEY}`);
+    return;
+  }
 
   const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.minhtanacademy.com';
   const link = `${base}/payment/bank/${payment.order_id}?t=${payment.access_token}`;
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: 'Minh Tan Academy <customer@minhtanacademy.com>',
     to,
     subject: `Đã thanh toán: ${asset.title}`,
@@ -191,4 +194,5 @@ async function emailAssetBuyer(supabase: SupabaseClient, resend: Resend, payment
       </div>
     `,
   });
+  if (error) console.error(`Resend: buyer email for ${payment.order_id} failed`, error);
 }
