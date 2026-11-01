@@ -10,7 +10,9 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createSupabaseServer();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    // Usually: the link was opened in a different browser than the one that asked for it
+    if (error) return NextResponse.redirect(new URL('/auth?error=link', request.url));
   }
 
   // URL to redirect to after sign in process completes

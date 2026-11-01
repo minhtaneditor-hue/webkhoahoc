@@ -4,12 +4,12 @@ import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { PASSWORD_RULE } from '@/lib/password';
 import { supabase } from '@/utils/supabase';
 import { Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 type Mode = 'login' | 'signup' | 'reset';
 
-const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 // Translate the most common Supabase auth errors into Vietnamese
 function friendlyError(message: string) {
@@ -33,7 +33,10 @@ function AuthForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // ?error=link: an email link was expired, already used, or opened in a different browser
+  const [error, setError] = useState<string | null>(
+    searchParams?.get('error') === 'link' ? 'Link trong email đã hết hạn hoặc đã được dùng. Vui lòng gửi lại link mới.' : null
+  );
   const [notice, setNotice] = useState<string | null>(null);
 
   const switchMode = (m: Mode) => { setMode(m); setError(null); setNotice(null); };
@@ -49,7 +52,7 @@ function AuthForm() {
     try {
       if (mode === 'reset') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/auth/update-password`,
         });
         if (error) throw error;
         setNotice('Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư (cả mục Spam).');
