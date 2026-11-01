@@ -30,7 +30,7 @@ export default async function StudentsPage() {
       {works.length > 0 && (
         <section id="san-pham" aria-labelledby="works-title" className="container-lux pb-20 scroll-mt-24">
           <h2 id="works-title">Sản phẩm của học viên</h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl">Bấm vào từng sản phẩm để xem video. Nhãn Trước / Sau cho thấy học viên làm video thế nào trước và sau khóa học.</p>
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl">Bấm vào từng sản phẩm để xem lớn. Nhãn Trước / Sau cho thấy học viên làm video thế nào trước và sau khóa học.</p>
           <div className="mt-8"><StudentWorks works={works} /></div>
         </section>
       )}
