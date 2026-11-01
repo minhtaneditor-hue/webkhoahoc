@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { CheckCircle2, Copy, Check, Loader2, ShieldCheck } from 'lucide-react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { CheckCircle2, Copy, Check, Loader2, ShieldCheck, Download } from 'lucide-react';
 import { formatVND } from '@/lib/supabase-public';
 
 type Order = {
@@ -12,6 +12,7 @@ type Order = {
   amount: number;
   title: string;
   courseId: string | null;
+  assetId: string | null;
   bank: string;
   account: string;
   accountName: string;
@@ -23,16 +24,17 @@ type Order = {
 // polls until the SePay webhook marks the order paid.
 export default function BankTransferPage() {
   const { orderId } = useParams<{ orderId: string }>();
+  const token = useSearchParams().get('t') || '';
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState('');
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/payment/bank?orderId=${encodeURIComponent(orderId)}`, { cache: 'no-store' });
+    const res = await fetch(`/api/payment/bank?orderId=${encodeURIComponent(orderId)}&t=${encodeURIComponent(token)}`, { cache: 'no-store' });
     const data = await res.json();
     if (!res.ok) return setError(data.error || 'Không tải được đơn hàng.');
     setOrder(data);
-  }, [orderId]);
+  }, [orderId, token]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -42,6 +44,16 @@ export default function BankTransferPage() {
     const t = setInterval(load, 4000);
     return () => clearInterval(t);
   }, [order?.status, load]);
+
+  const [downloading, setDownloading] = useState(false);
+  async function download() {
+    setDownloading(true);
+    const res = await fetch(`/api/shop/download?order=${encodeURIComponent(orderId)}&t=${encodeURIComponent(token)}`);
+    const data = await res.json();
+    setDownloading(false);
+    if (data.url) window.location.assign(data.url);
+    else setError(data.error || 'Không lấy được link tải.');
+  }
 
   function copy(label: string, value: string) {
     navigator.clipboard?.writeText(value);
@@ -77,10 +89,19 @@ export default function BankTransferPage() {
             Đã nhận {formatVND(order.amount)} cho “{order.title}”. Email xác nhận đã được gửi tới hộp thư của bạn.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            {order.courseId
-              ? <Link href={`/courses/${order.courseId}`} className="btn btn-gold">Vào học ngay</Link>
-              : <Link href="/shop" className="btn btn-gold">Tải tài nguyên</Link>}
-            <Link href="/dashboard" className="btn btn-outline">Khu học tập</Link>
+            {order.courseId ? (
+              <>
+                <Link href={`/courses/${order.courseId}`} className="btn btn-gold">Vào học ngay</Link>
+                <Link href="/dashboard" className="btn btn-outline">Khu học tập</Link>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={download} disabled={downloading} className="btn btn-gold">
+                  {downloading ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : <Download size={18} aria-hidden="true" />} Tải về
+                </button>
+                <Link href="/shop" className="btn btn-outline">Xem thêm tài nguyên</Link>
+              </>
+            )}
           </div>
         </div>
       </main>

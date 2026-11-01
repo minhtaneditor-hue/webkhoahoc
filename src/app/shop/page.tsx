@@ -6,6 +6,7 @@ import { supabase } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
 import { ShoppingBag, Download, Loader2, BookOpen, Palette, Package } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
+import BuyDialog from '@/components/shop/BuyDialog';
 
 const CATEGORY_LABELS: Record<string, string> = {
   ebook: 'Ebook',
@@ -28,6 +29,8 @@ export default function ShopPage() {
   const [purchasedIds, setPurchasedIds] = useState<string[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [buying, setBuying] = useState<any>(null);
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     async function fetchAssets() {
@@ -37,6 +40,7 @@ export default function ShopPage() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        setEmail(user.email || '');
         const { data: paid } = await supabase
           .from('payments')
           .select('asset_id')
@@ -68,28 +72,10 @@ export default function ShopPage() {
     }
   }
 
-  async function handlePurchase(asset: any) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      window.location.assign('/auth?redirect=/shop');
-      return;
-    }
-    setBusyId(asset.id);
+  // Opens the quick checkout form; no login needed.
+  function handlePurchase(asset: any) {
     setError(asset.id, '');
-    try {
-      const response = await fetch('/api/payment/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assetId: asset.id }),
-      });
-      const data = await response.json();
-      if (data.url) window.location.assign(data.url);
-      else setError(asset.id, data.error || 'Không tạo được đơn thanh toán.');
-    } catch {
-      setError(asset.id, 'Không kết nối được máy chủ thanh toán.');
-    } finally {
-      setBusyId(null);
-    }
+    setBuying(asset);
   }
 
   return (
@@ -153,12 +139,16 @@ export default function ShopPage() {
                   <div className="p-6 flex flex-col flex-1">
                     <h2 className="text-2xl">{asset.title}</h2>
                     {asset.description && <p className="mt-2 text-muted-foreground line-clamp-3">{asset.description}</p>}
-                    <div className="mt-auto pt-6 flex items-center justify-between gap-4">
-                      <p className="font-display text-2xl font-bold">{Number(asset.price) > 0 ? formatVND(asset.price) : 'Miễn phí'}</p>
+                    {/* Price panel right under the description, with a one-click buy */}
+                    <div className="mt-auto pt-6">
+                      <div className="rounded-[var(--radius-md)] bg-muted p-4 flex items-end justify-between gap-3">
+                        <span className="text-sm text-muted-foreground">{owned && Number(asset.price) > 0 ? 'Bạn đã mua' : 'Giá'}</span>
+                        <span className="font-display text-3xl font-bold text-ink">{Number(asset.price) > 0 ? formatVND(asset.price) : 'Miễn phí'}</span>
+                      </div>
                       <button
                         onClick={() => (owned ? handleDownload(asset) : handlePurchase(asset))}
                         disabled={busyId === asset.id}
-                        className={`btn !min-h-[44px] text-sm ${owned ? 'btn-dark' : 'btn-gold'}`}
+                        className={`btn w-full mt-3 ${owned ? 'btn-dark' : 'btn-gold'}`}
                       >
                         {busyId === asset.id ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : owned ? <Download size={16} aria-hidden="true" /> : <ShoppingBag size={16} aria-hidden="true" />}
                         {owned ? 'Tải về' : 'Mua ngay'}
@@ -172,6 +162,7 @@ export default function ShopPage() {
           </ul>
         )}
       </section>
+      <BuyDialog asset={buying} defaultEmail={email} onClose={() => setBuying(null)} />
     </main>
   );
 }

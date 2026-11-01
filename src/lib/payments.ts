@@ -1,16 +1,18 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { randomBytes } from 'crypto';
 import { Resend } from 'resend';
 import { calculateDiscount } from './promo';
 
 // Shared checkout pieces for every payment method (VNPay, SePay bank transfer).
 
-export type CheckoutInput = { courseId?: string; assetId?: string; promoCode?: string };
+export type Buyer = { name: string; email: string; phone: string };
+export type CheckoutInput = { courseId?: string; assetId?: string; promoCode?: string; buyer?: Buyer };
 
 /** Looks up the price server-side and stores a pending payment. Throws a user-facing message on bad input. */
 export async function createPendingPayment(
   supabase: SupabaseClient,
-  userId: string,
-  { courseId, assetId, promoCode }: CheckoutInput,
+  userId: string | null,
+  { courseId, assetId, promoCode, buyer }: CheckoutInput,
   method: 'vnpay' | 'bank_transfer',
   orderId: string
 ) {
@@ -25,9 +27,15 @@ export async function createPendingPayment(
   const amount = Math.max(0, basePrice - calculateDiscount(promoCode, basePrice));
   if (amount <= 0) throw new CheckoutError('Sản phẩm miễn phí không cần thanh toán.', 400);
 
+  // Lets a buyer without an account open the order page and download the file.
+  const accessToken = randomBytes(16).toString('hex');
   const { error } = await supabase.from('payments').insert({
     order_id: orderId,
     user_id: userId,
+    buyer_name: buyer?.name || null,
+    buyer_email: buyer?.email || null,
+    buyer_phone: buyer?.phone || null,
+    access_token: accessToken,
     course_id: courseId || null,
     asset_id: assetId || null,
     amount,
@@ -36,7 +44,7 @@ export async function createPendingPayment(
   });
   if (error) throw error;
 
-  return { orderId, amount, title: product.title as string };
+  return { orderId, amount, title: product.title as string, accessToken };
 }
 
 export class CheckoutError extends Error {
@@ -95,6 +103,12 @@ export async function fulfillPayment(supabase: SupabaseClient, payment: any) {
     });
   }
 
+  // Ebooks, presets, skills: email the download page (works for guests too)
+  if (payment.asset_id) {
+    await emailAssetBuyer(supabase, resend, payment);
+    return;
+  }
+
   // Confirmation email
   const { data: user } = await supabase.from('users').select('email').eq('id', payment.user_id).single();
   const { data: course } = payment.course_id
@@ -138,4 +152,43 @@ export async function fulfillPayment(supabase: SupabaseClient, payment: any) {
       `
     });
   }
+}
+
+/** Checks the guest checkout form; returns cleaned values or throws a user-facing message. */
+export function readBuyer(raw: any): Buyer {
+  const name = String(raw?.name || '').trim().slice(0, 120);
+  const email = String(raw?.email || '').trim().toLowerCase().slice(0, 200);
+  const phone = String(raw?.phone || '').replace(/[^\d+]/g, '').slice(0, 20);
+  if (!name) throw new CheckoutError('Vui lòng nhập họ tên.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new CheckoutError('Email chưa đúng.');
+  if (phone.replace(/\D/g, '').length < 9) throw new CheckoutError('Số điện thoại chưa đúng.');
+  return { name, email, phone };
+}
+
+const esc = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+async function emailAssetBuyer(supabase: SupabaseClient, resend: Resend, payment: any) {
+  let to = payment.buyer_email as string | null;
+  if (!to && payment.user_id) {
+    const { data: user } = await supabase.from('users').select('email').eq('id', payment.user_id).single();
+    to = user?.email || null;
+  }
+  const { data: asset } = await supabase.from('digital_assets').select('title').eq('id', payment.asset_id).single();
+  if (!to || !asset || !process.env.RESEND_API_KEY) return;
+
+  const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.minhtanacademy.com';
+  const link = `${base}/payment/bank/${payment.order_id}?t=${payment.access_token}`;
+  await resend.emails.send({
+    from: 'Minh Tan Academy <customer@minhtanacademy.com>',
+    to,
+    subject: `Đã thanh toán: ${asset.title}`,
+    html: `
+      <div style="font-family: 'Be Vietnam Pro', Arial, sans-serif; color: #1C1917; max-width: 520px; margin: 0 auto; padding: 32px;">
+        <h1 style="font-size: 24px; margin: 0 0 12px;">Cảm ơn ${esc(payment.buyer_name || 'bạn')}!</h1>
+        <p style="font-size: 15px; line-height: 1.6;">Minh Tấn Academy đã nhận thanh toán cho <strong>${esc(asset.title)}</strong> (mã đơn ${payment.order_id}).</p>
+        <p style="margin: 28px 0;"><a href="${link}" style="background: #A16207; color: #fff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700;">Tải về</a></p>
+        <p style="font-size: 13px; color: #78716C;">Giữ email này để tải lại khi cần. Cần hỗ trợ, trả lời email này hoặc nhắn Zalo cho Minh Tấn.</p>
+      </div>
+    `,
+  });
 }

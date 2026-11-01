@@ -4,9 +4,14 @@ import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
-// Returns the download link of a digital asset (ebook, preset, LUT...) only to buyers.
+// Returns the download link of a digital asset (ebook, preset, LUT...) only to buyers:
+// either a logged-in account that paid, or a guest holding the paid order's link (?order=&t=).
 export async function GET(req: Request) {
-  const assetId = new URL(req.url).searchParams.get('assetId');
+  const params = new URL(req.url).searchParams;
+  const order = params.get('order');
+  if (order) return guestDownload(order, params.get('t') || '');
+
+  const assetId = params.get('assetId');
   if (!assetId) {
     return NextResponse.json({ error: 'Missing assetId' }, { status: 400 });
   }
@@ -46,5 +51,20 @@ export async function GET(req: Request) {
     }
   }
 
+  return NextResponse.json({ url: asset.download_url });
+}
+
+async function guestDownload(orderId: string, token: string) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return NextResponse.json({ error: 'Server not configured' }, { status: 500 });
+  const { data: p } = await supabase
+    .from('payments')
+    .select('status, access_token, digital_assets ( download_url )')
+    .eq('order_id', orderId)
+    .maybeSingle();
+  const asset: any = p?.digital_assets;
+  if (!p || !token || p.access_token !== token || !asset) return NextResponse.json({ error: 'Không tìm thấy đơn hàng.' }, { status: 404 });
+  if (p.status !== 'success') return NextResponse.json({ error: 'Đơn hàng chưa thanh toán.' }, { status: 403 });
+  if (!asset.download_url) return NextResponse.json({ error: 'File not found' }, { status: 404 });
   return NextResponse.json({ url: asset.download_url });
 }

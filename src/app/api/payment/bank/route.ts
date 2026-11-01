@@ -4,24 +4,26 @@ import { bankConfig, vietQrUrl } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
 
-// Transfer details + live status for one of the buyer's own bank-transfer orders.
+// Transfer details + live status for one bank-transfer order (buyer's account or order link).
 // The payment page polls this until the SePay webhook marks the order paid.
 export async function GET(req: Request) {
   const supabase = getSupabaseAdmin();
   const cfg = bankConfig();
   if (!supabase || !cfg) return NextResponse.json({ error: 'Chưa cấu hình chuyển khoản.' }, { status: 503 });
 
-  const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: 'Vui lòng đăng nhập.' }, { status: 401 });
-
-  const orderId = new URL(req.url).searchParams.get('orderId') || '';
+  const params = new URL(req.url).searchParams;
+  const orderId = params.get('orderId') || '';
+  const token = params.get('t') || '';
   const { data: p } = await supabase
     .from('payments')
-    .select('order_id, amount, status, course_id, user_id, courses ( title ), digital_assets ( title )')
+    .select('order_id, amount, status, course_id, asset_id, user_id, access_token, courses ( title ), digital_assets ( title )')
     .eq('order_id', orderId)
     .eq('payment_method', 'bank_transfer')
     .single();
-  if (!p || p.user_id !== user.id) return NextResponse.json({ error: 'Không tìm thấy đơn hàng.' }, { status: 404 });
+  // Open to the buyer's account, or to anyone holding the order link (guest checkout).
+  const tokenOk = !!token && !!p?.access_token && token === p.access_token;
+  const user = tokenOk ? null : await getSessionUser();
+  if (!p || (!tokenOk && (!user || p.user_id !== user.id))) return NextResponse.json({ error: 'Không tìm thấy đơn hàng.' }, { status: 404 });
 
   const product: any = p.courses || p.digital_assets;
   const amount = Number(p.amount);
@@ -31,6 +33,7 @@ export async function GET(req: Request) {
     amount,
     title: product?.title || '',
     courseId: p.course_id,
+    assetId: p.asset_id,
     bank: cfg.bank,
     account: cfg.account,
     accountName: cfg.accountName,
