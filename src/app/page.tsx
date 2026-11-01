@@ -106,18 +106,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Partners: a quiet strip, no rules */}
-      <section aria-labelledby="partners-title" className="container-lux pt-10 md:pt-12 pb-16 md:pb-20">
-        <h2 id="partners-title" className="font-sans text-base font-medium text-muted-foreground">Đồng hành cùng các thương hiệu và đài truyền hình</h2>
-        <ul className="mt-6 grid grid-cols-3 md:grid-cols-5 gap-x-10 gap-y-6 items-center">
-          {partners.map((p) => (
-            <li key={p.name} className="relative h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300">
-              <Image src={p.logo} alt={p.name} fill sizes="160px" className="object-contain" />
-            </li>
-          ))}
-        </ul>
-      </section>
-
       {/* About the teacher: the portrait opens like a camera shutter (signature move) */}
       <section aria-labelledby="advisor-title" className="container-lux pb-20 md:pb-28 grid gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
         <Reveal stagger={0.1}>
@@ -290,7 +278,7 @@ export default async function Home() {
       {/* Projects: a compact strip of small thumbnails (supporting proof, not the focus) */}
       <section className="container-lux pb-16 md:pb-20">
         <div className="flex items-end justify-between gap-4">
-          <h2 className="text-2xl md:text-3xl">Đã tham gia sản xuất</h2>
+          <h2 className="text-2xl md:text-3xl">Đã tham gia hậu kỳ</h2>
           <Link href="/work" className="link-underline text-sm font-semibold text-gold whitespace-nowrap">Xem tất cả dự án →</Link>
         </div>
         <Reveal as="ul" className="mt-6 grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4" stagger={0.05}>
@@ -305,6 +293,18 @@ export default async function Home() {
             </li>
           ))}
         </Reveal>
+
+        {/* Brands and TV stations: large logos drifting right to left, endlessly */}
+        <h3 className="mt-14 font-sans text-base font-medium text-muted-foreground">Đồng hành cùng các thương hiệu và đài truyền hình</h3>
+        <div className="mt-6 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]">
+          <ul className="marquee-track items-center gap-14 md:gap-20" style={{ ['--marquee-duration' as string]: '30s' }}>
+            {[...partners, ...partners, ...partners, ...partners].map((p, i) => (
+              <li key={`${p.name}-${i}`} aria-hidden={i >= partners.length || undefined} className="relative shrink-0 h-16 w-36 md:h-24 md:w-52">
+                <Image src={p.logo} alt={i < partners.length ? p.name : ''} fill sizes="208px" loading="eager" className="object-contain" />
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       {/* FAQ */}
