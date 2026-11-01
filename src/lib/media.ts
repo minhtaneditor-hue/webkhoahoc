@@ -55,10 +55,14 @@ export function sideThumbnail(media: ParsedMedia | null, uploaded?: string | nul
   return uploaded || media?.thumbnail || null;
 }
 
-// Student work categories (admin select + public filter)
+// Student work categories = the student's industry (admin select + public filter)
 export const WORK_CATEGORIES = [
-  { value: 'short-video', label: 'Video ngắn (TikTok, Reels)' },
-  { value: 'long-video', label: 'Video dài (YouTube)' },
-  { value: 'ads', label: 'Video quảng cáo / bán hàng' },
-  { value: 'photo', label: 'Ảnh / thiết kế' },
+  { value: 'bat-dong-san', label: 'Bất động sản' },
+  { value: 'am-thuc', label: 'Ẩm thực & F&B' },
+  { value: 'lam-dep', label: 'Làm đẹp, nail & spa' },
+  { value: 'du-lich', label: 'Du lịch & vlog' },
+  { value: 'san-pham', label: 'Kinh doanh sản phẩm' },
+  { value: 'me-va-be', label: 'Mẹ & bé' },
+  { value: 'sang-tao', label: 'Sáng tạo nội dung' },
+  { value: 'khac', label: 'Ngành khác' },
 ];

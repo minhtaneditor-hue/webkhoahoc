@@ -33,6 +33,10 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
 
   const categories = useMemo(() => WORK_CATEGORIES.filter((c) => works.some((w) => w.category === c.value)), [works]);
   const shown = category === 'all' ? works : works.filter((w) => w.category === category);
+  // One section per industry, in the admin's category order; unknown categories go last.
+  const groups = [...WORK_CATEGORIES, { value: '', label: 'Khác' }]
+    .map((c) => ({ ...c, items: shown.filter((w) => (c.value ? w.category === c.value : !WORK_CATEGORIES.some((k) => k.value === w.category))) }))
+    .filter((g) => g.items.length > 0);
 
   function show(w: StudentWork) {
     setOpen(w);
@@ -50,7 +54,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
   return (
     <>
       {categories.length > 1 && (
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Lọc theo loại sản phẩm">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Lọc theo ngành nghề">
           <button type="button" className={chip(category === 'all')} aria-pressed={category === 'all'} onClick={() => setCategory('all')}>Tất cả ({works.length})</button>
           {categories.map((c) => (
             <button key={c.value} type="button" className={chip(category === c.value)} aria-pressed={category === c.value} onClick={() => setCategory(c.value)}>{c.label}</button>
@@ -58,50 +62,59 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
         </div>
       )}
 
-      <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {shown.map((w) => {
-          const sides = sidesOf(w);
-          const vertical = w.orientation !== 'horizontal';
-          const place = placeOf(w);
-          return (
-            <li key={w.id}>
-              <button type="button" onClick={() => show(w)} className="group w-full text-left" aria-label={`Xem ${w.title} của ${w.student_name}`}>
-                <div className={`grid gap-1.5 overflow-hidden rounded-[var(--radius-img)] ${sides.length === 2 && vertical ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                  {sides.map((s) => (
-                    <div key={s.label} className={`relative ${vertical ? (sides.length === 2 ? 'aspect-[9/16]' : 'aspect-[4/5]') : 'aspect-video'} bg-onyx overflow-hidden`}>
-                      {s.thumb ? (
-                        <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" unoptimized={s.thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-stone-800 to-onyx text-stone-400 text-sm">{s.media?.label}</div>
-                      )}
-                      {sides.length === 2 && (
-                        <span className={`absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-bold ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/60 text-white'}`}>{s.label}</span>
-                      )}
-                      {s.media && s.media.kind !== 'image' && (
-                        <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-                          <span className="w-12 h-12 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center text-white transition-transform group-hover:scale-110"><Play size={20} className="ml-0.5" /></span>
-                        </span>
-                      )}
+      {groups.map((g) => (
+        <section key={g.value} aria-labelledby={groups.length > 1 ? `nganh-${g.value}` : undefined} className="mt-10 first:mt-8">
+          {groups.length > 1 && (
+            <h3 id={`nganh-${g.value}`} className={`text-2xl md:text-3xl ${light ? 'text-white' : 'text-ink'}`}>
+              {g.label} <span className={`font-sans text-base font-normal ${light ? 'text-stone-400' : 'text-muted-foreground'}`}>· {g.items.length}</span>
+            </h3>
+          )}
+          <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {g.items.map((w) => {
+              const sides = sidesOf(w);
+              const vertical = w.orientation !== 'horizontal';
+              const place = placeOf(w);
+              return (
+                <li key={w.id}>
+                  <button type="button" onClick={() => show(w)} className="group w-full text-left" aria-label={`Xem ${w.title} của ${w.student_name}`}>
+                    <div className={`grid gap-1.5 overflow-hidden rounded-[var(--radius-img)] ${sides.length === 2 && vertical ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                      {sides.map((s) => (
+                        <div key={s.label} className={`relative ${vertical ? (sides.length === 2 ? 'aspect-[9/16]' : 'aspect-[4/5]') : 'aspect-video'} bg-onyx overflow-hidden`}>
+                          {s.thumb ? (
+                            <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" unoptimized={s.thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-stone-800 to-onyx text-stone-400 text-sm">{s.media?.label}</div>
+                          )}
+                          {sides.length === 2 && (
+                            <span className={`absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-bold ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/60 text-white'}`}>{s.label}</span>
+                          )}
+                          {s.media && s.media.kind !== 'image' && (
+                            <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                              <span className="w-12 h-12 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center text-white transition-transform group-hover:scale-110"><Play size={20} className="ml-0.5" /></span>
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="mt-4 flex items-start gap-3">
-                  {w.avatar_url && (
-                    <Image src={w.avatar_url} alt="" width={44} height={44} unoptimized={w.avatar_url.startsWith('http')} className="!rounded-full w-11 h-11 object-cover shrink-0" />
-                  )}
-                  <div className="min-w-0">
-                    <p className={`font-display text-xl font-bold leading-snug ${light ? 'text-white' : 'text-ink'}`}>{w.title}</p>
-                    <p className={`mt-1 text-sm ${light ? 'text-stone-300' : 'text-muted-foreground'}`}>
-                      {w.student_name}{w.student_title ? ` · ${w.student_title}` : ''}{place ? ` · ${place}` : ''}
-                    </p>
-                    {w.result && <span className="badge mt-3">{w.result}</span>}
-                  </div>
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+                    <div className="mt-4 flex items-start gap-3">
+                      {w.avatar_url && (
+                        <Image src={w.avatar_url} alt="" width={44} height={44} unoptimized={w.avatar_url.startsWith('http')} className="!rounded-full w-11 h-11 object-cover shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <p className={`font-display text-xl font-bold leading-snug ${light ? 'text-white' : 'text-ink'}`}>{w.title}</p>
+                        <p className={`mt-1 text-sm ${light ? 'text-stone-300' : 'text-muted-foreground'}`}>
+                          {w.student_name}{w.student_title ? ` · ${w.student_title}` : ''}{place ? ` · ${place}` : ''}
+                        </p>
+                        {w.result && <span className="badge mt-3">{w.result}</span>}
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
 
       <dialog
         ref={dialog}
