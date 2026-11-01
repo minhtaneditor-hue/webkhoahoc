@@ -22,6 +22,8 @@ export type Student = {
   story?: string | null;
   results: string | null;
   avatar_url: string | null;
+  country?: string | null;
+  city?: string | null;
 };
 
 export async function getStudents(): Promise<Student[]> {
@@ -55,4 +57,52 @@ export async function getFaqs(): Promise<{ q: string; a: string }[]> {
   const { data, error } = await supabase.from('faqs').select('question, answer').order('sort_order').order('created_at');
   if (error || !data?.length) return DEFAULT_FAQS;
   return data.map((r) => ({ q: r.question, a: r.answer }));
+}
+
+export type StudentWork = {
+  id: string;
+  student_name: string;
+  student_title: string | null;
+  avatar_url: string | null;
+  title: string;
+  description: string | null;
+  result: string | null;
+  category: string | null;
+  orientation: 'vertical' | 'horizontal';
+  before_url: string | null;
+  before_thumbnail_url: string | null;
+  after_url: string | null;
+  after_thumbnail_url: string | null;
+  is_featured: boolean;
+  country: string | null;
+  city: string | null;
+};
+
+/** Former students' work (before / after). Empty until the admin adds some. */
+export async function getStudentWorks(): Promise<StudentWork[]> {
+  const supabase = getPublicSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase.from('student_works').select('*').order('sort_order').order('created_at', { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export type StudentPlace = { code: string; count: number; cities: string[] };
+
+/** Countries students live in, most students first. People listed in both tables count once. */
+export function studentPlaces(students: Student[], works: StudentWork[]): StudentPlace[] {
+  const seen = new Map<string, { code: string; city?: string | null }>();
+  for (const s of students) if (s.country) seen.set(s.name.trim().toLowerCase(), { code: s.country, city: s.city });
+  for (const w of works) if (w.country) {
+    const key = w.student_name.trim().toLowerCase();
+    if (!seen.has(key)) seen.set(key, { code: w.country, city: w.city });
+  }
+  const byCode = new Map<string, StudentPlace>();
+  for (const { code, city } of seen.values()) {
+    const place = byCode.get(code) ?? { code, count: 0, cities: [] };
+    place.count++;
+    if (city && !place.cities.includes(city.trim())) place.cities.push(city.trim());
+    byCode.set(code, place);
+  }
+  return [...byCode.values()].sort((a, b) => b.count - a.count);
 }

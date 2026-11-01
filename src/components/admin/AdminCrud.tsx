@@ -11,7 +11,7 @@ import ImageUpload from './ImageUpload';
 export type CrudField = {
   key: string;
   label: string;
-  type?: 'text' | 'textarea' | 'number' | 'select' | 'url' | 'image';
+  type?: 'text' | 'textarea' | 'number' | 'select' | 'url' | 'image' | 'checkbox';
   options?: { value: string; label: string }[];
   hint?: string;
   required?: boolean;
@@ -77,7 +77,7 @@ export default function AdminCrud({
     const payload: Record<string, any> = {};
     for (const f of fields) {
       const v = form[f.key];
-      payload[f.key] = f.type === 'number' ? Number(v) || 0 : v === '' ? null : v;
+      payload[f.key] = f.type === 'number' ? Number(v) || 0 : f.type === 'checkbox' ? !!v : v === '' ? null : v;
       if (f.sizeKeys) {
         payload[f.sizeKeys.width] = Number(form[f.sizeKeys.width]) || 1024;
         payload[f.sizeKeys.height] = Number(form[f.sizeKeys.height]) || 400;
@@ -159,8 +159,13 @@ export default function AdminCrud({
         {form && (
           <form onSubmit={save} className="space-y-5">
             {fields.map((f) => (
-              <Field key={f.key} id={`f-${f.key}`} label={f.label} hint={f.hint}>
-                {f.type === 'image' ? (
+              <Field key={f.key} id={`f-${f.key}`} label={f.label} hint={f.type === 'checkbox' ? undefined : f.hint}>
+                {f.type === 'checkbox' ? (
+                  <label className="flex items-center gap-3 min-h-[44px]">
+                    <input id={`f-${f.key}`} type="checkbox" className="w-5 h-5" checked={!!form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.checked })} />
+                    <span className="text-sm">{f.hint || 'Bật'}</span>
+                  </label>
+                ) : f.type === 'image' ? (
                   <ImageUpload
                     id={`f-${f.key}`}
                     folder={table}

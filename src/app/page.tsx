@@ -9,7 +9,9 @@ import ScrollReveal from '@/components/reactbits/ScrollReveal';
 import ShowreelVideo from '@/components/motion/ShowreelVideo';
 import CountUp from '@/components/motion/CountUp';
 import FeedbackMarquee from '@/components/FeedbackMarquee';
-import { getSiteSettings, getStudents, getFeedbackImages, getFaqs } from '@/lib/content';
+import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWorks, studentPlaces } from '@/lib/content';
+import StudentWorks from '@/components/students/StudentWorks';
+import WorldStudents from '@/components/students/WorldStudents';
 import { toYoutubeId } from '@/lib/site-settings';
 
 export const revalidate = 300;
@@ -63,9 +65,11 @@ async function getFeaturedCourse() {
 
 export default async function Home() {
   // Everything below is editable in /admin (falls back to built-in content when the tables are empty)
-  const [course, settings, students, feedback, faqs] = await Promise.all([
-    getFeaturedCourse(), getSiteSettings(), getStudents(), getFeedbackImages(), getFaqs(),
+  const [course, settings, students, feedback, faqs, works] = await Promise.all([
+    getFeaturedCourse(), getSiteSettings(), getStudents(), getFeedbackImages(), getFaqs(), getStudentWorks(),
   ]);
+  const featuredWorks = works.filter((w) => w.is_featured).slice(0, 3);
+  const places = studentPlaces(students, works);
   const youtubeId = toYoutubeId(settings.showreel_youtube_id);
   const SHOWREEL = {
     youtubeId,
@@ -176,6 +180,13 @@ export default async function Home() {
           </Reveal>
         </div>
 
+        {featuredWorks.length > 0 && (
+          <div className="container-lux mt-20">
+            <h3 className="text-white text-[clamp(1.375rem,3vw,2.25rem)]">Sản phẩm học viên làm ra, trước và sau khóa học</h3>
+            <StudentWorks works={featuredWorks} light />
+          </div>
+        )}
+
         <div className="mt-20">
           <p className="container-lux mb-6 font-semibold text-gold-light">Tin nhắn thật học viên gửi sau khóa học</p>
           <FeedbackMarquee images={feedback} />
@@ -183,9 +194,11 @@ export default async function Home() {
 
         <div className="container-lux py-14 md:py-20 flex flex-col sm:flex-row gap-3">
           <Link href={courseHref} className="btn btn-gold">Bắt đầu như họ <ArrowRight size={18} aria-hidden="true" /></Link>
-          <Link href="/students" className="btn btn-outline-light">Xem tất cả câu chuyện học viên</Link>
+          <Link href={works.length ? '/students#san-pham' : '/students'} className="btn btn-outline-light">{works.length ? `Xem ${works.length} sản phẩm học viên` : 'Xem tất cả câu chuyện học viên'}</Link>
         </div>
       </section>
+
+      <WorldStudents places={places} />
 
       {/* Statement: words fill with ink as they rise through the screen (React Bits ScrollReveal) */}
       <section className="bg-card">

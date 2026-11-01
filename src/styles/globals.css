@@ -362,3 +362,11 @@
   transition: box-shadow 350ms var(--ease-lux), transform 350ms var(--ease-lux);
   &:hover { box-shadow: 0 0 0 2px var(--color-gold-light), 0 18px 40px -16px rgba(161, 98, 7, 0.45); transform: translateY(-4px); }
 }
+
+/* World map: each student pin sends out a slow ring */
+@keyframes world-pulse {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(3.2); opacity: 0; }
+}
+.world-pulse { transform-box: fill-box; transform-origin: center; animation: world-pulse 2.6s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .world-pulse { animation: none; opacity: 0; } }

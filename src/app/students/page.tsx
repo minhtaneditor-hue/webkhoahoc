@@ -4,24 +4,41 @@ import Image from 'next/image';
 import { Quote, ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
-import { getStudents, getFeedbackImages } from '@/lib/content';
+import { getStudents, getFeedbackImages, getStudentWorks, studentPlaces } from '@/lib/content';
+import StudentWorks from '@/components/students/StudentWorks';
+import WorldStudents from '@/components/students/WorldStudents';
 
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: 'Học viên tiêu biểu',
-  description: 'Câu chuyện và kết quả thật của học viên Minh Tấn Academy.',
+  title: 'Học viên & sản phẩm',
+  description: 'Sản phẩm thật của học viên Minh Tấn Video Advisor, trước và sau khóa học, cùng câu chuyện từ học viên ở Việt Nam và khắp thế giới.',
 };
 
 
 
 export default async function StudentsPage() {
-  const [students, feedback] = await Promise.all([getStudents(), getFeedbackImages()]);
+  const [students, feedback, works] = await Promise.all([getStudents(), getFeedbackImages(), getStudentWorks()]);
+  const places = studentPlaces(students, works);
 
   return (
     <main>
       <section className="container-lux pt-12 pb-10 md:pt-20">
-        <SectionHeading as="h1" title="Học viên tiêu biểu" description="Kết quả thật từ những người đã học. Họ bắt đầu giống bạn, với một chiếc điện thoại và mong muốn làm video tốt hơn." />
+        <SectionHeading as="h1" title="Học viên & sản phẩm" description="Kết quả thật từ những người đã học. Họ bắt đầu giống bạn, với một chiếc điện thoại và mong muốn làm video tốt hơn." />
+      </section>
+
+      {works.length > 0 && (
+        <section id="san-pham" aria-labelledby="works-title" className="container-lux pb-20 scroll-mt-24">
+          <h2 id="works-title">Sản phẩm của học viên</h2>
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl">Bấm vào từng sản phẩm để xem video. Nhãn Trước / Sau cho thấy học viên làm video thế nào trước và sau khóa học.</p>
+          <div className="mt-8"><StudentWorks works={works} /></div>
+        </section>
+      )}
+
+      <WorldStudents places={places} />
+
+      <section className="container-lux pt-20 pb-6">
+        <h2>Câu chuyện học viên</h2>
       </section>
 
       <section className="container-lux pb-20">
