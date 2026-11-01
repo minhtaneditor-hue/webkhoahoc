@@ -1,30 +1,45 @@
 import { NextResponse } from 'next/server';
-import { timingSafeEqual } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { findOrderCode, fulfillPayment } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
 
 // SePay calls this for every incoming bank transfer (docs.sepay.vn/tich-hop-webhooks.html).
-// Auth: header "Authorization: Apikey <SEPAY_WEBHOOK_KEY>". SePay retries until it gets
-// 200 + {"success": true}, so transfers we cannot act on are still acknowledged.
+// Auth, whichever the webhook is set up with in SePay:
+//   HMAC-SHA256: X-SePay-Signature = "sha256=" + hex(HMAC(SEPAY_WEBHOOK_SECRET, `${X-SePay-Timestamp}.${rawBody}`))
+//   API Key:     Authorization = "Apikey <SEPAY_WEBHOOK_KEY>"
+// SePay retries until it gets 200 + {"success": true}, so transfers we cannot act on are still acknowledged.
 const ok = (note: string) => NextResponse.json({ success: true, note });
 
-function authorized(req: Request) {
+const same = (a: string, b: string) => {
+  const x = Buffer.from(a), y = Buffer.from(b);
+  return x.length === y.length && timingSafeEqual(x, y);
+};
+
+function authorized(req: Request, rawBody: string) {
+  const secret = process.env.SEPAY_WEBHOOK_SECRET;
+  const signature = req.headers.get('x-sepay-signature');
+  if (secret && signature) {
+    const ts = req.headers.get('x-sepay-timestamp') || '';
+    if (!(Math.abs(Date.now() / 1000 - Number(ts)) <= 300)) return false; // replay window, as in SePay's sample
+    const expected = 'sha256=' + createHmac('sha256', secret).update(`${ts}.${rawBody}`).digest('hex');
+    return same(signature, expected);
+  }
   const key = process.env.SEPAY_WEBHOOK_KEY;
-  if (!key) return false;
-  const got = Buffer.from(req.headers.get('authorization') || '');
-  const want = Buffer.from(`Apikey ${key}`);
-  return got.length === want.length && timingSafeEqual(got, want);
+  return !!key && same(req.headers.get('authorization') || '', `Apikey ${key}`);
 }
 
 export async function POST(req: Request) {
-  if (!authorized(req)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  // The signature covers the exact bytes SePay sent, so read the body as text first.
+  const rawBody = await req.text();
+  if (!authorized(req, rawBody)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ success: false, error: 'Server not configured' }, { status: 500 });
 
-  const tx = await req.json().catch(() => null);
+  let tx: any = null;
+  try { tx = JSON.parse(rawBody); } catch {}
   if (!tx || tx.transferType !== 'in') return ok('ignored: not an incoming transfer');
 
   const orderId = findOrderCode(tx.code, tx.content, tx.description);
