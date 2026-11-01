@@ -1,5 +1,6 @@
 export const ADMIN_EMAILS = [
   'minhtaneditor@gmail.com',
+  'tan@tanlab.vn',
   process.env.NEXT_PUBLIC_ADMIN_EMAIL,
 ].filter(Boolean) as string[];
 
