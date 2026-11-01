@@ -49,7 +49,7 @@ export default function OrdersManagement() {
     <div className="space-y-6">
       <PageHeader
         title="Đơn hàng"
-        description="Mọi giao dịch qua VNPay. Đơn thành công tự động mở khóa học cho học viên."
+        description="Mọi giao dịch chuyển khoản QR (SePay) và VNPay. Đơn thành công tự động mở khóa học cho học viên."
         actions={<button onClick={exportCsv} disabled={filtered.length === 0} className="btn btn-outline"><Download size={16} aria-hidden="true" /> Xuất CSV</button>}
       />
 

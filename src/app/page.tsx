@@ -241,7 +241,7 @@ export default async function Home() {
               )}
             </div>
             <ul className="mt-8 space-y-3 text-stone-300 text-lg">
-              {['Truy cập trọn đời', 'Hỗ trợ 1:1 qua Zalo', 'Hoàn tiền trong 7 ngày', 'Thanh toán an toàn qua VNPay'].map((x) => (
+              {['Truy cập trọn đời', 'Hỗ trợ 1:1 qua Zalo', 'Hoàn tiền trong 7 ngày', 'Quét QR, kích hoạt tự động'].map((x) => (
                 <li key={x} className="flex gap-3"><Check size={20} className="text-gold-light shrink-0 mt-1" aria-hidden="true" /> {x}</li>
               ))}
             </ul>

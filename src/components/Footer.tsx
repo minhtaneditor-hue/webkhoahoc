@@ -118,7 +118,7 @@ export default function Footer() {
         <p>© {new Date().getFullYear()} Minh Tấn Academy. Bảo lưu mọi quyền.</p>
         <div className="flex items-center gap-5 flex-wrap">
           <span className="flex items-center gap-2"><ShieldCheck size={16} aria-hidden="true" /> Bảo mật SSL</span>
-          <span className="flex items-center gap-2"><CreditCard size={16} aria-hidden="true" /> Thanh toán VNPay</span>
+          <span className="flex items-center gap-2"><CreditCard size={16} aria-hidden="true" /> Thanh toán QR ngân hàng</span>
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })}

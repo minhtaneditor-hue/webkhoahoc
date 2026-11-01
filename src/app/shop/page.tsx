@@ -76,7 +76,7 @@ export default function ShopPage() {
     setBusyId(asset.id);
     setError(asset.id, '');
     try {
-      const response = await fetch('/api/payment/vnpay', {
+      const response = await fetch('/api/payment/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assetId: asset.id }),

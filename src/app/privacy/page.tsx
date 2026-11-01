@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         },
         {
           title: 'An toàn thanh toán',
-          body: <p>Mọi giao dịch được xử lý qua cổng thanh toán trung gian uy tín (VNPay). Chúng tôi không lưu thông tin thẻ của bạn trên hệ thống riêng.</p>,
+          body: <p>Thanh toán bằng chuyển khoản ngân hàng (mã VietQR, xác nhận tự động qua SePay) hoặc qua cổng VNPay. Chúng tôi không lưu thông tin thẻ hay tài khoản ngân hàng của bạn.</p>,
         },
       ]}
     />

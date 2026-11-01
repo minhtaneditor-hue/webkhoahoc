@@ -22,7 +22,7 @@ const guarantees = [
   { icon: InfinityIcon, text: 'Truy cập trọn đời' },
   { icon: MessageCircle, text: 'Hỗ trợ 1:1 qua Zalo' },
   { icon: RotateCcw, text: 'Hoàn tiền trong 7 ngày' },
-  { icon: ShieldCheck, text: 'Thanh toán an toàn qua VNPay' },
+  { icon: ShieldCheck, text: 'Thanh toán an toàn, kích hoạt tự động' },
 ];
 
 export default function CourseDetails() {
@@ -91,7 +91,7 @@ export default function CourseDetails() {
     setPaymentLoading(true);
     setPayError('');
     try {
-      const response = await fetch('/api/payment/vnpay', {
+      const response = await fetch('/api/payment/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ courseId: course.id, promoCode: appliedDiscount > 0 ? promoCode : undefined }),
@@ -265,7 +265,7 @@ export default function CourseDetails() {
                 </form>
 
                 <button onClick={handlePayment} disabled={paymentLoading} className="btn btn-gold w-full mt-2">
-                  {paymentLoading ? <><Loader2 className="animate-spin" size={18} aria-hidden="true" /> Đang chuyển tới VNPay…</> : <>{user ? 'Thanh toán qua VNPay' : 'Đăng nhập để đăng ký'} <ArrowRight size={18} aria-hidden="true" /></>}
+                  {paymentLoading ? <><Loader2 className="animate-spin" size={18} aria-hidden="true" /> Đang tạo đơn…</> : <>{user ? 'Thanh toán ngay' : 'Đăng nhập để đăng ký'} <ArrowRight size={18} aria-hidden="true" /></>}
                 </button>
                 {payError && <p role="alert" className="mt-3 text-sm text-danger">{payError}</p>}
 
