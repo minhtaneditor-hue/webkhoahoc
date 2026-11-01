@@ -9,6 +9,7 @@ const categories = [
   { value: 'preset', label: 'Preset' },
   { value: 'lut', label: 'LUT màu' },
   { value: 'template', label: 'Template' },
+  { value: 'skill', label: 'Skill AI' },
 ];
 
 export default function AdminShopPage() {

@@ -12,6 +12,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   preset: 'Preset',
   lut: 'LUT màu',
   template: 'Template',
+  skill: 'Skill AI',
   wedding: 'Cưới hỏi',
   travel: 'Du lịch',
   vlog: 'Vlog',
