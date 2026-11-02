@@ -13,6 +13,9 @@ import FeedbackVideos from './FeedbackVideos';
 type Kind = 'all' | 'image' | 'video';
 
 const isVideo = (w: StudentWork) => [w.before_url, w.after_url].some((u) => { const m = parseMedia(u); return !!m && m.kind !== 'image'; });
+// A "work" row with no picture or clip yet: the student is listed with their channels only.
+const hasMedia = (w: StudentWork) => !!(w.before_url || w.after_url || w.before_thumbnail_url || w.after_thumbnail_url);
+const isImage = (w: StudentWork) => hasMedia(w) && !isVideo(w);
 
 type Profile = {
   name: string;
@@ -61,14 +64,14 @@ export default function StudentShowcase({ works, videos }: { works: StudentWork[
   const [open, setOpen] = useState<Profile | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
 
-  const byKind = useMemo(() => (kind === 'all' ? works : works.filter((w) => (kind === 'video' ? isVideo(w) : !isVideo(w)))), [works, kind]);
+  const byKind = useMemo(() => (kind === 'all' ? works : works.filter((w) => (kind === 'video' ? isVideo(w) : isImage(w)))), [works, kind]);
   const industries = useMemo(() => WORK_CATEGORIES.filter((c) => byKind.some((w) => w.category === c.value)), [byKind]);
   const profiles = useMemo(
     () => toProfiles(industry === 'all' ? byKind : byKind.filter((w) => w.category === industry)),
     [byKind, industry]
   );
 
-  const counts = { all: works.length + videos.length, image: works.filter((w) => !isVideo(w)).length, video: works.filter(isVideo).length + videos.length };
+  const counts = { all: works.length + videos.length, image: works.filter(isImage).length, video: works.filter(isVideo).length + videos.length };
   const tabs: { value: Kind; label: string; icon: typeof Images }[] = [
     { value: 'all', label: 'Tất cả', icon: LayoutGrid },
     { value: 'image', label: 'Hình ảnh', icon: Images },
@@ -133,7 +136,13 @@ export default function StudentShowcase({ works, videos }: { works: StudentWork[
                         </div>
                       ))}
                     </div>
-                    <span className="absolute top-3 right-3 rounded-full bg-black/65 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-white">{p.works.length} sản phẩm</span>
+                    {cover.length === 0 && (
+                      <div className="absolute inset-0 surface-dark flex flex-col items-center justify-center gap-3">
+                        <span className="w-20 h-20 rounded-full bg-white/10 text-gold-light flex items-center justify-center font-display text-4xl font-bold" aria-hidden="true">{p.name.replace(/^(Anh|Chị|Team|C|A)\s+/i, '').charAt(0)}</span>
+                        <span className="text-sm font-semibold text-stone-300">Xem kênh của học viên</span>
+                      </div>
+                    )}
+                    {p.works.some(hasMedia) && <span className="absolute top-3 right-3 rounded-full bg-black/65 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-white">{p.works.filter(hasMedia).length} sản phẩm</span>}
                   </button>
                   <div className="flex-1 flex flex-col p-5">
                     <div className="flex items-start gap-3">
@@ -196,9 +205,11 @@ export default function StudentShowcase({ works, videos }: { works: StudentWork[
               <button type="button" onClick={() => dialog.current?.close()} className="w-11 h-11 shrink-0 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center" aria-label="Đóng"><X size={20} aria-hidden="true" /></button>
             </div>
 
+            {!open.works.some(hasMedia) && <p className="mt-8 text-stone-300">Sản phẩm của học viên đang được cập nhật. Xem kênh của học viên qua các nút ở trên.</p>}
             <ol className="mt-8 space-y-10">
               {open.works.map((w, i) => {
                 const sides = sidesOf(w);
+                if (!sides.length) return null;
                 const vertical = w.orientation !== 'horizontal';
                 return (
                   <li key={w.id}>
