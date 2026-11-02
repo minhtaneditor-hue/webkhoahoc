@@ -15,7 +15,7 @@ const VIOLATION_NAMES: Record<string, string> = {
   printscreen: 'Chụp màn hình', display_capture_requested: 'Quay màn hình trong trình duyệt', focus_lost: 'Rời cửa sổ',
   tab_hidden: 'Chuyển tab', concurrent_stream_blocked: 'Xem trên 2 thiết bị', segment_rate_exceeded: 'Tải đoạn video quá nhanh',
   key_rate_exceeded: 'Lấy khoá quá nhanh', many_accounts_one_device: 'Nhiều tài khoản một máy', ip_hopping: 'Đổi IP liên tục',
-  session_burst: 'Mở phiên quá nhiều',
+  session_burst: 'Mở phiên quá nhiều', text_copy: 'Cố copy bài đọc', text_print: 'Cố in bài đọc',
 };
 const REVOKE_NAMES: Record<string, string> = {
   too_many_violations: 'Vi phạm nhiều lần', revoked_by_admin: 'Admin thu hồi', download_tool_suspected: 'Nghi công cụ tải video',

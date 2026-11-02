@@ -11,6 +11,7 @@ import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import AgreementGate from '@/components/video/AgreementGate';
 import { studentCode } from '@/lib/content-agreement';
 import LessonText from '@/components/LessonText';
+import ProtectedText from '@/components/ProtectedText';
 import { isAdmin } from '@/lib/admin';
 
 export default function LearningPortal() {
@@ -223,7 +224,7 @@ export default function LearningPortal() {
                   <p className="text-sm text-gold-light font-semibold">Bài {currentIndex + 1} / {lessons.length}</p>
                   <h1 className="mt-2 text-3xl md:text-4xl text-white">{currentLesson.title}</h1>
                   {currentLesson.content
-                    ? <LessonText text={currentLesson.content} className={`mt-6 max-w-3xl ${currentLesson.video_url ? '' : 'text-base md:text-lg'}`} />
+                    ? <ProtectedText watermark={`${studentCode(userId)} · ${userEmail}`}><LessonText text={currentLesson.content} className={`mt-6 max-w-3xl ${currentLesson.video_url ? '' : 'text-base md:text-lg'}`} /></ProtectedText>
                     : <p className="mt-4 text-stone-300 leading-relaxed max-w-2xl">Hãy tập trung xem hết bài và áp dụng ngay vào dự án của bạn.</p>}
                 </div>
                 {canWatch && (

@@ -400,3 +400,9 @@
 @keyframes wm-x { from { left: 2%; } to { left: calc(98% - 16rem); } }
 @keyframes wm-y { from { top: 4%; } to { top: 86%; } }
 .wm-drift { animation: wm-x 13s linear infinite alternate, wm-y 9s linear infinite alternate; }
+
+/* Paid lesson text never prints: the page shows a notice instead (see ProtectedText) */
+@media print {
+  .protected-text > :not(.print-only) { display: none !important; }
+  .protected-text .print-only { display: block !important; color: #000; }
+}
