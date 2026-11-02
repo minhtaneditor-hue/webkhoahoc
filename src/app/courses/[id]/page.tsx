@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { supabase } from '@/utils/supabase';
 import { calculateDiscount } from '@/lib/promo';
 import { isAdmin } from '@/lib/admin';
+import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import { formatVND } from '@/lib/supabase-public';
 import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, RotateCcw, X, ChevronLeft } from 'lucide-react';
@@ -312,7 +313,9 @@ export default function CourseDetails() {
               </button>
             </div>
             <div className="aspect-video rounded-[var(--radius-card)] overflow-hidden bg-black">
-              <iframe src={toEmbedUrl(selectedLesson.video_url)} title={selectedLesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
+              {youTubeId(selectedLesson.video_url)
+                ? <GuardedYouTube videoId={youTubeId(selectedLesson.video_url)!} title={selectedLesson.title} autoPlay />
+                : <iframe src={toEmbedUrl(selectedLesson.video_url)} title={selectedLesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />}
             </div>
           </div>
         </div>

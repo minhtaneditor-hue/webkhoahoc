@@ -7,6 +7,7 @@ import { supabase } from '@/utils/supabase';
 import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import { CheckCircle2, Circle, ChevronLeft, Loader2, Menu, X, ArrowRight, Lock, Play, PartyPopper } from 'lucide-react';
 import DrmPlayer from '@/components/video/DrmPlayer';
+import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import { isAdmin } from '@/lib/admin';
 
 export default function LearningPortal() {
@@ -195,7 +196,9 @@ export default function LearningPortal() {
                 ) : currentLesson.video_url?.includes('drm:') ? (
                   <DrmPlayer videoId={currentLesson.video_url.split('drm:')[1]} token={drmToken} watermark={userEmail} />
                 ) : currentLesson.video_url ? (
-                  <iframe src={toEmbedUrl(currentLesson.video_url)} title={currentLesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
+                  youTubeId(currentLesson.video_url)
+                    ? <GuardedYouTube videoId={youTubeId(currentLesson.video_url)!} title={currentLesson.title} watermark={userEmail} />
+                    : <iframe src={toEmbedUrl(currentLesson.video_url)} title={currentLesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-stone-400">
                     <Play size={36} className="text-gold-light/60" aria-hidden="true" />
