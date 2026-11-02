@@ -155,7 +155,7 @@ export default async function Home() {
 
         <div className="container-lux py-14 md:py-20 flex flex-col sm:flex-row gap-3">
           <Link href={courseHref} className="btn btn-gold">Bắt đầu như họ <ArrowRight size={18} aria-hidden="true" /></Link>
-          <Link href={works.length ? '/students#san-pham' : '/students'} className="btn btn-outline-light">{works.length ? `Xem ${works.length} sản phẩm học viên` : 'Xem tất cả câu chuyện học viên'}</Link>
+          <Link href={works.length ? '/students#san-pham' : '/students'} className="btn btn-outline-light">Xem thêm sản phẩm của học viên khác</Link>
         </div>
       </section>
 
