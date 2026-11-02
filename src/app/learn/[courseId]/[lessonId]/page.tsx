@@ -10,6 +10,7 @@ import DrmPlayer from '@/components/video/DrmPlayer';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import AgreementGate from '@/components/video/AgreementGate';
 import { studentCode } from '@/lib/content-agreement';
+import LessonText from '@/components/LessonText';
 import { isAdmin } from '@/lib/admin';
 
 export default function LearningPortal() {
@@ -186,6 +187,8 @@ export default function LearningPortal() {
             <p className="text-stone-400">Khóa học chưa có bài học.</p>
           ) : (
             <>
+              {/* Text lessons (no video, has content) skip the player box and read like an article */}
+              {(!canWatch || currentLesson.video_url || !currentLesson.content) && (
               <div className="relative aspect-video rounded-[var(--radius-card)] overflow-hidden bg-black border border-white/10">
                 {!canWatch ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 text-center px-6">
@@ -206,6 +209,7 @@ export default function LearningPortal() {
                   </div>
                 )}
               </div>
+              )}
 
               {finished && (
                 <div role="status" className="mt-6 p-5 rounded-md bg-gold-light/10 border border-gold-light/30 flex items-center gap-3 text-white">
@@ -218,9 +222,9 @@ export default function LearningPortal() {
                 <div className="min-w-0">
                   <p className="text-sm text-gold-light font-semibold">Bài {currentIndex + 1} / {lessons.length}</p>
                   <h1 className="mt-2 text-3xl md:text-4xl text-white">{currentLesson.title}</h1>
-                  <p className="mt-4 text-stone-300 leading-relaxed max-w-2xl whitespace-pre-line">
-                    {currentLesson.content || 'Hãy tập trung xem hết bài và áp dụng ngay vào dự án của bạn.'}
-                  </p>
+                  {currentLesson.content
+                    ? <LessonText text={currentLesson.content} className={`mt-6 max-w-3xl ${currentLesson.video_url ? '' : 'text-base md:text-lg'}`} />
+                    : <p className="mt-4 text-stone-300 leading-relaxed max-w-2xl">Hãy tập trung xem hết bài và áp dụng ngay vào dự án của bạn.</p>}
                 </div>
                 {canWatch && (
                   <div className="flex flex-col sm:flex-row md:flex-col gap-3 shrink-0">

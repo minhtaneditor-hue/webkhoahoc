@@ -52,3 +52,4 @@ src/**/._*
 **/._*
 supabase/data/*course*.sql
 supabase/data/*.local.json
+supabase/data/*text_lessons*.json
