@@ -1,128 +1,174 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
+import type Player from 'video.js/dist/types/player';
 import SecuritySDK from '@/lib/drm/SecuritySDK';
-import DynamicWatermark from './DynamicWatermark';
-import { Lock, Play, ShieldAlert } from 'lucide-react';
-import Player from 'video.js/dist/types/player';
+import { Lock, Play, ShieldAlert, EyeOff, Loader2 } from 'lucide-react';
 
-interface DrmPlayerProps {
-  videoId: string;
-  token: string;
-  watermark?: string;
-  onViolation?: (type: string) => void;
-}
+// tVNDRM player: opens a playback session (/api/drm/session), keeps it alive with heartbeats,
+// and plays AES-128 HLS whose keys are released by /api/drm/keys only to that live session.
+// Video files are encrypted in Cloudflare R2; see scripts/drm/encrypt-upload.mjs.
 
-const DrmPlayer: React.FC<DrmPlayerProps> = ({ 
-  videoId, 
-  token, 
-  watermark = 'SECURE-VIEW', 
-  onViolation 
-}) => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+const BLOCK_MESSAGES: Record<string, string> = {
+  too_many_violations: 'Phát hiện nhiều thao tác vi phạm. Phiên xem đã bị khóa.',
+  revoked_by_admin: 'Phiên xem đã bị quản trị viên thu hồi.',
+  replaced: 'Video đang được mở ở cửa sổ khác trên thiết bị này.',
+  heartbeat_timeout: 'Mất kết nối bảo mật với máy chủ. Vui lòng tải lại trang.',
+  download_tool_suspected: 'Phát hiện công cụ tải video. Phiên xem đã bị khóa.',
+};
+
+const post = (url: string, body: unknown) =>
+  fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(async (r) => ({ status: r.status, data: await r.json().catch(() => ({})) }));
+
+export default function DrmPlayer({ videoId, title, watermark }: { videoId: string; title: string; watermark: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<Player | null>(null);
   const sdkRef = useRef<SecuritySDK | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isViolated, setIsViolated] = useState(false);
+  const sessionRef = useRef<string | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [blocked, setBlocked] = useState<string | null>(null);
+  const [obscured, setObscured] = useState(false);
 
-  // Initialize Security SDK
-  useEffect(() => {
-    const sdk = new SecuritySDK({
-      violationMessage: 'Phát hiện thao tác không được phép trên video.'
-    });
-    sdkRef.current = sdk;
-
-    if (onViolation) {
-      sdk.onSecurityAlert(onViolation);
-    }
-
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.dispose();
-      }
-    };
-  }, [onViolation]);
-
-  const onVideoRef = useCallback((el: HTMLVideoElement | null) => {
-    if (!el) return;
-    
-    if (!playerRef.current) {
-      videoRef.current = el;
-      const player = videojs(el, {
-        autoplay: false,
-        controls: true,
-        responsive: true,
-        fluid: true,
-        playbackRates: [0.5, 1, 1.25, 1.5, 2]
-      });
-      playerRef.current = player;
-      
-      if (sdkRef.current) {
-        sdkRef.current.lockElement(el);
-      }
-    }
+  const stopPlayback = useCallback((reason?: string) => {
+    if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+    sessionRef.current = null;
+    const p = playerRef.current;
+    if (p && !p.isDisposed()) { p.pause(); p.reset(); }
+    setBlocked((reason && BLOCK_MESSAGES[reason]) || reason || 'Phiên xem đã kết thúc.');
   }, []);
 
-  const handleStart = () => {
-    if (playerRef.current && videoId && token) {
-      // Points to the VPS identified in environment variables
-      const serverUrl = process.env.NEXT_PUBLIC_DRM_SERVER_URL || 'http://103.97.126.54:5000';
-      const streamUrl = `${serverUrl}/api/drm/keys/${videoId}?token=${token}`;
-      
-      playerRef.current.src({
-        src: streamUrl,
-        type: 'application/x-mpegURL'
-      });
-      setIsLoaded(true);
+  const reportViolation = useCallback((type: string) => {
+    const sid = sessionRef.current;
+    if (!sid) return;
+    post('/api/drm/violation', { sessionId: sid, type }).then((r) => { if (r.status === 409) stopPlayback(r.data.error); }).catch(() => {});
+  }, [stopPlayback]);
+
+  // Security SDK: devtools / shortcut / capture detection, blackout when the window loses focus
+  useEffect(() => {
+    const sdk = new SecuritySDK({ onViolation: reportViolation });
+    sdkRef.current = sdk;
+    sdk.onSecurityAlert((type) => {
+      if (type === 'focus_lost' || type === 'tab_hidden') {
+        reportViolation(type);
+        if (sessionRef.current) { playerRef.current?.pause(); setObscured(true); }
+      } else if (document.visibilityState === 'visible' && document.hasFocus()) {
+        setObscured(false);
+      }
+    });
+    return () => sdk.destroy();
+  }, [reportViolation]);
+
+  // End the session when the page closes or the lesson changes
+  useEffect(() => {
+    const end = () => {
+      const sid = sessionRef.current;
+      if (sid) fetch('/api/drm/session/end', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: sid }) }).catch(() => {});
+    };
+    window.addEventListener('pagehide', end);
+    return () => {
+      window.removeEventListener('pagehide', end);
+      end();
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+    };
+  }, [videoId]);
+
+  // video.js owns its element (created here, not by React) so dispose() can't break React's DOM
+  useEffect(() => {
+    const el = document.createElement('video-js');
+    el.className = 'vjs-big-play-centered vjs-fill';
+    el.setAttribute('playsinline', '');
+    containerRef.current!.appendChild(el);
+    const player = videojs(el, {
+      autoplay: false,
+      controls: true,
+      playbackRates: [0.75, 1, 1.25, 1.5, 2],
+      controlBar: { pictureInPictureToggle: false },
+      // Always use VHS so key/segment requests go through our token-rewritten URLs
+      html5: { vhs: { overrideNative: true }, nativeAudioTracks: false, nativeVideoTracks: false },
+    });
+    player.ready(() => sdkRef.current?.lockElement(player.el().querySelector('video')));
+    player.on('error', () => {
+      const code = player.error()?.code;
+      const sid = sessionRef.current;
+      if (!sid || !code) return;
+      // Ask the server why: a revoked session explains a failed segment/key request
+      post('/api/drm/heartbeat', { sessionId: sid })
+        .then((r) => stopPlayback(r.status === 200 ? `Không phát được video (mã lỗi ${code}).` : r.data.error));
+    });
+    playerRef.current = player;
+    return () => { player.dispose(); playerRef.current = null; };
+  }, [videoId, stopPlayback]);
+
+  const start = async () => {
+    if (!playerRef.current || starting) return;
+    setStarting(true);
+    try {
+      const deviceId = await sdkRef.current!.getFingerprint();
+      const r = await post('/api/drm/session', { videoId, deviceId });
+      if (r.status !== 200) return setBlocked(r.data.error || 'Không mở được phiên xem bảo mật.');
+      sessionRef.current = r.data.sessionId;
+      heartbeatRef.current = setInterval(() => {
+        post('/api/drm/heartbeat', { sessionId: r.data.sessionId })
+          .then((h) => { if (h.status === 409 || h.status === 404) stopPlayback(h.data.error); }).catch(() => {});
+      }, r.data.heartbeatInterval || 15000);
+      playerRef.current.src({ src: `/api/drm/play/${videoId}/index.m3u8?pt=${encodeURIComponent(r.data.playbackToken)}`, type: 'application/x-mpegURL' });
+      setLoaded(true);
+      playerRef.current.play()?.catch(() => {});
+    } catch {
+      setBlocked('Không mở được phiên xem bảo mật.');
+    } finally {
+      setStarting(false);
     }
   };
 
   return (
-    <div className="relative group w-full h-full overflow-hidden bg-black">
-      {/* Intro Overlay */}
-      {!isLoaded && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl transition-all duration-700">
-          <div className="mb-6 w-16 h-16 rounded-full flex items-center justify-center border border-gold-light/40 text-gold-light">
-            <Lock className="w-7 h-7" aria-hidden="true" />
-          </div>
-          <p className="text-white font-semibold mb-1">Video được bảo vệ bản quyền</p>
-          <p className="text-stone-400 text-sm mb-8 px-6 text-center">Video gắn dấu email của bạn để chống sao chép.</p>
-          <button
-            onClick={handleStart}
-            disabled={!token}
-            className="btn btn-gold"
-          >
-            {token ? <><Play className="w-4 h-4" fill="currentColor" aria-hidden="true" /> Phát video</> : 'Đang chuẩn bị video…'}
+    <div className="relative w-full h-full bg-black select-none overflow-hidden" onContextMenu={(e) => e.preventDefault()}>
+      <div ref={containerRef} className="absolute inset-0" />
+
+      {!loaded && !blocked && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/95 px-6 text-center">
+          <span className="mb-5 w-14 h-14 rounded-full flex items-center justify-center border border-gold-light/40 text-gold-light"><Lock size={24} aria-hidden="true" /></span>
+          <p className="text-white font-semibold">{title}</p>
+          <p className="mt-1 mb-6 text-stone-400 text-sm">Video được mã hoá và gắn mã học viên của bạn.</p>
+          <button type="button" onClick={start} disabled={starting} className="btn btn-gold">
+            {starting ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Play size={16} fill="currentColor" aria-hidden="true" />}
+            {starting ? 'Đang kết nối bảo mật…' : 'Phát video'}
           </button>
         </div>
       )}
 
-      {/* Video.js Element */}
-      <div data-vjs-player>
-        <video 
-          ref={onVideoRef} 
-          className="video-js vjs-big-play-centered"
-          playsInline
-        />
-      </div>
+      {/* Student ID drifting across the picture, plus a faint tiled copy that can't be cropped out */}
+      {loaded && !blocked && (
+        <>
+          <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden" aria-hidden="true">
+            <div className="absolute -inset-1/2 grid grid-cols-4 gap-y-24 gap-x-10 -rotate-[25deg] opacity-[0.06]">
+              {Array.from({ length: 48 }).map((_, i) => <span key={i} className="text-white text-xs font-mono whitespace-nowrap">{watermark}</span>)}
+            </div>
+          </div>
+          <span className="wm-drift pointer-events-none absolute z-[2] whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] md:text-xs font-semibold text-white/35 bg-black/10" aria-hidden="true">{watermark}</span>
+        </>
+      )}
 
-      {/* Security Layers */}
-      {isLoaded && <DynamicWatermark text={watermark} />}
+      {obscured && loaded && !blocked && (
+        <div className="absolute inset-0 z-40 bg-black flex flex-col items-center justify-center text-center p-8">
+          <EyeOff size={40} className="text-white/40 mb-3" aria-hidden="true" />
+          <p className="text-white/70">Video tạm ẩn vì cửa sổ không còn được chọn.</p>
+          <p className="text-white/40 text-xs mt-1">Bấm vào trang để xem tiếp.</p>
+        </div>
+      )}
 
-      {/* Violation Shield */}
-      {isViolated && (
-        <div className="absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center p-12 text-center">
-            <ShieldAlert className="w-12 h-12 text-gold-light mb-5" aria-hidden="true" />
-            <p className="text-xl font-semibold text-white">Đã tạm dừng phát video</p>
-            <p className="text-stone-400 mt-3 max-w-sm">
-                Phát hiện công cụ nhà phát triển hoặc phần mềm quay màn hình. Hãy tắt chúng rồi tải lại trang.
-            </p>
+      {blocked && (
+        <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-8 text-center" role="alert">
+          <ShieldAlert size={44} className="text-gold-light mb-4" aria-hidden="true" />
+          <p className="text-lg font-semibold text-white">Đã dừng phát video</p>
+          <p className="text-stone-400 mt-2 max-w-sm">{blocked}</p>
         </div>
       )}
     </div>
   );
-};
-
-export default DrmPlayer;
+}

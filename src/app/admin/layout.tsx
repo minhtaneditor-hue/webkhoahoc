@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import { Logo } from '@/components/Navbar';
-import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart, Activity } from 'lucide-react';
+import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart, Activity, ShieldCheck } from 'lucide-react';
 
 const sidebarItems = [
   { group: 'Tổng quan', items: [
@@ -21,6 +21,7 @@ const sidebarItems = [
   { group: 'Khóa học', items: [
     { title: 'Khóa học & bài học', icon: Database, href: '/admin/courses' },
     { title: 'Ebook & Preset', icon: ShoppingBag, href: '/admin/shop' },
+    { title: 'Bảo vệ video (DRM)', icon: ShieldCheck, href: '/admin/drm' },
   ]},
   { group: 'Trang chủ', items: [
     { title: 'Nội dung & liên hệ', icon: Settings, href: '/admin/settings' },

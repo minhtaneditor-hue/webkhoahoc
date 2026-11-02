@@ -23,7 +23,6 @@ export default function LearningPortal() {
   const [currentLesson, setCurrentLesson] = useState<any>(null);
   const [progress, setProgress] = useState<string[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [drmToken, setDrmToken] = useState('');
   const [userEmail, setUserEmail] = useState('STUDENT');
   const [userId, setUserId] = useState('');
   const [hasAccess, setHasAccess] = useState(false);
@@ -61,11 +60,6 @@ export default function LearningPortal() {
         const lesson = full || list.find((l) => l.id === targetId);
         setCurrentLesson(lesson);
 
-        // Generate a temporary DRM token for the session (server re-checks enrollment)
-        if (full?.video_url?.includes('drm:')) {
-          const vId = full.video_url.split('drm:')[1];
-          fetch(`/api/drm/token?videoId=${vId}`).then((res) => res.json()).then((data) => data.token && setDrmToken(data.token));
-        }
       }
 
       const ids = list.map((l) => l.id);
@@ -200,7 +194,7 @@ export default function LearningPortal() {
                     <Link href={`/courses/${courseId}#dang-ky`} className="btn btn-gold">Đăng ký khóa học</Link>
                   </div>
                 ) : currentLesson.video_url?.includes('drm:') ? (
-                  <DrmPlayer videoId={currentLesson.video_url.split('drm:')[1]} token={drmToken} watermark={`${studentCode(userId)} · ${userEmail}`} />
+                  <DrmPlayer key={currentLesson.id} videoId={currentLesson.video_url.split('drm:')[1].trim()} title={currentLesson.title} watermark={`${studentCode(userId)} · ${userEmail}`} />
                 ) : currentLesson.video_url ? (
                   youTubeId(currentLesson.video_url)
                     ? <GuardedYouTube videoId={youTubeId(currentLesson.video_url)!} title={currentLesson.title} watermark={`${studentCode(userId)} · ${userEmail}`} />
