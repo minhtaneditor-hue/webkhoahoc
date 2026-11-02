@@ -10,6 +10,20 @@ const supabaseHost = (() => {
 })();
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  // Baseline security headers: no framing by other sites (clickjacking), no MIME sniffing,
+  // no full URLs leaked to other sites, no camera/mic/location access.
+  async headers() {
+    return [{
+      source: '/:path*',
+      headers: [
+        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      ],
+    }];
+  },
   images: {
     remotePatterns: [
       ...(supabaseHost ? [{ protocol: "https" as const, hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }] : []),
