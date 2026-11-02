@@ -115,6 +115,8 @@ export default function DrmPlayer({ videoId, title, watermark }: { videoId: stri
       html5: { vhs: { overrideNative: true }, nativeAudioTracks: false, nativeVideoTracks: false },
     });
     player.ready(() => sdkRef.current?.lockElement(player.el().querySelector('video')));
+    // Levels exist once the master playlist is parsed; apply the 720p default there
+    player.on('loadedmetadata', applyQuality);
     (player as any).qualityLevels().on('addqualitytrack', applyQuality);
     player.on('error', () => {
       const code = player.error()?.code;
