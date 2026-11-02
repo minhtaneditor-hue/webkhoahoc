@@ -1,19 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Be_Vietnam_Pro } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import "@/styles/globals.css";
 
-// Two typefaces only: Playfair Display (bold, high-contrast serif) for headings,
-// Be Vietnam Pro (sturdy sans designed for Vietnamese) for everything else.
-const playfair = Playfair_Display({
-  subsets: ["latin", "vietnamese"],
-  weight: ["600", "700", "800"],
-  variable: "--font-playfair",
-  display: "swap",
-});
-
+// One typeface for the whole site: Be Vietnam Pro (built for Vietnamese diacritics).
+// Headings stand out by weight, size and uppercase, not by a second font.
 const beVietnam = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-be-vietnam",
   display: "swap",
 });
@@ -56,7 +49,7 @@ export default async function RootLayout({
 }>) {
   const settings = await getSiteSettings();
   return (
-    <html lang="vi" className={`${playfair.variable} ${beVietnam.variable}`}>
+    <html lang="vi" className={beVietnam.variable}>
       <body>
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[3000] btn btn-dark">
           Bỏ qua tới nội dung chính
