@@ -134,7 +134,7 @@ export default function StudentDashboard() {
         <aside className="space-y-6">
           <Link href="/shop" className="card card-hover p-6 flex items-center gap-4">
             <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center shrink-0"><ShoppingBag size={20} aria-hidden="true" /></span>
-            <span><span className="block font-semibold">Ebook & Preset</span><span className="block text-sm text-muted-foreground">Tải lại sản phẩm đã mua</span></span>
+            <span><span className="block font-semibold">Sản phẩm khác</span><span className="block text-sm text-muted-foreground">Tải lại sản phẩm đã mua</span></span>
           </Link>
 
           <div className="card p-6 flex items-center gap-4">

@@ -87,7 +87,7 @@ export default function ShopPage() {
         <SectionHeading
           as="h1"
 
-          title="Ebook & Preset"
+          title="Sản phẩm khác"
           description="Tài nguyên để làm video nhanh và đẹp hơn: ebook, preset màu, LUT và template studio của Minh Tấn dùng hằng ngày. Mua một lần, tải về dùng mãi."
         />
 

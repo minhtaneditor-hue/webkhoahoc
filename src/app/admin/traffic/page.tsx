@@ -27,7 +27,7 @@ type Summary = {
 };
 
 const PAGE_NAMES: Record<string, string> = {
-  '/': 'Trang chủ', '/students': 'Học viên & sản phẩm', '/courses': 'Khóa học', '/shop': 'Ebook & Preset',
+  '/': 'Trang chủ', '/students': 'Học viên & sản phẩm', '/courses': 'Khóa học', '/shop': 'Sản phẩm khác',
   '/about': 'Về Minh Tấn', '/cam-ket-bao-mat': 'Cam kết bảo mật', '/dashboard': 'Trang học viên',
 };
 const DEVICE_NAMES: Record<string, string> = { mobile: 'Điện thoại', desktop: 'Máy tính', tablet: 'Máy tính bảng' };

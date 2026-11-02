@@ -8,6 +8,8 @@ import { Play, X, Layers } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 
 const CATEGORY_LABELS: Record<string, string> = {
+  'game-show': 'Game show',
+  TV: 'Truyền hình',
   'short-video': 'Video ngắn',
   cinematic: 'Điện ảnh',
   brand: 'Thương hiệu',
@@ -88,6 +90,9 @@ export default function WorkPage() {
               </li>
             ))}
           </ul>
+        )}
+        {!loading && filter === 'all' && (
+          <p className="mt-10 text-center text-muted-foreground">Và nhiều dự án truyền hình, phim và nhãn hàng khác đang được cập nhật.</p>
         )}
       </section>
 

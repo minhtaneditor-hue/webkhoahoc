@@ -8,46 +8,60 @@ import { contactFrom } from '@/lib/site-settings';
 
 export const metadata: Metadata = {
   title: 'Coaching 1:1',
-  description: 'Chương trình đồng hành 1:1 cùng Minh Tấn: chiến lược nội dung, thương hiệu cá nhân và mô hình kinh doanh bằng video.',
+  description: 'Học 1-1 cùng Minh Tấn: chụp ảnh, quay và dựng video bằng điện thoại hoặc bằng AI. Gói Audit 1,5 triệu, gói 6 buổi và 10 buổi.',
 };
 
 const packages = [
   {
-    name: 'Platinum Companion',
-    price: '2.000 USD',
-    duration: '1 tháng đồng hành',
+    name: 'Gói Audit',
+    price: '1.500.000đ',
+    duration: 'Tư vấn online · hơn 1 giờ',
     features: [
-      '8 buổi học trực tiếp 1:1 cùng mentor',
-      'Tư vấn định hướng chiến lược mô hình kinh doanh',
-      'Trọn bộ khóa học online (vĩnh viễn)',
-      'Cam kết đạt mục tiêu video cụ thể',
-      'Hỗ trợ trực tiếp qua Zalo/Zoom',
-      'Tặng bộ Sound FX, Transitions, Overlays',
+      'Xem kênh và video hiện tại của bạn',
+      'Bắt lỗi hình ảnh, âm thanh, cách nói và cách dựng',
+      'Định hướng nội dung phù hợp với bạn',
+      'Gợi ý hướng đi và các bước làm tiếp theo',
     ],
-    cta: 'Đặt lịch tư vấn miễn phí',
+    cta: 'Đặt lịch Audit',
     featured: false,
   },
   {
-    name: 'Elite Transformation',
-    price: '5.000 USD',
-    duration: '4 tháng đồng hành',
+    name: 'Gói 6 buổi',
+    price: '10.000.000đ',
+    duration: '6 buổi học 1-1',
     features: [
-      'Toàn bộ quyền lợi gói Platinum',
-      'Đồng hành xây kênh TikTok, YouTube trong 4 tháng',
-      '1 buổi Zoom chiến lược mỗi tuần',
-      'Giao bài tập và theo sát hành động mỗi ngày',
-      'Định hướng thương hiệu cá nhân dài hạn',
-      'Tham gia các buổi quay thực tế cùng mentor',
+      'Mỗi buổi 2 tiếng, học cá nhân hóa',
+      'Học được toàn bộ nội dung khóa 21 Ngày',
+      'Kèm cặp 1-1, đổi chương trình theo nhu cầu riêng',
+      'Giao bài tập và quan sát bạn làm bài',
+      'Hỗ trợ sửa bài 3 tháng sau khóa học',
     ],
-    cta: 'Đăng ký xét tuyển',
+    cta: 'Đăng ký gói 6 buổi',
     featured: true,
+  },
+  {
+    name: 'Gói 10 buổi',
+    price: '15.000.000đ',
+    duration: '10 buổi học 1-1 · có thể đến tận nơi',
+    features: [
+      'Mỗi buổi 2 tiếng, học cá nhân hóa',
+      'Học được toàn bộ nội dung khóa 21 Ngày',
+      'Kèm cặp 1-1, đổi chương trình theo nhu cầu riêng',
+      'Giao bài tập và quan sát bạn làm bài',
+      'Hỗ trợ sửa bài vĩnh viễn sau khóa học',
+      'Có bản ghi hình (record) từng buổi để xem lại',
+    ],
+    cta: 'Đăng ký gói 10 buổi',
+    featured: false,
   },
 ];
 
-const pillars = [
-  { title: 'Chiến lược marketing', desc: 'Xây thương hiệu cá nhân đủ mạnh để nhãn hàng tự tìm đến bạn.' },
-  { title: 'Định hướng thu nhập', desc: 'Lộ trình từ 0 tới 1.000 USD đầu tiên và cách nhân bản con số đó.' },
-  { title: 'Mô hình kinh doanh', desc: 'Đóng gói kiến thức thành sản phẩm số tạo thu nhập bền vững.' },
+// What a coaching student can choose to learn
+const topics = [
+  { title: 'Chụp ảnh bằng điện thoại', desc: 'Bố cục, ánh sáng, chân dung và ảnh sản phẩm đẹp chỉ với chiếc điện thoại.' },
+  { title: 'Quay video bằng điện thoại', desc: 'Cài đặt máy, cỡ cảnh, góc máy, chuyển động và tự tin nói trước ống kính.' },
+  { title: 'Dựng video bằng điện thoại', desc: 'Dựng nhanh trên CapCut: cắt, chữ, phụ đề, âm thanh, màu và xuất video.' },
+  { title: 'Dựng video bằng AI', desc: 'Dùng công cụ AI để viết kịch bản, tạo hình ảnh và dựng video nhanh hơn.' },
 ];
 
 export default async function CoachingPage() {
@@ -60,10 +74,10 @@ export default async function CoachingPage() {
           <div>
             <h1 className="text-white text-[clamp(1.75rem,5.5vw,4rem)]">Coaching 1:1 cùng Minh Tấn Video Advisor</h1>
             <p className="mt-6 text-lg text-stone-300 leading-relaxed max-w-xl">
-              Học cách kinh doanh bằng hình ảnh trong một chương trình đồng hành riêng, để video trở thành nguồn thu nhập và sự nghiệp tự do thực sự.
+              Học 1-1 theo đúng nhu cầu của bạn: chụp ảnh, quay video và dựng video bằng điện thoại, hoặc dựng video bằng AI. Minh Tấn kèm cặp, giao bài và sửa bài cho bạn.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <a href="#goi-coaching" className="btn btn-gold">Xem các gói đồng hành <ArrowRight size={18} aria-hidden="true" /></a>
+              <a href="#goi-coaching" className="btn btn-gold">Xem các gói học <ArrowRight size={18} aria-hidden="true" /></a>
               <a href={CONTACT.zaloHref} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">Nhắn Zalo tư vấn</a>
             </div>
             <p className="mt-6 flex items-center gap-2 text-sm text-stone-400"><ShieldCheck size={16} className="text-gold-light" aria-hidden="true" /> Mỗi tháng chỉ nhận tối đa 2 học viên</p>
@@ -89,15 +103,16 @@ export default async function CoachingPage() {
         </div>
       </section>
 
-      {/* Pillars */}
+      {/* Topics */}
       <section className="section bg-card">
         <div className="container-lux">
-          <SectionHeading title="Ba trụ cột của chương trình" />
-          <dl className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-3">
-            {pillars.map(({ title, desc }) => (
+          <SectionHeading title="Bạn có thể chọn học" description="Chọn một hoặc kết hợp nhiều nội dung, chương trình được may đo theo bạn." />
+          <dl className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+            {topics.map(({ title, desc }, i) => (
               <div key={title}>
-                <dt className="font-display text-3xl font-bold text-ink">{title}</dt>
-                <dd className="mt-2 text-lg text-muted-foreground leading-relaxed">{desc}</dd>
+                <span className="w-10 h-10 rounded-full bg-gold text-white font-bold flex items-center justify-center">{i + 1}</span>
+                <dt className="mt-4 text-xl font-bold text-ink">{title}</dt>
+                <dd className="mt-2 text-muted-foreground leading-relaxed">{desc}</dd>
               </div>
             ))}
           </dl>
@@ -108,13 +123,13 @@ export default async function CoachingPage() {
       <section id="goi-coaching" className="section scroll-mt-20">
         <div className="container-lux">
           <SectionHeading title="Chọn gói phù hợp với bạn" align="center" description="Hoàn tiền trong 7 ngày đầu nếu chương trình chưa phù hợp." />
-          <Reveal className="mt-12 grid gap-6 lg:grid-cols-2 max-w-5xl mx-auto">
+          <Reveal className="mt-12 grid gap-6 lg:grid-cols-3 max-w-6xl mx-auto items-stretch">
             {packages.map((pkg) => (
               <div key={pkg.name} className={`relative rounded-[var(--radius-card)] p-8 md:p-10 flex flex-col ${pkg.featured ? 'surface-dark shadow-[var(--shadow-lift)]' : 'card'}`}>
-                {pkg.featured && <span className="badge absolute -top-3 left-8 !bg-gold-light !text-onyx">Hiệu quả nhất</span>}
+                {pkg.featured && <span className="badge absolute -top-3 left-8 !bg-gold-light !text-onyx">Được chọn nhiều nhất</span>}
                 <p className={`text-sm font-semibold ${pkg.featured ? 'text-gold-light' : 'text-gold'}`}>{pkg.duration}</p>
                 <h3 className={`mt-2 text-3xl ${pkg.featured ? 'text-white' : ''}`}>{pkg.name}</h3>
-                <p className={`mt-4 font-display text-5xl font-bold ${pkg.featured ? 'text-white' : ''}`}>{pkg.price}</p>
+                <p className={`mt-4 text-4xl font-extrabold tabular-nums ${pkg.featured ? 'text-white' : ''}`}>{pkg.price}</p>
                 <ul className={`mt-8 space-y-3 flex-1 ${pkg.featured ? 'text-stone-300' : 'text-stone'}`}>
                   {pkg.features.map((f) => (
                     <li key={f} className="flex gap-3"><Check size={18} className={`shrink-0 mt-0.5 ${pkg.featured ? 'text-gold-light' : 'text-gold'}`} aria-hidden="true" /> {f}</li>

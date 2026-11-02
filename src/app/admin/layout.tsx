@@ -20,7 +20,7 @@ const sidebarItems = [
   ]},
   { group: 'Khóa học', items: [
     { title: 'Khóa học & bài học', icon: Database, href: '/admin/courses' },
-    { title: 'Ebook & Preset', icon: ShoppingBag, href: '/admin/shop' },
+    { title: 'Sản phẩm khác', icon: ShoppingBag, href: '/admin/shop' },
     { title: 'Bảo vệ video (DRM)', icon: ShieldCheck, href: '/admin/drm' },
   ]},
   { group: 'Trang chủ', items: [

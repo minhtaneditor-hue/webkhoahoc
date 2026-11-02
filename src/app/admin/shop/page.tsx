@@ -16,7 +16,7 @@ export default function AdminShopPage() {
   return (
     <AdminCrud
       table="digital_assets"
-      title="Ebook & Preset"
+      title="Sản phẩm khác"
       description="Sản phẩm số bán trên trang Shop. Link tải chỉ được gửi cho người đã thanh toán."
       icon={ShoppingBag}
       itemLabel="sản phẩm"

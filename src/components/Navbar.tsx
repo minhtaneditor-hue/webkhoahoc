@@ -12,24 +12,23 @@ import {
   Menu,
   X,
   GraduationCap,
-  ShoppingBag,
   UserRound,
   ShieldCheck,
   ArrowRight,
 } from 'lucide-react';
 import { isAdmin } from '@/lib/admin';
 
-// Four top-level items. Everything that is sold lives under "Khóa học"; the logo links home;
-// Blog stays in the footer until it has real posts.
+// Top-level items. Courses and coaching sit under "Khóa học"; ebooks, presets and skills are
+// "Sản phẩm khác" right after "Dự án". The logo links home; Blog stays in the footer.
 const productLinks = [
   { name: 'Khóa học online', desc: 'Học theo lộ trình, truy cập trọn đời', href: '/courses', icon: GraduationCap },
   { name: 'Coaching 1:1', desc: 'Đồng hành riêng cùng Minh Tấn', href: '/coaching', icon: UserRound },
-  { name: 'Ebook & Preset', desc: 'Tài nguyên tải về dùng ngay', href: '/shop', icon: ShoppingBag },
 ];
 
 const navLinks = [
   { name: 'Học viên', href: '/students' },
   { name: 'Dự án', href: '/work' },
+  { name: 'Sản phẩm khác', href: '/shop' },
   { name: 'Về Minh Tấn', href: '/about' },
 ];
 
