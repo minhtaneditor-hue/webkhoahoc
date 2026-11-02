@@ -38,6 +38,7 @@ import { SiteProvider } from "@/components/SiteContext";
 import { getSiteSettings } from "@/lib/content";
 import { Analytics } from "@vercel/analytics/next";
 import PageViewTracker from "@/components/PageViewTracker";
+import FacebookPixel from "@/components/FacebookPixel";
 
 // Admin edits trigger revalidatePath('/', 'layout'); this is the fallback refresh window.
 export const revalidate = 300;
@@ -64,6 +65,7 @@ export default async function RootLayout({
         {/* Traffic: Vercel Web Analytics (detail on vercel.com) + own counter shown at /admin/traffic */}
         <Analytics />
         <PageViewTracker />
+        <FacebookPixel pixelId={settings.fb_pixel_id} />
       </body>
     </html>
   );

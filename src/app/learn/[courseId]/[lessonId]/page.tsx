@@ -5,13 +5,15 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
-import { CheckCircle2, Circle, ChevronLeft, Loader2, Menu, X, ArrowRight, Lock, Play, PartyPopper } from 'lucide-react';
+import { CheckCircle2, Circle, ChevronLeft, Loader2, Menu, X, ArrowRight, Lock, Play, PartyPopper, Send } from 'lucide-react';
 import DrmPlayer from '@/components/video/DrmPlayer';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import AgreementGate from '@/components/video/AgreementGate';
 import { studentCode } from '@/lib/content-agreement';
 import LessonText from '@/components/LessonText';
 import ProtectedText from '@/components/ProtectedText';
+import { useSiteSettings } from '@/components/SiteContext';
+import { contactFrom } from '@/lib/site-settings';
 import { isAdmin } from '@/lib/admin';
 
 export default function LearningPortal() {
@@ -30,6 +32,7 @@ export default function LearningPortal() {
   const [hasAccess, setHasAccess] = useState(false);
   const [finished, setFinished] = useState(false);
 
+  const contact = contactFrom(useSiteSettings());
   useEffect(() => {
     async function init() {
       if (!courseId) return;
@@ -226,6 +229,17 @@ export default function LearningPortal() {
                   {currentLesson.content
                     ? <ProtectedText watermark={`${studentCode(userId)} · ${userEmail}`}><LessonText text={currentLesson.content} className={`mt-6 max-w-3xl ${currentLesson.video_url ? '' : 'text-base md:text-lg'}`} /></ProtectedText>
                     : <p className="mt-4 text-stone-300 leading-relaxed max-w-2xl">Hãy tập trung xem hết bài và áp dụng ngay vào dự án của bạn.</p>}
+                  {canWatch && (
+                    <div className="mt-8 max-w-3xl rounded-xl border border-gold-light/30 bg-gold-light/10 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-white">Nộp bài thực hành</p>
+                        <p className="mt-1 text-sm text-stone-300">Làm xong bài tập của bài này, gửi video hoặc ảnh vào nhóm Zalo cộng đồng để Minh Tấn và các bạn cùng góp ý sửa.</p>
+                      </div>
+                      <a href={contact.zaloGroupHref} target="_blank" rel="noopener noreferrer" className="btn btn-gold shrink-0">
+                        <Send size={16} aria-hidden="true" /> Nộp bài vào nhóm Zalo
+                      </a>
+                    </div>
+                  )}
                 </div>
                 {canWatch && (
                   <div className="flex flex-col sm:flex-row md:flex-col gap-3 shrink-0">

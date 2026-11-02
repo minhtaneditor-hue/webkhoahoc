@@ -45,6 +45,15 @@ export default function BankTransferPage() {
     return () => clearInterval(t);
   }, [order?.status, load]);
 
+  // Meta Pixel: checkout opened, then purchase once the webhook confirms (once per order per browser)
+  useEffect(() => {
+    if (!order) return;
+    const key = `fbq-${orderId}-${order.status}`;
+    try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch { /* storage blocked */ }
+    if (order.status === 'pending') window.fbq?.('track', 'InitiateCheckout', { value: order.amount, currency: 'VND' });
+    if (order.status === 'success') window.fbq?.('track', 'Purchase', { value: order.amount, currency: 'VND' });
+  }, [order, orderId]);
+
   const [downloading, setDownloading] = useState(false);
   async function download() {
     setDownloading(true);
