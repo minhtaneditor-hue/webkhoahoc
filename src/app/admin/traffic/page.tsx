@@ -72,10 +72,10 @@ function DailyBars({ days, daily }: { days: number; daily: Summary['daily'] }) {
   return (
     <div className="relative">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Biểu đồ người truy cập theo ngày">
-        {[0, 0.5, 1].map((t) => (
-          <g key={t}>
-            <line x1={padL} x2={W} y1={y(t * max)} y2={y(t * max)} stroke="#E7E5E4" strokeWidth={1} />
-            <text x={padL - 8} y={y(t * max) + 4} textAnchor="end" fontSize="11" fill="#57534E">{Math.round(t * max)}</text>
+        {[...new Set([0, Math.round(max / 2), max])].map((v) => (
+          <g key={v}>
+            <line x1={padL} x2={W} y1={y(v)} y2={y(v)} stroke="#E7E5E4" strokeWidth={1} />
+            <text x={padL - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#57534E">{v}</text>
           </g>
         ))}
         {buckets.map((b, i) => {
