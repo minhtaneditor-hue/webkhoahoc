@@ -24,6 +24,7 @@ export type Student = {
   avatar_url: string | null;
   country?: string | null;
   city?: string | null;
+  facebook_url?: string | null;
 };
 
 export async function getStudents(): Promise<Student[]> {

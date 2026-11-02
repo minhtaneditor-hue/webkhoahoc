@@ -6,9 +6,12 @@ import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
 import { getStudents, getFeedbackImages, getStudentWorks, getFeedbackVideos, getSiteSettings, studentPlaces } from '@/lib/content';
 import StudentShowcase from '@/components/students/StudentShowcase';
+import SocialLinks from '@/components/students/SocialLinks';
+import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
 import WorldStudents from '@/components/students/WorldStudents';
 
-export const revalidate = 300;
+// Short cache: student rows are often changed straight in Supabase, which does not trigger a refresh
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Học viên & sản phẩm',
@@ -51,12 +54,12 @@ export default async function StudentsPage() {
       <WorldStudents places={places} />
 
       <section className="container-lux pt-20 pb-6">
-        <h2>Câu chuyện học viên</h2>
+        <h2>Học viên tiêu biểu</h2>
       </section>
 
       <section className="container-lux pb-20">
         <Reveal as="ul" className="grid gap-6 md:grid-cols-2" from="mask">
-          {students.map((s: any, i: number) => (
+          {students.filter((s) => s.quote || s.story).map((s: any, i: number) => (
             <li key={`${s.id}-${i}`} className="card overflow-hidden grid sm:grid-cols-[200px_1fr]">
               <div className="relative aspect-square sm:aspect-auto bg-muted">
                 <Image src={s.avatar_url || '/asset/hoc_vien/tan.jpg'} alt={s.name} fill sizes="(min-width: 640px) 200px, 100vw" className="object-cover" unoptimized={!!s.avatar_url?.startsWith('http')} />
@@ -73,6 +76,31 @@ export default async function StudentsPage() {
             </li>
           ))}
         </Reveal>
+
+        {/* Students without a written story yet: compact profile cards */}
+        {students.some((s) => !s.quote && !s.story) && (
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {students.filter((s) => !s.quote && !s.story).map((s) => (
+              <li key={s.id} className="flex items-center gap-4 rounded-[var(--radius-card)] border border-line bg-card p-4">
+                <Image src={s.avatar_url || '/asset/hoc_vien/tan.jpg'} alt="" width={64} height={64} unoptimized={!!s.avatar_url?.startsWith('http')} className="!rounded-full w-16 h-16 object-cover shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-ink truncate">{s.name}</p>
+                  {s.title && <p className="text-sm text-muted-foreground line-clamp-2">{s.title}</p>}
+                  <div className="mt-2 flex items-center gap-2">
+                    {s.country && COUNTRY_BY_CODE[s.country] && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={flagUrl(s.country)} alt="" width={16} height={11} className="!rounded-[2px] w-4 h-[11px] object-cover" />
+                        {s.city || COUNTRY_BY_CODE[s.country].name}
+                      </span>
+                    )}
+                    {s.facebook_url && <SocialLinks links={{ facebook: s.facebook_url }} name={s.name} />}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="section surface-dark">

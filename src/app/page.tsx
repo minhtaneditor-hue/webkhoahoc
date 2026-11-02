@@ -12,7 +12,7 @@ import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWor
 import StudentWorks from '@/components/students/StudentWorks';
 import { toYoutubeId } from '@/lib/site-settings';
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 const FEATURED_COURSE_ID = 'd290f1ee-6c54-4b01-90e6-d701748f0851';
 
@@ -136,7 +136,7 @@ export default async function Home() {
           </div>
 
           <Reveal as="ul" from="mask" className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {students.slice(0, 4).map((st) => (
+            {students.filter((st) => st.quote).slice(0, 4).map((st) => (
               <li key={st.id}>
                 <figure className="group h-full flex flex-col">
                   <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-img)] ring-hover">
