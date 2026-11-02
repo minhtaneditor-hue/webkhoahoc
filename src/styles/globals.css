@@ -381,3 +381,17 @@
 }
 .world-pulse { transform-box: fill-box; transform-origin: center; animation: world-pulse 2.6s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) { .world-pulse { animation: none; opacity: 0; } }
+
+/* "Và còn nhiều học viên…" pill: ember light sweeping across, a gentle float and a pulsing dot */
+@keyframes more-note-sweep { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes more-note-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes more-note-ping { 0% { box-shadow: 0 0 0 0 rgba(232, 149, 107, 0.7); } 100% { box-shadow: 0 0 0 10px rgba(232, 149, 107, 0); } }
+.more-note {
+  background-color: var(--color-onyx);
+  background-image: linear-gradient(110deg, #3A1A1E 0%, #5A1F25 35%, #A84E3C 50%, #5A1F25 65%, #3A1A1E 100%);
+  background-size: 250% 100%;
+  box-shadow: 0 12px 30px -14px rgba(90, 31, 37, 0.6);
+  animation: more-note-sweep 6s linear infinite, more-note-float 4s ease-in-out infinite;
+}
+.more-note-dot { width: 8px; height: 8px; border-radius: 9999px; background: var(--color-gold-light); flex-shrink: 0; animation: more-note-ping 1.8s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .more-note, .more-note-dot { animation: none; } }

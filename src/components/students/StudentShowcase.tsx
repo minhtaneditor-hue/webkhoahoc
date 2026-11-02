@@ -178,8 +178,9 @@ export default function StudentShowcase({ works, videos }: { works: StudentWork[
 
       {/* Closing note under the cards: the list shown is a sample */}
       <div className="mt-10 flex justify-center">
-        <p className="w-full max-w-3xl rounded-[var(--radius-card)] surface-dark px-6 py-8 md:py-10 text-center font-display text-2xl md:text-3xl leading-snug text-white">
-          Và còn nhiều học viên cá nhân và <span className="text-gold-light">trung tâm đào tạo</span> khác nữa.
+        <p className="more-note inline-flex items-center gap-2.5 rounded-2xl sm:rounded-full px-5 py-2.5 text-sm md:text-base font-semibold text-white text-center">
+          <span className="more-note-dot" aria-hidden="true" />
+          Và còn nhiều học viên cá nhân và <span className="text-gold-light">trung tâm đào tạo</span> khác nữa
         </p>
       </div>
 
