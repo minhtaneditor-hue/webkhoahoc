@@ -5,20 +5,22 @@ import { getSessionUser } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
-// Admin-only: sends a test email to the logged-in admin and shows Resend's answer,
-// so a wrong RESEND_API_KEY or unverified sender is visible instead of failing silently.
+// Checks that RESEND_API_KEY works and shows Resend's own answer.
+// Admins get the test in their inbox; any other signed-in account sends to
+// Resend's test sink (delivered@resend.dev), so nobody real receives it.
 export async function GET() {
   const user = await getSessionUser();
-  if (!user || !isAdmin(user.email)) return NextResponse.json({ error: 'Admins only' }, { status: 403 });
+  if (!user) return NextResponse.json({ error: 'Vui lòng đăng nhập' }, { status: 401 });
 
   const key = process.env.RESEND_API_KEY;
   if (!key) return NextResponse.json({ ok: false, problem: 'RESEND_API_KEY is not set on this deployment' });
 
+  const to = isAdmin(user.email) ? user.email! : 'delivered@resend.dev';
   const { data, error } = await new Resend(key).emails.send({
-    from: 'Minh Tan Academy <customer@minhtanacademy.com>',
-    to: user.email!,
-    subject: 'Email thử từ Minh Tấn Academy',
-    html: '<p>Nếu bạn đọc được email này, Resend đã gửi được mail từ website.</p>',
+    from: 'TẤN VA <customer@minhtanacademy.com>',
+    to,
+    subject: 'Email thử từ TẤN VA',
+    html: '<p>Nếu bạn đọc được email này, website đã gửi được mail qua Resend.</p>',
   });
-  return NextResponse.json({ ok: !error, id: data?.id, error, keyPrefix: key.slice(0, 3), keyLength: key.length });
+  return NextResponse.json({ ok: !error, sentTo: to, id: data?.id, error, keyLooksRight: key.startsWith('re_') && key.length > 30, keyLength: key.length });
 }
