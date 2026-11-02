@@ -24,6 +24,7 @@ export default function AdminStudentWorksPage() {
         category: 'bat-dong-san', orientation: 'vertical',
         before_url: '', before_thumbnail_url: '', after_url: '', after_thumbnail_url: '',
         is_featured: false, sort_order: 0,
+        facebook_url: '', tiktok_url: '', instagram_url: '', youtube_url: '', website_url: '',
       }}
       fields={[
         { key: 'student_name', label: 'Tên học viên', required: true },
@@ -31,6 +32,11 @@ export default function AdminStudentWorksPage() {
         { key: 'country', label: 'Đang sống ở', type: 'select', options: COUNTRY_OPTIONS, hint: 'Hiện trên bản đồ học viên khắp thế giới' },
         { key: 'city', label: 'Thành phố', hint: 'Ví dụ: Sài Gòn, Melbourne, Paris' },
         { key: 'avatar_url', label: 'Ảnh đại diện học viên', type: 'image' },
+        { key: 'facebook_url', label: 'Facebook / Fanpage', type: 'url', hint: 'Mỗi học viên chỉ cần nhập link ở 1 sản phẩm.' },
+        { key: 'tiktok_url', label: 'TikTok', type: 'url' },
+        { key: 'instagram_url', label: 'Instagram', type: 'url' },
+        { key: 'youtube_url', label: 'YouTube', type: 'url' },
+        { key: 'website_url', label: 'Website', type: 'url' },
         { key: 'title', label: 'Tên sản phẩm', required: true, hint: 'Ví dụ: Video giới thiệu tiệm bánh' },
         { key: 'result', label: 'Kết quả', hint: 'Ví dụ: 1,2 triệu view, +40 đơn trong tuần đầu' },
         { key: 'description', label: 'Mô tả ngắn', type: 'textarea' },

@@ -76,6 +76,11 @@ export type StudentWork = {
   is_featured: boolean;
   country: string | null;
   city: string | null;
+  facebook_url?: string | null;
+  tiktok_url?: string | null;
+  instagram_url?: string | null;
+  youtube_url?: string | null;
+  website_url?: string | null;
 };
 
 /** Former students' work (before / after). Empty until the admin adds some. */

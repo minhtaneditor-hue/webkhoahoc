@@ -5,8 +5,7 @@ import { Quote, ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
 import { getStudents, getFeedbackImages, getStudentWorks, getFeedbackVideos, studentPlaces } from '@/lib/content';
-import FeedbackVideos from '@/components/students/FeedbackVideos';
-import StudentWorks from '@/components/students/StudentWorks';
+import StudentShowcase from '@/components/students/StudentShowcase';
 import WorldStudents from '@/components/students/WorldStudents';
 
 export const revalidate = 300;
@@ -21,28 +20,32 @@ export const metadata: Metadata = {
 export default async function StudentsPage() {
   const [students, feedback, works, videos] = await Promise.all([getStudents(), getFeedbackImages(), getStudentWorks(), getFeedbackVideos()]);
   const places = studentPlaces(students, works);
+  const profileCount = new Set(works.map((w) => w.student_name.trim().toLowerCase())).size;
 
   return (
     <main>
-      <section className="container-lux pt-12 pb-10 md:pt-20">
-        <SectionHeading as="h1" title="Học viên & sản phẩm" description="Kết quả thật từ những người đã học. Họ bắt đầu giống bạn, với một chiếc điện thoại và mong muốn làm video tốt hơn." />
+      {/* Header: what this page proves, in three numbers */}
+      <section className="container-lux pt-12 md:pt-20 pb-8">
+        <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+          <SectionHeading as="h1" title="Học viên & sản phẩm" description="Sản phẩm thật học viên làm ra, trước và sau khóa học. Họ bắt đầu giống bạn, với một chiếc điện thoại." />
+          <dl className="grid grid-cols-3 gap-3">
+            {[
+              { n: profileCount, label: 'học viên' },
+              { n: places.length, label: 'quốc gia' },
+              { n: works.length + videos.length, label: 'sản phẩm & clip' },
+            ].map((s) => (
+              <div key={s.label} className="rounded-[var(--radius-card)] border border-line bg-card p-4 flex flex-col-reverse">
+                <dt className="mt-1 text-sm text-muted-foreground">{s.label}</dt>
+                <dd className="font-display text-3xl md:text-4xl font-bold text-ink">{s.n}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       </section>
 
-      {works.length > 0 && (
-        <section id="san-pham" aria-labelledby="works-title" className="container-lux pb-20 scroll-mt-24">
-          <h2 id="works-title">Sản phẩm của học viên</h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl">Bấm vào từng sản phẩm để xem lớn. Nhãn Trước / Sau cho thấy học viên làm video thế nào trước và sau khóa học.</p>
-          <div className="mt-8"><StudentWorks works={works} /></div>
-        </section>
-      )}
-
-      {videos.length > 0 && (
-        <section id="video-feedback" aria-labelledby="video-feedback-title" className="container-lux pb-20 scroll-mt-24">
-          <h2 id="video-feedback-title">Video feedback từ học viên</h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl">Học viên tự kể về khóa học và về Minh Tấn. Bấm vào để xem.</p>
-          <div className="mt-8"><FeedbackVideos videos={videos} /></div>
-        </section>
-      )}
+      <section id="san-pham" aria-label="Sản phẩm của học viên" className="container-lux pb-20 scroll-mt-24">
+        <StudentShowcase works={works} videos={videos} />
+      </section>
 
       <WorldStudents places={places} />
 

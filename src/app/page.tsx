@@ -1,17 +1,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Check, Quote, PlayCircle, MessageCircle, FileText, Music, LayoutTemplate } from 'lucide-react';
+import { ArrowRight, Check, Quote, PlayCircle } from 'lucide-react';
 import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import FaqList from '@/components/FaqList';
 import { ShutterImage, Reveal } from '@/components/motion/Motion';
-import ScrollReveal from '@/components/reactbits/ScrollReveal';
 import ShowreelVideo from '@/components/motion/ShowreelVideo';
 import CountUp from '@/components/motion/CountUp';
 import FeedbackMarquee from '@/components/FeedbackMarquee';
-import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWorks, studentPlaces } from '@/lib/content';
+import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWorks } from '@/lib/content';
 import StudentWorks from '@/components/students/StudentWorks';
-import WorldStudents from '@/components/students/WorldStudents';
 import { toYoutubeId } from '@/lib/site-settings';
 
 export const revalidate = 300;
@@ -44,14 +42,6 @@ const outcomes = [
   'Biến lượt xem thành khách hàng và doanh thu',
 ];
 
-const bonuses = [
-  { title: 'Kèm cặp 1:1 trọn đời', desc: 'Hỏi trực tiếp qua Zalo và nhóm kín, không phải tự mò một mình.', icon: MessageCircle },
-  { title: 'Kho 100+ kịch bản', desc: 'Mẫu nội dung đã kiểm chứng, chỉ cần điền thông tin của bạn.', icon: FileText },
-  { title: 'Thư viện nhạc bản quyền', desc: 'Nhạc nền theo xu hướng, dùng thoải mái không lo bị gỡ video.', icon: Music },
-  { title: 'Template thiết kế', desc: 'Ảnh bìa và hiệu ứng chữ chuyên nghiệp từ studio của Minh Tấn.', icon: LayoutTemplate },
-];
-
-
 async function getFeaturedCourse() {
   const supabase = getPublicSupabase();
   if (!supabase) return null;
@@ -69,7 +59,6 @@ export default async function Home() {
     getFeaturedCourse(), getSiteSettings(), getStudents(), getFeedbackImages(), getFaqs(), getStudentWorks(),
   ]);
   const featuredWorks = works.filter((w) => w.is_featured).slice(0, 3);
-  const places = studentPlaces(students, works);
   const youtubeId = toYoutubeId(settings.showreel_youtube_id);
   const SHOWREEL = {
     youtubeId,
@@ -186,23 +175,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <WorldStudents places={places} />
-
-      {/* Statement: words fill with ink as they rise through the screen (React Bits ScrollReveal) */}
-      <section className="bg-card">
-        <div className="container-lux py-20 md:py-28">
-          <ScrollReveal
-            baseOpacity={0.12}
-            enableBlur={false}
-            baseRotation={0}
-            containerClassName="max-w-4xl"
-            textClassName="font-display font-bold text-[clamp(1.75rem,3.8vw,3.125rem)] leading-[1.25] text-ink"
-          >
-            {settings.statement}
-          </ScrollReveal>
-        </div>
-      </section>
-
       {/* Featured course: outcomes as a plain list beside a filled price panel */}
       <section className="section">
         <div className="container-lux grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-start [&>*]:min-w-0">
@@ -239,38 +211,6 @@ export default async function Home() {
             <Link href={courseHref} className="mt-3 flex items-center justify-center gap-2 text-gold-light hover:underline min-h-[44px]">
               <PlayCircle size={18} aria-hidden="true" /> Học thử miễn phí bài đầu tiên
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* What comes with it: frosted-glass "notification" cards over a blurred warm photo */}
-      <section aria-labelledby="bonuses-title" className="container-lux pb-20 md:pb-28">
-        <div className="relative isolate overflow-hidden rounded-[var(--radius-xl)] bg-onyx px-5 py-14 md:px-12 md:py-20">
-          <Image src="/asset/avatar/hero_expert.jpg" alt="" fill sizes="100vw" aria-hidden="true" className="!rounded-none object-cover scale-125 blur-3xl opacity-70 -z-20" />
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_left,rgb(227_179_65/.25),transparent_55%),linear-gradient(to_bottom,rgb(28_25_23/.35),rgb(28_25_23/.75))]" aria-hidden="true" />
-          <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-            <div>
-              <h2 id="bonuses-title" className="text-white">Đi kèm khóa học</h2>
-              <p className="mt-4 text-lg text-stone-200 leading-relaxed">Mọi thứ cần để bắt đầu ngay trong tuần đầu tiên, có sẵn khi bạn vào học.</p>
-            </div>
-            <Reveal as="ul" className="grid gap-4 sm:grid-cols-2" stagger={0.12}>
-              {bonuses.map(({ title, desc, icon: Icon }, i) => (
-                <li key={title} className={i % 2 === 1 ? 'sm:translate-y-8' : ''}>
-                  <div className="h-full flex gap-4 p-5 rounded-[var(--radius-card)] bg-white/10 backdrop-blur-xl ring-1 ring-white/20 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.6)] transition duration-300 hover:bg-white/[0.16] hover:-translate-y-1">
-                    <span className="w-11 h-11 rounded-full bg-gold-light text-onyx flex items-center justify-center shrink-0"><Icon size={20} aria-hidden="true" /></span>
-                    <span className="min-w-0 flex-1">
-                      {/* notification header line, like a phone alert */}
-                      <span className="flex items-center justify-between gap-3 text-xs text-stone-300">
-                        <span>Minh Tấn Academy</span>
-                        <span>Có sẵn</span>
-                      </span>
-                      <span className="mt-1 block font-semibold text-white leading-snug">{title}</span>
-                      <span className="mt-1 block text-sm text-stone-200 leading-relaxed">{desc}</span>
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </Reveal>
           </div>
         </div>
       </section>

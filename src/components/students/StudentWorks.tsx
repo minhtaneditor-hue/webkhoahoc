@@ -7,9 +7,9 @@ import { parseMedia, sideThumbnail, WORK_CATEGORIES, type ParsedMedia } from '@/
 import { COUNTRY_BY_CODE } from '@/lib/countries';
 import type { StudentWork } from '@/lib/content';
 
-type Side = { label: 'Trước' | 'Sau'; media: ParsedMedia | null; thumb: string | null };
+export type Side = { label: 'Trước' | 'Sau'; media: ParsedMedia | null; thumb: string | null };
 
-function sidesOf(w: StudentWork): Side[] {
+export function sidesOf(w: StudentWork): Side[] {
   const before = parseMedia(w.before_url);
   const after = parseMedia(w.after_url);
   const sides: Side[] = [];
@@ -18,7 +18,7 @@ function sidesOf(w: StudentWork): Side[] {
   return sides;
 }
 
-function placeOf(w: StudentWork) {
+export function placeOf(w: StudentWork) {
   const c = w.country ? COUNTRY_BY_CODE[w.country] : null;
   if (!c) return w.city || null;
   return `${w.city ? `${w.city}, ` : ''}${c.name}`;
@@ -169,7 +169,7 @@ function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void 
   );
 }
 
-function Player({ side, vertical }: { side: Side; vertical: boolean }) {
+export function Player({ side, vertical }: { side: Side; vertical: boolean }) {
   const { media, thumb } = side;
   const frame = `relative w-full overflow-hidden rounded-[var(--radius-img)] bg-black ${vertical ? 'aspect-[9/16] max-h-[70dvh] mx-auto' : 'aspect-video'}`;
 
