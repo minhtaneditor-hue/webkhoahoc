@@ -71,9 +71,7 @@ export default class SecuritySDK {
         const start = performance.now();
         pause();
         if (performance.now() - start > 100) this.triggerViolation('devtools_detected');
-        if (window.outerWidth - window.innerWidth > 200 || window.outerHeight - window.innerHeight > 200) {
-          this.triggerViolation('devtools_docked');
-        }
+        // No outer/inner window size check: browser zoom and side panels trip it and locked real students out
       }, 1000);
       this.cleanups.push(() => clearInterval(trap));
       this.listen(document, 'keydown', (e: KeyboardEvent) => this.handleShortcuts(e));
