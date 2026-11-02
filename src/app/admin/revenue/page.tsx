@@ -72,7 +72,7 @@ function RevenueBars({ buckets }: { buckets: { key: string; label: string; value
               {h > 0 && (
                 <path
                   d={`M${x},${H - padB} V${top + Math.min(4, h)} Q${x},${top} ${x + Math.min(4, barW / 2)},${top} H${x + barW - Math.min(4, barW / 2)} Q${x + barW},${top} ${x + barW},${top + Math.min(4, h)} V${H - padB} Z`}
-                  fill="#A16207"
+                  fill="#A84E3C"
                   opacity={hover === null || hover === i ? 1 : 0.45}
                 />
               )}

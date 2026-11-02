@@ -21,20 +21,20 @@ const beVietnam = Be_Vietnam_Pro({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
   title: {
-    default: "Minh Tấn Academy | Khóa học làm video & sáng tạo nội dung",
-    template: "%s | Minh Tấn Academy",
+    default: "TẤN VA | Từ góc nhìn đến câu chuyện",
+    template: "%s | TẤN VA",
   },
   description: "Học làm video, xây dựng thương hiệu cá nhân và biến nội dung thành tài sản cùng Minh Tấn. Khóa học, ebook, preset và coaching 1:1.",
   openGraph: {
     type: "website",
     locale: "vi_VN",
-    siteName: "Minh Tấn Academy",
+    siteName: "TẤN VA",
     images: ["/asset/avatar/hero_expert.jpg"],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1C1917",
+  themeColor: "#242321",
 };
 
 import Navbar from "@/components/Navbar";

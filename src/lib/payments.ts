@@ -186,10 +186,10 @@ async function emailAssetBuyer(supabase: SupabaseClient, resend: Resend, payment
     to,
     subject: `Đã thanh toán: ${asset.title}`,
     html: `
-      <div style="font-family: 'Be Vietnam Pro', Arial, sans-serif; color: #1C1917; max-width: 520px; margin: 0 auto; padding: 32px;">
+      <div style="font-family: 'Be Vietnam Pro', Arial, sans-serif; color: #242321; max-width: 520px; margin: 0 auto; padding: 32px;">
         <h1 style="font-size: 24px; margin: 0 0 12px;">Cảm ơn ${esc(payment.buyer_name || 'bạn')}!</h1>
         <p style="font-size: 15px; line-height: 1.6;">Minh Tấn Academy đã nhận thanh toán cho <strong>${esc(asset.title)}</strong> (mã đơn ${payment.order_id}).</p>
-        <p style="margin: 28px 0;"><a href="${link}" style="background: #A16207; color: #fff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700;">Tải về</a></p>
+        <p style="margin: 28px 0;"><a href="${link}" style="background: #A84E3C; color: #fff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700;">Tải về</a></p>
         <p style="font-size: 13px; color: #78716C;">Giữ email này để tải lại khi cần. Cần hỗ trợ, trả lời email này hoặc nhắn Zalo cho Minh Tấn.</p>
       </div>
     `,

@@ -1,24 +1,29 @@
 @import "tailwindcss";
 
 /* =====================================================================
-   MINH TẤN ACADEMY — Design system "Sang trọng đen – vàng"
-   Source of truth: design-system/minh-tan-academy/MASTER.md (UI UX Pro Max)
+   TẤN VA — Brand Kit 1.0 "Cinematic Ember"
+   Burgundy #5A1F25 · Brick Red #A84E3C · Terracotta #C67654 · Sand Beige #DDC3A7
+   Ivory #F5F0E9 · Charcoal #242321. Token names are kept from the first design
+   system (gold = brand accent) so every page picks the new palette up at once.
    ===================================================================== */
 @theme {
   /* Core palette */
-  --color-ivory: #F4F2EE;          /* page background: warm stone, one tone below white cards */
-  --color-ink: #0C0A09;            /* main text */
-  --color-onyx: #1C1917;           /* primary / dark surfaces */
-  --color-stone: #44403C;          /* secondary */
-  --color-gold: #A16207;           /* accent / CTA on light (4.9:1 on white) */
-  --color-gold-hover: #854D0E;
-  --color-gold-light: #E3B341;     /* accent on dark surfaces (8:1 on onyx) */
-  --color-gold-soft: #FEF3C7;      /* tinted backgrounds, badges */
+  --color-ivory: #F5F0E9;          /* brand Ivory: page background */
+  --color-ink: #1F1C1B;            /* main text, a step under Charcoal */
+  --color-onyx: #242321;           /* brand Charcoal: dark buttons, text on light accents */
+  --color-burgundy: #5A1F25;       /* brand Burgundy: deep surfaces */
+  --color-stone: #4A403C;          /* secondary */
+  --color-gold: #A84E3C;           /* brand Brick Red: accent / CTA on light (5.5:1 on white) */
+  --color-gold-hover: #5A1F25;     /* Burgundy */
+  --color-gold-light: #E8956B;     /* ember highlight from the brand gradient: accent on dark (6.5:1 on Charcoal) */
+  --color-gold-soft: #F1E2D2;      /* Sand Beige, lightened: tinted backgrounds, badges */
+  --color-terracotta: #C67654;
+  --color-sand: #DDC3A7;
   --color-card: #FFFFFF;
-  --color-muted: #EBE8E3;
-  --color-muted-foreground: #57534E; /* 7:1 on ivory */
-  --color-line: #E7E5E4;
-  --color-line-strong: #D6D3D1;
+  --color-muted: #EDE4D9;
+  --color-muted-foreground: #6A5A53; /* 5.9:1 on Ivory */
+  --color-line: #E6DCD0;
+  --color-line-strong: #D3C4B3;
   --color-danger: #DC2626;
   --color-success: #15803D;
 
@@ -46,7 +51,7 @@
   /* Resting surfaces carry no shadow; depth comes from tone steps. --shadow-lift is for overlays only */
   --shadow-soft: none;
   --shadow-card: none;
-  --shadow-lift: 0 24px 48px -12px rgba(12, 10, 9, 0.25);
+  --shadow-lift: 0 24px 48px -12px rgba(90, 31, 37, 0.28);
 
   /* Motion: subtle and never instant */
   --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
@@ -181,10 +186,12 @@
     transition: transform 700ms var(--ease-lux);
   }
   &:hover::after { transform: translateX(120%); }
+  /* Cinematic Ember: terracotta into brick red into burgundy */
   background-color: var(--color-gold);
+  background-image: linear-gradient(135deg, #B35A3F 0%, #A84E3C 45%, #7A2E2E 100%);
   color: #fff;
   box-shadow: var(--shadow-soft);
-  &:hover { background-color: var(--color-gold-hover); box-shadow: var(--shadow-card); }
+  &:hover { background-color: var(--color-gold-hover); background-image: linear-gradient(135deg, #A84E3C 0%, #5A1F25 100%); box-shadow: var(--shadow-card); }
 }
 
 @utility btn-dark {
@@ -238,9 +245,13 @@
   &:hover img { transform: scale(1.03); }
 }
 
+/* Dark sections: the brand's "Cinematic Ember", a burgundy night lit from one corner */
 @utility surface-dark {
   background-color: var(--color-onyx);
-  color: #F5F5F4;
+  background-image:
+    radial-gradient(ellipse 70% 60% at 100% 0%, rgba(198, 118, 84, 0.22), transparent 70%),
+    linear-gradient(160deg, #4A1A1F 0%, #2C1E1E 45%, #242321 100%);
+  color: #F5F0E9;
 }
 
 @utility badge {

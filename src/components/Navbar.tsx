@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import BrandMark from './BrandMark';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import {
@@ -38,13 +39,10 @@ export const isAppShellRoute = (pathname: string | null) =>
 
 export function Logo({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" className="group flex items-center gap-3 min-h-[44px]" aria-label="Minh Tấn Academy — Trang chủ">
-      <span className={`w-9 h-9 rounded-md flex items-center justify-center font-display text-xl font-bold transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:-rotate-[10deg] group-hover:scale-110 ${light ? 'bg-gold-light text-onyx' : 'bg-onyx text-gold-light'}`}>
-        M
-      </span>
-      <span className="leading-none">
-        <span className={`block font-display text-xl font-bold tracking-tight ${light ? 'text-white' : 'text-ink'}`}>Minh Tấn</span>
-        <span className={`block text-[10px] font-semibold tracking-[0.25em] uppercase ${light ? 'text-gold-light' : 'text-gold'}`}>Academy</span>
+    <Link href="/" className="group flex items-center gap-2.5 min-h-[44px]" aria-label="TẤN VA — Trang chủ">
+      <BrandMark size={38} className="transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-110 group-hover:-rotate-[6deg]" />
+      <span className="font-sans text-[1.35rem] font-extrabold tracking-tight leading-none">
+        <span className={light ? 'text-white' : 'text-ink'}>TẤN</span> <span className={light ? 'text-gold-light' : 'text-gold'}>VA</span>
       </span>
     </Link>
   );

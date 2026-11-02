@@ -240,7 +240,7 @@ export default function CourseManagement() {
               <ImageUpload id="c-thumb" folder="courses" value={editing.thumbnail_url || ''} onChange={(url) => setEditing((cur: any) => ({ ...cur, thumbnail_url: url }))} />
             </Field>
             <label className="flex items-center gap-3 min-h-[44px]">
-              <input type="checkbox" className="w-5 h-5 accent-[#A16207]" checked={!!editing.is_published} onChange={(e) => setEditing({ ...editing, is_published: e.target.checked })} />
+              <input type="checkbox" className="w-5 h-5 accent-[#A84E3C]" checked={!!editing.is_published} onChange={(e) => setEditing({ ...editing, is_published: e.target.checked })} />
               <span className="font-semibold">Mở bán công khai</span>
             </label>
             <div className="flex justify-end gap-2 pt-2">
@@ -271,7 +271,7 @@ export default function CourseManagement() {
               <textarea id="l-content" className="input min-h-[120px]" value={lessonForm.content || ''} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
             </Field>
             <label className="flex items-center gap-3 min-h-[44px]">
-              <input type="checkbox" className="w-5 h-5 accent-[#A16207]" checked={!!lessonForm.is_free} onChange={(e) => setLessonForm({ ...lessonForm, is_free: e.target.checked })} />
+              <input type="checkbox" className="w-5 h-5 accent-[#A84E3C]" checked={!!lessonForm.is_free} onChange={(e) => setLessonForm({ ...lessonForm, is_free: e.target.checked })} />
               <span className="font-semibold">Cho học thử miễn phí</span>
             </label>
             <div className="flex justify-end gap-2">

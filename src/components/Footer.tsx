@@ -84,7 +84,8 @@ export default function Footer() {
         <div className="mt-14 grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-sm">
             <Logo light />
-            <p className="mt-5 text-stone-400 text-[15px] leading-relaxed">
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.25em] text-gold-light">Từ góc nhìn đến câu chuyện</p>
+            <p className="mt-4 text-stone-400 text-[15px] leading-relaxed">
               Học làm video bài bản từ người làm nghề truyền hình, để mỗi video bạn quay ra đều trở thành tài sản.
             </p>
             <div className="mt-6 flex gap-3">
@@ -115,7 +116,7 @@ export default function Footer() {
       </div>
 
       <div className="container-lux mt-14 py-8 pb-24 sm:pb-8 sm:pr-40 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between text-sm text-stone-400">
-        <p>© {new Date().getFullYear()} Minh Tấn Academy. Bảo lưu mọi quyền.</p>
+        <p>© {new Date().getFullYear()} TẤN VA · Minh Tấn Video Advisor. Bảo lưu mọi quyền.</p>
         <div className="flex items-center gap-5 flex-wrap">
           <span className="flex items-center gap-2"><ShieldCheck size={16} aria-hidden="true" /> Bảo mật SSL</span>
           <span className="flex items-center gap-2"><CreditCard size={16} aria-hidden="true" /> Thanh toán QR ngân hàng</span>
