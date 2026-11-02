@@ -29,7 +29,6 @@ const navLinks = [
   { name: 'Học viên', href: '/students' },
   { name: 'Dự án', href: '/work' },
   { name: 'Sản phẩm khác', href: '/shop' },
-  { name: 'Về Minh Tấn', href: '/about' },
 ];
 
 // Routes with their own full-screen chrome
