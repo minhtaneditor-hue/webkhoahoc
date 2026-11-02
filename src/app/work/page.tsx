@@ -10,6 +10,9 @@ import SectionHeading from '@/components/SectionHeading';
 const CATEGORY_LABELS: Record<string, string> = {
   'game-show': 'Game show',
   TV: 'Truyền hình',
+  tvc: 'TVC & Viral',
+  'real-estate': 'Bất động sản & Vlog',
+  talent: 'Vũ đạo',
   'short-video': 'Video ngắn',
   cinematic: 'Điện ảnh',
   brand: 'Thương hiệu',
@@ -125,8 +128,11 @@ export default function WorkPage() {
   );
 }
 
-// Converts YouTube watch/short links into embeddable URLs
+// Converts YouTube and Vimeo links into embeddable URLs (Vimeo unlisted links carry a hash)
 function toEmbedUrl(url: string) {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
-  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1`;
+  const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)(?:\/(\w+))?/);
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1${vm[2] ? `&h=${vm[2]}` : ''}`;
+  return url;
 }
