@@ -22,7 +22,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ videoId:
     const res = await r2Get(`${videoId}/${file}`);
     if (!res.ok) return new NextResponse('Not found', { status: 404, headers: noStore });
     const pt = encodeURIComponent(new URL(req.url).searchParams.get('pt')!);
-    const body = (await res.text()).replace(/^﻿/, '').split(/\r?\n/).map((line) => {
+    const lines = (await res.text()).replace(/^﻿/, '').split(/\r?\n/);
+    // Encrypted segments go straight to R2 through signed URLs (no function call per segment);
+    // they are useless without the keys, which stay behind the rate-limited key endpoint.
+    const out = await Promise.all(lines.map(async (line) => {
       if (line.startsWith('#EXT-X-KEY')) {
         // tvndrm://key/<videoId>/<n> -> protected key endpoint
         return line.replace(/URI="[^"]*"/, (m) => {
@@ -30,8 +33,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ videoId:
           return `URI="/api/drm/keys/${videoId}/${n}?pt=${pt}"`;
         });
       }
-      return line && !line.startsWith('#') ? `${line.trim()}?pt=${pt}` : line;
-    }).join('\n');
+      if (!line || line.startsWith('#')) return line;
+      const name = line.trim();
+      return name.endsWith('.ts') ? r2SignedUrl(`${videoId}/${name}`, 6 * 3600) : `${name}?pt=${pt}`;
+    }));
+    const body = out.join('\n');
     return new NextResponse(body, { headers: { ...noStore, 'Content-Type': 'application/vnd.apple.mpegurl' } });
   }
 
