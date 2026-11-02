@@ -6,12 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import { Logo } from '@/components/Navbar';
-import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart } from 'lucide-react';
+import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart, Activity } from 'lucide-react';
 
 const sidebarItems = [
   { group: 'Tổng quan', items: [
     { title: 'Bảng điều khiển', icon: BarChart3, href: '/admin' },
     { title: 'Doanh thu', icon: TrendingUp, href: '/admin/revenue' },
+    { title: 'Truy cập website', icon: Activity, href: '/admin/traffic' },
   ]},
   { group: 'Bán hàng', items: [
     { title: 'Đơn hàng', icon: CreditCard, href: '/admin/orders' },
