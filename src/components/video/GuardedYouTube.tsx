@@ -42,6 +42,7 @@ export default function GuardedYouTube({ videoId, title, watermark, autoPlay = f
   const player = useRef<any>(null);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [ended, setEnded] = useState(false);
   const [muted, setMuted] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -60,7 +61,7 @@ export default function GuardedYouTube({ videoId, title, watermark, autoPlay = f
         playerVars: { controls: 0, disablekb: 1, fs: 0, rel: 0, modestbranding: 1, iv_load_policy: 3, playsinline: 1, autoplay: autoPlay ? 1 : 0 },
         events: {
           onReady: (e: any) => { setReady(true); setDuration(e.target.getDuration() || 0); },
-          onStateChange: (e: any) => setPlaying(e.data === 1),
+          onStateChange: (e: any) => { setPlaying(e.data === 1); setEnded(e.data === 0); },
         },
       });
     });
@@ -84,7 +85,7 @@ export default function GuardedYouTube({ videoId, title, watermark, autoPlay = f
   }, []);
 
   const p = () => player.current;
-  const toggle = () => { if (!ready) return; playing ? p().pauseVideo() : p().playVideo(); };
+  const toggle = () => { if (!ready) return; if (ended) { p().seekTo(0, true); setEnded(false); } playing ? p().pauseVideo() : p().playVideo(); };
   const seek = (v: number) => { p()?.seekTo(v, true); setTime(v); };
   const toggleMute = () => { if (!ready) return; muted ? p().unMute() : p().mute(); setMuted(!muted); };
   const changeSpeed = () => { const next = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length]; p()?.setPlaybackRate(next); setSpeed(next); };
@@ -101,6 +102,21 @@ export default function GuardedYouTube({ videoId, title, watermark, autoPlay = f
           <span className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-black/55 backdrop-blur-sm text-white flex items-center justify-center" aria-hidden="true"><Play size={28} className="ml-1" /></span>
         )}
       </button>
+
+      {/* While paused or not started YouTube prints its own video title top-left: cover it with ours (the Unica title) */}
+      {!playing && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black via-black to-black/0 px-4 pt-3" aria-hidden="true">
+          <p className="text-white text-sm md:text-base font-semibold truncate">{title}</p>
+        </div>
+      )}
+
+      {/* End screen: hide YouTube's "more videos" grid */}
+      {ended && (
+        <div className="pointer-events-none absolute inset-0 bg-black flex flex-col items-center justify-center gap-3 text-white">
+          <span className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center"><Play size={28} className="ml-1" aria-hidden="true" /></span>
+          <span className="text-sm font-semibold">Xem lại bài học</span>
+        </div>
+      )}
 
       {watermark && (
         <span className="pointer-events-none absolute text-[11px] font-semibold text-white/25 transition-all duration-[2000ms]" style={{ left: `${mark.x}%`, top: `${mark.y}%` }} aria-hidden="true">{watermark}</span>
