@@ -16,11 +16,16 @@ export async function GET() {
   if (!key) return NextResponse.json({ ok: false, problem: 'RESEND_API_KEY is not set on this deployment' });
 
   const to = isAdmin(user.email) ? user.email! : 'delivered@resend.dev';
+  const meta = { sentTo: to, keyLooksRight: key.trim().startsWith('re_') && key.trim().length > 30, keyLength: key.length, hasSpaces: key !== key.trim() };
+  try {
   const { data, error } = await new Resend(key).emails.send({
     from: 'TẤN VA <customer@minhtanacademy.com>',
     to,
     subject: 'Email thử từ TẤN VA',
     html: '<p>Nếu bạn đọc được email này, website đã gửi được mail qua Resend.</p>',
   });
-  return NextResponse.json({ ok: !error, sentTo: to, id: data?.id, error, keyLooksRight: key.startsWith('re_') && key.length > 30, keyLength: key.length });
+  return NextResponse.json({ ok: !error, id: data?.id, error, ...meta });
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, thrown: String(e?.message || e), ...meta });
+  }
 }
