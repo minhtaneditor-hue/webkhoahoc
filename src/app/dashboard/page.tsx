@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
+import { isAdmin } from '@/lib/admin';
 import { Loader2, ArrowRight, BookOpen, ShoppingBag, Receipt, LogOut } from 'lucide-react';
 
 
@@ -31,7 +32,17 @@ export default function StudentDashboard() {
         supabase.from('payments').select('id, order_id, amount, status, created_at, courses ( title )').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
       ]);
 
-      setEnrollments(enrollmentData || []);
+      // Admin accounts own every course: list all of them as active enrolments
+      if (isAdmin(user.email)) {
+        const { data: courses } = await supabase.from('courses').select('id, title, description, created_at').order('created_at');
+        const own = new Set((enrollmentData || []).map((e) => e.course_id));
+        setEnrollments([
+          ...(enrollmentData || []),
+          ...(courses || []).filter((c) => !own.has(c.id)).map((c) => ({ course_id: c.id, status: 'active', enrolled_at: c.created_at, courses: c })),
+        ]);
+      } else {
+        setEnrollments(enrollmentData || []);
+      }
       setPayments(paymentData || []);
 
       await supabase.from('users').update({ last_active_at: new Date().toISOString() }).eq('id', user.id);
