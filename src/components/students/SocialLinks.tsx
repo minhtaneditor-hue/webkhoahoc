@@ -1,3 +1,5 @@
+'use client';
+
 import { Globe } from 'lucide-react';
 
 // Brand marks drawn inline (lucide has no brand icons). 24x24, currentColor.

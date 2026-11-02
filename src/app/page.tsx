@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Check, Quote, PlayCircle } from 'lucide-react';
+import { ArrowRight, Check, PlayCircle } from 'lucide-react';
 import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import FaqList from '@/components/FaqList';
@@ -8,6 +8,7 @@ import { ShutterImage, Reveal } from '@/components/motion/Motion';
 import ShowreelVideo from '@/components/motion/ShowreelVideo';
 import CountUp from '@/components/motion/CountUp';
 import FeedbackMarquee from '@/components/FeedbackMarquee';
+import StudentsMarquee from '@/components/students/StudentsMarquee';
 import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWorks } from '@/lib/content';
 import StudentWorks from '@/components/students/StudentWorks';
 import { toYoutubeId } from '@/lib/site-settings';
@@ -135,27 +136,10 @@ export default async function Home() {
             </dl>
           </div>
 
-          <Reveal as="ul" from="mask" className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {students.filter((st) => st.quote).slice(0, 4).map((st) => (
-              <li key={st.id}>
-                <figure className="group h-full flex flex-col">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-img)] ring-hover">
-                    <Image src={st.avatar_url || '/asset/avatar/hero_expert.jpg'} alt={st.name} unoptimized={!!st.avatar_url?.startsWith('http')} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.05]" />
-                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-onyx/90 to-transparent" aria-hidden="true" />
-                    {st.results && <span className="badge absolute top-4 left-4 !bg-gold-light !text-onyx">{st.results}</span>}
-                    <figcaption className="absolute left-5 right-5 bottom-5">
-                      <span className="block font-display text-2xl font-bold text-white">{st.name}</span>
-                      <span className="block text-sm text-stone-300">{st.title}</span>
-                    </figcaption>
-                  </div>
-                  <blockquote className="mt-5 text-lg text-stone-200 leading-relaxed">
-                    <Quote size={20} className="inline -mt-1 mr-2 text-gold-light" aria-hidden="true" />{st.quote}
-                  </blockquote>
-                </figure>
-              </li>
-            ))}
-          </Reveal>
         </div>
+
+        {/* All students with a photo, scrolling left to right */}
+        <div className="mt-14"><StudentsMarquee students={students} /></div>
 
         {featuredWorks.length > 0 && (
           <div className="container-lux mt-20">

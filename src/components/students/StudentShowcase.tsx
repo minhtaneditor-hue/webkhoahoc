@@ -176,6 +176,13 @@ export default function StudentShowcase({ works, videos }: { works: StudentWork[
 
       {profiles.length === 0 && kind !== 'video' && <p className="mt-8 text-muted-foreground">Chưa có sản phẩm trong mục này.</p>}
 
+      {/* Closing note under the cards: the list shown is a sample */}
+      <div className="mt-10 flex justify-center">
+        <p className="w-full max-w-3xl rounded-[var(--radius-card)] surface-dark px-6 py-8 md:py-10 text-center font-display text-2xl md:text-3xl leading-snug text-white">
+          Và còn nhiều học viên cá nhân và <span className="text-gold-light">trung tâm đào tạo</span> khác nữa.
+        </p>
+      </div>
+
       {kind !== 'image' && videos.length > 0 && (
         <section id="video-feedback" aria-labelledby="video-feedback-title" className="mt-16 scroll-mt-40">
           <h2 id="video-feedback-title" className="text-3xl md:text-4xl">Video feedback từ học viên</h2>
