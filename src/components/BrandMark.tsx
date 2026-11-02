@@ -6,8 +6,8 @@ export default function BrandMark({ size = 36, className = '' }: { size?: number
     <Image
       src="/brand/tan-va-mark.png"
       alt=""
-      width={166}
-      height={154}
+      width={493}
+      height={452}
       priority
       className={`!rounded-none object-contain ${className}`}
       style={{ width: size, height: 'auto' }}
