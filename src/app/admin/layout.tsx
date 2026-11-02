@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import { Logo } from '@/components/Navbar';
-import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard } from 'lucide-react';
+import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart } from 'lucide-react';
 
 const sidebarItems = [
   { group: 'Tổng quan', items: [
@@ -27,6 +27,7 @@ const sidebarItems = [
     { title: 'Ảnh feedback', icon: MessageSquareQuote, href: '/admin/feedback' },
     { title: 'Câu hỏi thường gặp', icon: HelpCircle, href: '/admin/faqs' },
     { title: 'Sản phẩm học viên', icon: Clapperboard, href: '/admin/student-works' },
+    { title: 'Video feedback', icon: MessageSquareHeart, href: '/admin/feedback-videos' },
     { title: 'Dự án', icon: Briefcase, href: '/admin/work' },
   ]},
 ];

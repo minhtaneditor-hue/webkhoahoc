@@ -4,7 +4,8 @@ import Image from 'next/image';
 import { Quote, ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
-import { getStudents, getFeedbackImages, getStudentWorks, studentPlaces } from '@/lib/content';
+import { getStudents, getFeedbackImages, getStudentWorks, getFeedbackVideos, studentPlaces } from '@/lib/content';
+import FeedbackVideos from '@/components/students/FeedbackVideos';
 import StudentWorks from '@/components/students/StudentWorks';
 import WorldStudents from '@/components/students/WorldStudents';
 
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 
 export default async function StudentsPage() {
-  const [students, feedback, works] = await Promise.all([getStudents(), getFeedbackImages(), getStudentWorks()]);
+  const [students, feedback, works, videos] = await Promise.all([getStudents(), getFeedbackImages(), getStudentWorks(), getFeedbackVideos()]);
   const places = studentPlaces(students, works);
 
   return (
@@ -32,6 +33,14 @@ export default async function StudentsPage() {
           <h2 id="works-title">Sản phẩm của học viên</h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl">Bấm vào từng sản phẩm để xem lớn. Nhãn Trước / Sau cho thấy học viên làm video thế nào trước và sau khóa học.</p>
           <div className="mt-8"><StudentWorks works={works} /></div>
+        </section>
+      )}
+
+      {videos.length > 0 && (
+        <section id="video-feedback" aria-labelledby="video-feedback-title" className="container-lux pb-20 scroll-mt-24">
+          <h2 id="video-feedback-title">Video feedback từ học viên</h2>
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl">Học viên tự kể về khóa học và về Minh Tấn. Bấm vào để xem.</p>
+          <div className="mt-8"><FeedbackVideos videos={videos} /></div>
         </section>
       )}
 

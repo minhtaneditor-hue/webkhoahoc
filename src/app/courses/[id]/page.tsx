@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { supabase } from '@/utils/supabase';
 import { calculateDiscount } from '@/lib/promo';
 import { formatVND } from '@/lib/supabase-public';
+import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, RotateCcw, X, ChevronLeft } from 'lucide-react';
 
 type Status = { type: 'success' | 'error'; text: string } | null;
@@ -32,6 +33,7 @@ export default function CourseDetails() {
 
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [promoCode, setPromoCode] = useState('');
@@ -52,9 +54,12 @@ export default function CourseDetails() {
       const { data: courseData } = await supabase.from('courses').select('*').eq('id', id).maybeSingle();
       // lesson_outline is a public view: titles for everyone, video_url only for free preview lessons
       const { data: lessonsData } = await supabase.from('lesson_outline').select('*').eq('course_id', id).order('order_index', { ascending: true });
+      const { data: chapterData } = await supabase.from('chapters').select('id, title, order_index').eq('course_id', id).order('order_index');
 
       setCourse(courseData);
-      setLessons(lessonsData || []);
+      setChapters(chapterData || []);
+      // Study order: chapter by chapter, so "first lesson" links and numbering follow the outline
+      setLessons(lessonsInOrder(chapterData || [], lessonsData || []));
 
       if (currentUser) {
         const { data: enrollmentData } = await supabase.from('enrollments').select('*').eq('user_id', currentUser.id).eq('course_id', id).eq('status', 'active').maybeSingle();
@@ -198,9 +203,19 @@ export default function CourseDetails() {
           {/* Curriculum */}
           <section aria-labelledby="curriculum-title" id="curriculum">
             <h2 id="curriculum-title" className="text-4xl">Lộ trình khóa học</h2>
-            <p className="mt-2 text-muted-foreground">{lessons.length} bài học · bài có biểu tượng ▶ xem thử được miễn phí</p>
-            <ol className="mt-8 space-y-2">
-              {lessons.map((lesson, idx) => {
+            <p className="mt-2 text-muted-foreground">{chapters.length > 0 ? `${chapters.length} chương · ` : ''}{lessons.length} bài học · bài có biểu tượng ▶ xem thử được miễn phí</p>
+            <div className="mt-8 space-y-8">
+            {groupByChapter(chapters, lessons).map((g) => (
+            <section key={g.chapter?.id || 'loose'} aria-label={g.chapter?.title || 'Bài học'}>
+            {chapters.length > 0 && (
+              <h3 className="flex items-baseline justify-between gap-4 border-b border-line pb-3 text-2xl">
+                <span>{g.chapter ? g.chapter.title : 'Bài học thêm'}</span>
+                <span className="font-sans text-sm font-normal text-muted-foreground shrink-0">{g.lessons.length} bài</span>
+              </h3>
+            )}
+            <ol className="mt-3 space-y-2">
+              {g.lessons.map((lesson) => {
+                const idx = lessons.indexOf(lesson);
                 const canWatch = lesson.is_free || enrolled;
                 return (
                   <li key={lesson.id} className="card flex items-center gap-4 p-4 md:p-5">
@@ -221,8 +236,11 @@ export default function CourseDetails() {
                   </li>
                 );
               })}
-              {lessons.length === 0 && <li className="card p-6 text-muted-foreground">Nội dung đang được cập nhật.</li>}
             </ol>
+            </section>
+            ))}
+            {lessons.length === 0 && <p className="card p-6 text-muted-foreground">Nội dung đang được cập nhật.</p>}
+            </div>
           </section>
         </div>
 

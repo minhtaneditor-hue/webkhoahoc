@@ -5,13 +5,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
-import { Plus, Pencil, Trash2, Database, ListVideo, ExternalLink, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Database, ListVideo, ExternalLink, X, ArrowUp, ArrowDown, FolderPlus } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, Modal, Field, StatusBadge } from '@/components/admin/AdminUI';
 import ImageUpload from '@/components/admin/ImageUpload';
 import { revalidateSite } from '@/lib/revalidate';
+import { groupByChapter, type Chapter } from '@/lib/curriculum';
 
 const emptyCourse = { title: '', slug: '', description: '', price: 0, old_price: '', thumbnail_url: '', is_published: false };
-const emptyLesson = { title: '', video_url: '', content: '', is_free: false };
+const emptyLesson = { title: '', video_url: '', content: '', is_free: false, chapter_id: '' };
 
 const slugify = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
@@ -26,6 +27,7 @@ export default function CourseManagement() {
   const [editing, setEditing] = useState<any>(null); // course form state (null = closed)
   const [lessonsFor, setLessonsFor] = useState<any>(null); // course whose lessons are open
   const [lessons, setLessons] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [lessonForm, setLessonForm] = useState<any>(null);
   const [busy, setBusy] = useState(false);
 
@@ -40,8 +42,12 @@ export default function CourseManagement() {
   useEffect(() => { load(); }, [load]);
 
   const loadLessons = useCallback(async (courseId: string) => {
-    const { data } = await supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index');
+    const [{ data }, { data: ch }] = await Promise.all([
+      supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index'),
+      supabase.from('chapters').select('id, title, order_index').eq('course_id', courseId).order('order_index'),
+    ]);
     setLessons(data || []);
+    setChapters(ch || []);
   }, []);
 
   async function saveCourse(e: React.FormEvent) {
@@ -96,6 +102,7 @@ export default function CourseManagement() {
       video_url: lessonForm.video_url.trim() || null,
       content: lessonForm.content || null,
       is_free: !!lessonForm.is_free,
+      chapter_id: lessonForm.chapter_id || null,
     };
     const { error } = lessonForm.id
       ? await supabase.from('lessons').update(payload).eq('id', lessonForm.id)
@@ -116,9 +123,10 @@ export default function CourseManagement() {
     revalidateSite();
   }
 
-  async function moveLesson(index: number, dir: -1 | 1) {
-    const a = lessons[index];
-    const b = lessons[index + dir];
+  // Swap with the neighbour inside the same chapter
+  async function moveLesson(group: any[], index: number, dir: -1 | 1) {
+    const a = group[index];
+    const b = group[index + dir];
     if (!a || !b) return;
     await Promise.all([
       supabase.from('lessons').update({ order_index: b.order_index }).eq('id', a.id),
@@ -127,6 +135,45 @@ export default function CourseManagement() {
     loadLessons(lessonsFor.id);
     revalidateSite();
   }
+
+  async function addChapter() {
+    const title = prompt('Tên chương mới', `Chương ${chapters.length + 1}: `)?.trim();
+    if (!title) return;
+    const { error } = await supabase.from('chapters').insert({ course_id: lessonsFor.id, title, order_index: (chapters.at(-1)?.order_index ?? 0) + 1 });
+    if (error) return setNotice({ type: 'error', text: `Không tạo được chương: ${error.message}. Có thể bạn chưa chạy migration 008.` });
+    loadLessons(lessonsFor.id);
+    revalidateSite();
+  }
+
+  async function renameChapter(ch: Chapter) {
+    const title = prompt('Đổi tên chương', ch.title)?.trim();
+    if (!title || title === ch.title) return;
+    await supabase.from('chapters').update({ title }).eq('id', ch.id);
+    loadLessons(lessonsFor.id);
+    revalidateSite();
+  }
+
+  async function deleteChapter(ch: Chapter) {
+    if (!confirm(`Xóa “${ch.title}”? Các bài trong chương vẫn được giữ, chuyển sang mục “Chưa xếp chương”.`)) return;
+    await supabase.from('chapters').delete().eq('id', ch.id);
+    loadLessons(lessonsFor.id);
+    revalidateSite();
+  }
+
+  async function moveChapter(index: number, dir: -1 | 1) {
+    const a = chapters[index];
+    const b = chapters[index + dir];
+    if (!a || !b) return;
+    await Promise.all([
+      supabase.from('chapters').update({ order_index: b.order_index }).eq('id', a.id),
+      supabase.from('chapters').update({ order_index: a.order_index }).eq('id', b.id),
+    ]);
+    loadLessons(lessonsFor.id);
+    revalidateSite();
+  }
+
+  const iconBtn = 'w-9 h-9 rounded-md flex items-center justify-center hover:bg-muted disabled:opacity-30';
+  let lessonNo = 0;
 
   return (
     <div className="space-y-6">
@@ -205,11 +252,17 @@ export default function CourseManagement() {
       </Modal>
 
       {/* Lessons manager */}
-      <Modal title={`Bài học — ${lessonsFor?.title || ''}`} open={!!lessonsFor} onClose={() => setLessonsFor(null)} wide>
+      <Modal title={`Chương & bài học — ${lessonsFor?.title || ''}`} open={!!lessonsFor} onClose={() => setLessonsFor(null)} wide>
         {lessonForm ? (
           <form onSubmit={saveLesson} className="space-y-5">
             <Field id="l-title" label="Tên bài học">
               <input id="l-title" className="input" required value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} />
+            </Field>
+            <Field id="l-chapter" label="Thuộc chương">
+              <select id="l-chapter" className="input" value={lessonForm.chapter_id || ''} onChange={(e) => setLessonForm({ ...lessonForm, chapter_id: e.target.value })}>
+                <option value="">Chưa xếp chương</option>
+                {chapters.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
             </Field>
             <Field id="l-video" label="Video" hint="Link YouTube/Vimeo, hoặc drm:MÃ-VIDEO cho video bảo vệ bằng DRM.">
               <input id="l-video" className="input" value={lessonForm.video_url || ''} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} />
@@ -227,29 +280,49 @@ export default function CourseManagement() {
             </div>
           </form>
         ) : (
-          <div className="space-y-4">
-            {lessons.length === 0 ? (
-              <p className="text-muted-foreground">Khóa học chưa có bài học nào.</p>
-            ) : (
-              <ol className="divide-y divide-line border border-line rounded-md">
-                {lessons.map((l, i) => (
-                  <li key={l.id} className="flex items-center gap-3 p-3">
-                    <span className="w-7 text-center font-display text-xl text-muted-foreground">{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{l.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{l.video_url || 'Chưa có video'}{l.is_free ? ' · Học thử' : ''}</p>
-                    </div>
+          <div className="space-y-5">
+            {lessons.length === 0 && chapters.length === 0 && <p className="text-muted-foreground">Khóa học chưa có chương và bài học. Tạo chương trước, rồi thêm bài vào từng chương.</p>}
+            {groupByChapter(chapters, lessons).map((g, gi) => (
+              <section key={g.chapter?.id || 'loose'} className="border border-line rounded-md">
+                <header className="flex items-center gap-2 p-3 bg-muted rounded-t-md">
+                  <h3 className="flex-1 min-w-0 font-sans text-base font-bold truncate">{g.chapter ? g.chapter.title : 'Chưa xếp chương'} <span className="font-normal text-muted-foreground">· {g.lessons.length} bài</span></h3>
+                  {g.chapter && (
                     <div className="flex gap-1 shrink-0">
-                      <button onClick={() => moveLesson(i, -1)} disabled={i === 0} className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-muted disabled:opacity-30" aria-label="Chuyển lên"><ArrowUp size={16} aria-hidden="true" /></button>
-                      <button onClick={() => moveLesson(i, 1)} disabled={i === lessons.length - 1} className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-muted disabled:opacity-30" aria-label="Chuyển xuống"><ArrowDown size={16} aria-hidden="true" /></button>
-                      <button onClick={() => setLessonForm({ ...l })} className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-muted" aria-label={`Sửa ${l.title}`}><Pencil size={15} aria-hidden="true" /></button>
-                      <button onClick={() => deleteLesson(l)} className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-red-50 hover:text-danger" aria-label={`Xóa ${l.title}`}><Trash2 size={15} aria-hidden="true" /></button>
+                      <button onClick={() => moveChapter(gi, -1)} disabled={gi === 0} className={iconBtn} aria-label="Chuyển chương lên"><ArrowUp size={16} aria-hidden="true" /></button>
+                      <button onClick={() => moveChapter(gi, 1)} disabled={gi >= chapters.length - 1} className={iconBtn} aria-label="Chuyển chương xuống"><ArrowDown size={16} aria-hidden="true" /></button>
+                      <button onClick={() => renameChapter(g.chapter!)} className={iconBtn} aria-label={`Đổi tên ${g.chapter.title}`}><Pencil size={15} aria-hidden="true" /></button>
+                      <button onClick={() => deleteChapter(g.chapter!)} className={`${iconBtn} hover:!bg-red-50 hover:text-danger`} aria-label={`Xóa ${g.chapter.title}`}><Trash2 size={15} aria-hidden="true" /></button>
                     </div>
-                  </li>
-                ))}
-              </ol>
-            )}
-            <button onClick={() => setLessonForm({ ...emptyLesson })} className="btn btn-gold"><Plus size={16} aria-hidden="true" /> Thêm bài học</button>
+                  )}
+                </header>
+                <ol className="divide-y divide-line">
+                  {g.lessons.map((l, i) => (
+                    <li key={l.id} className="flex items-center gap-3 p-3">
+                      <span className="w-7 text-center font-display text-xl text-muted-foreground">{++lessonNo}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{l.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{l.video_url || 'Chưa có video'}{l.is_free ? ' · Học thử' : ''}</p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <button onClick={() => moveLesson(g.lessons, i, -1)} disabled={i === 0} className={iconBtn} aria-label="Chuyển lên"><ArrowUp size={16} aria-hidden="true" /></button>
+                        <button onClick={() => moveLesson(g.lessons, i, 1)} disabled={i === g.lessons.length - 1} className={iconBtn} aria-label="Chuyển xuống"><ArrowDown size={16} aria-hidden="true" /></button>
+                        <button onClick={() => setLessonForm({ ...emptyLesson, ...l, chapter_id: l.chapter_id || '' })} className={iconBtn} aria-label={`Sửa ${l.title}`}><Pencil size={15} aria-hidden="true" /></button>
+                        <button onClick={() => deleteLesson(l)} className={`${iconBtn} hover:!bg-red-50 hover:text-danger`} aria-label={`Xóa ${l.title}`}><Trash2 size={15} aria-hidden="true" /></button>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+                {g.chapter && (
+                  <div className="p-3 border-t border-line">
+                    <button onClick={() => setLessonForm({ ...emptyLesson, chapter_id: g.chapter!.id })} className="btn btn-outline !min-h-[40px] !px-3 text-sm"><Plus size={15} aria-hidden="true" /> Thêm bài vào chương này</button>
+                  </div>
+                )}
+              </section>
+            ))}
+            <div className="flex flex-wrap gap-2">
+              <button onClick={addChapter} className="btn btn-gold"><FolderPlus size={16} aria-hidden="true" /> Thêm chương</button>
+              <button onClick={() => setLessonForm({ ...emptyLesson, chapter_id: chapters.at(-1)?.id || '' })} className="btn btn-outline"><Plus size={16} aria-hidden="true" /> Thêm bài học</button>
+            </div>
           </div>
         )}
       </Modal>

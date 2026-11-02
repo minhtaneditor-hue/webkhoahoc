@@ -69,44 +69,47 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
               {g.label} <span className={`font-sans text-base font-normal ${light ? 'text-stone-400' : 'text-muted-foreground'}`}>· {g.items.length}</span>
             </h3>
           )}
-          <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Every card has the same frame: a 4:3 picture split Trước | Sau, then a fixed-height caption */}
+          <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {g.items.map((w) => {
               const sides = sidesOf(w);
-              const vertical = w.orientation !== 'horizontal';
               const place = placeOf(w);
               return (
-                <li key={w.id}>
-                  <button type="button" onClick={() => show(w)} className="group w-full text-left" aria-label={`Xem ${w.title} của ${w.student_name}`}>
-                    <div className={`grid gap-1.5 overflow-hidden rounded-[var(--radius-img)] ${sides.length === 2 && vertical ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                <li key={w.id} className="h-full">
+                  <button
+                    type="button"
+                    onClick={() => show(w)}
+                    className={`group h-full w-full text-left flex flex-col overflow-hidden rounded-[var(--radius-card)] border transition-shadow hover:shadow-[var(--shadow-lift)] ${light ? 'border-white/10 bg-white/[0.04]' : 'border-line bg-card'}`}
+                    aria-label={`Xem ${w.title} của ${w.student_name}`}
+                  >
+                    <div className={`relative aspect-[4/3] grid gap-px bg-black/20 ${sides.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                       {sides.map((s) => (
-                        <div key={s.label} className={`relative ${vertical ? (sides.length === 2 ? 'aspect-[9/16]' : 'aspect-[4/5]') : 'aspect-video'} bg-onyx overflow-hidden`}>
+                        <div key={s.label} className="relative overflow-hidden bg-onyx">
                           {s.thumb ? (
-                            <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" unoptimized={s.thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                            <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 17vw, (min-width: 640px) 25vw, 50vw" unoptimized={s.thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-stone-800 to-onyx text-stone-400 text-sm">{s.media?.label}</div>
                           )}
-                          {sides.length === 2 && (
-                            <span className={`absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-bold ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/60 text-white'}`}>{s.label}</span>
-                          )}
                           {s.media && s.media.kind !== 'image' && (
                             <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-                              <span className="w-12 h-12 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center text-white transition-transform group-hover:scale-110"><Play size={20} className="ml-0.5" /></span>
+                              <span className="w-11 h-11 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center text-white"><Play size={18} className="ml-0.5" /></span>
                             </span>
                           )}
+                          <span className={`absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/65 text-white'}`}>{s.label}</span>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-4 flex items-start gap-3">
-                      {w.avatar_url && (
-                        <Image src={w.avatar_url} alt="" width={44} height={44} unoptimized={w.avatar_url.startsWith('http')} className="!rounded-full w-11 h-11 object-cover shrink-0" />
-                      )}
-                      <div className="min-w-0">
-                        <p className={`font-display text-xl font-bold leading-snug ${light ? 'text-white' : 'text-ink'}`}>{w.title}</p>
-                        <p className={`mt-1 text-sm ${light ? 'text-stone-300' : 'text-muted-foreground'}`}>
-                          {w.student_name}{w.student_title ? ` · ${w.student_title}` : ''}{place ? ` · ${place}` : ''}
+                    <div className="flex-1 flex flex-col p-4">
+                      <p className={`font-display text-lg font-bold leading-snug line-clamp-2 min-h-[2.75em] ${light ? 'text-white' : 'text-ink'}`}>{w.title}</p>
+                      <div className="mt-3 flex items-center gap-2.5 min-w-0">
+                        {w.avatar_url && (
+                          <Image src={w.avatar_url} alt="" width={32} height={32} unoptimized={w.avatar_url.startsWith('http')} className="!rounded-full w-8 h-8 object-cover shrink-0" />
+                        )}
+                        <p className={`text-sm truncate ${light ? 'text-stone-300' : 'text-muted-foreground'}`}>
+                          <span className={`font-semibold ${light ? 'text-white' : 'text-ink'}`}>{w.student_name}</span>{place ? ` · ${place}` : ''}
                         </p>
-                        {w.result && <span className="badge mt-3">{w.result}</span>}
                       </div>
+                      {w.result && <span className="badge mt-3 self-start max-w-full truncate">{w.result}</span>}
                     </div>
                   </button>
                 </li>

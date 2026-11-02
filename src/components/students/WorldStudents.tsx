@@ -16,7 +16,7 @@ export default function WorldStudents({ places, title = 'Học viên Minh Tấn 
       <div className="container-lux py-20 md:py-28">
         <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
           <Reveal>
-            <h2 id="world-title" className="text-white text-[clamp(1.625rem,4.5vw,3.5rem)] leading-[1.1] max-w-3xl">{title}</h2>
+            <h2 id="world-title" className="text-white text-[clamp(1.625rem,4.5vw,3.5rem)] leading-[1.2] max-w-3xl">{title}</h2>
             <p className="mt-5 text-lg text-stone-300 max-w-xl">
               Từ Việt Nam tới {abroad} quốc gia khác, học viên học online và áp dụng ngay cho công việc ở nơi họ sống.
             </p>

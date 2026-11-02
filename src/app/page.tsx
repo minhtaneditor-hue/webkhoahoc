@@ -92,7 +92,7 @@ export default async function Home() {
           <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_bottom,rgb(28_25_23/.25)_0%,rgb(28_25_23/0)_30%,rgb(28_25_23/.55)_60%,rgb(28_25_23/.92)_100%)]" aria-hidden="true" />
           <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgb(28_25_23/.6),transparent_65%)]" aria-hidden="true" />
           <Reveal className="relative w-full px-6 md:px-12 pb-8 md:pb-10 max-w-2xl" stagger={0.1}>
-            <h1 id="hero-title" className="text-white text-[clamp(2.5rem,5vw,4rem)] leading-[1.02] tracking-[-0.02em]">{settings.hero_title}</h1>
+            <h1 id="hero-title" className="text-white text-[clamp(2.5rem,5vw,4rem)] leading-[1.15] tracking-[-0.02em]">{settings.hero_title}</h1>
             <p className="mt-4 text-lg md:text-xl text-stone-200 leading-snug max-w-xl">
               {settings.hero_subtitle}
             </p>
@@ -109,7 +109,7 @@ export default async function Home() {
       {/* About the teacher: the portrait opens like a camera shutter (signature move) */}
       <section aria-labelledby="advisor-title" className="container-lux pb-20 md:pb-28 grid gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
         <Reveal stagger={0.1}>
-          <h2 id="advisor-title" className="text-ink text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.05]">Minh Tấn Video Advisor</h2>
+          <h2 id="advisor-title" className="text-ink text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.15]">Minh Tấn Video Advisor</h2>
           <p className="mt-6 text-xl text-stone leading-relaxed max-w-xl">
             {settings.advisor_bio}
           </p>
@@ -131,7 +131,7 @@ export default async function Home() {
         <div className="container-lux pt-20 md:pt-28">
           <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
             <Reveal>
-              <h2 id="students-title" className="text-white text-[clamp(1.625rem,5vw,4rem)] leading-[1.1]">{settings.students_title}</h2>
+              <h2 id="students-title" className="text-white text-[clamp(1.625rem,5vw,4rem)] leading-[1.2]">{settings.students_title}</h2>
               <p className="mt-5 text-lg text-stone-300 max-w-xl">{settings.students_subtitle}</p>
             </Reveal>
             <dl className="grid grid-cols-2 gap-6">
@@ -223,7 +223,7 @@ export default async function Home() {
           <div className="surface-dark p-6 sm:p-8 md:p-10">
             <p className="text-gold-light font-semibold">Học phí trọn gói</p>
             <div className="mt-3 flex items-baseline gap-3 flex-wrap">
-              <p className="font-display text-[2.75rem] sm:text-6xl font-bold whitespace-nowrap text-white">{course ? formatVND(course.price) : 'Liên hệ'}</p>
+              <p className="font-display text-[clamp(2rem,9vw,2.75rem)] sm:text-5xl lg:text-[2.75rem] xl:text-5xl font-bold whitespace-nowrap text-white">{course ? formatVND(course.price) : 'Liên hệ'}</p>
               {course?.old_price && Number(course.old_price) > Number(course.price) && (
                 <p className="text-lg text-stone-400 line-through">{formatVND(course.old_price)}</p>
               )}
@@ -318,7 +318,7 @@ export default async function Home() {
       {/* Closing call to action */}
       <section className="surface-dark">
         <div className="container-lux py-20 md:py-28 grid gap-10 lg:grid-cols-[1.3fr_0.7fr] items-end">
-          <h2 className="text-white text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1]">Học thử bài đầu tiên, miễn phí.</h2>
+          <h2 className="text-white text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1.15]">Học thử bài đầu tiên, miễn phí.</h2>
           <div className="flex flex-col gap-3">
             <Link href={courseHref} className="btn btn-gold">Vào học thử <ArrowRight size={18} aria-hidden="true" /></Link>
             <Link href="/courses" className="btn btn-outline-light">Xem tất cả khóa học</Link>

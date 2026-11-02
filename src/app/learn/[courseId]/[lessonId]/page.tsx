@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
+import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import { CheckCircle2, Circle, ChevronLeft, Loader2, Menu, X, ArrowRight, Lock, Play, PartyPopper } from 'lucide-react';
 import DrmPlayer from '@/components/video/DrmPlayer';
 import { isAdmin } from '@/lib/admin';
@@ -15,6 +16,7 @@ export default function LearningPortal() {
   const [loading, setLoading] = useState(true);
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [currentLesson, setCurrentLesson] = useState<any>(null);
   const [progress, setProgress] = useState<string[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,12 +37,15 @@ export default function LearningPortal() {
       setUserEmail(user.email || 'STUDENT');
 
       // Outline (all titles) is public; full lesson rows are filtered by RLS to free/enrolled lessons
-      const [{ data: courseData }, { data: outline }, { data: enrollment }] = await Promise.all([
+      const [{ data: courseData }, { data: outline }, { data: enrollment }, { data: chapterData }] = await Promise.all([
         supabase.from('courses').select('id, title').eq('id', courseId).maybeSingle(),
-        supabase.from('lesson_outline').select('id, title, order_index, is_free').eq('course_id', courseId).order('order_index', { ascending: true }),
+        supabase.from('lesson_outline').select('id, title, order_index, is_free, chapter_id').eq('course_id', courseId).order('order_index', { ascending: true }),
         supabase.from('enrollments').select('status').eq('user_id', user.id).eq('course_id', courseId).eq('status', 'active').maybeSingle(),
+        supabase.from('chapters').select('id, title, order_index').eq('course_id', courseId).order('order_index'),
       ]);
-      const list = outline || [];
+      // Study order: chapter by chapter
+      const list = lessonsInOrder(chapterData || [], outline || []);
+      setChapters(chapterData || []);
       setCourse(courseData);
       setLessons(list);
       setHasAccess(!!enrollment || isAdmin(user.email));
@@ -111,8 +116,13 @@ export default function LearningPortal() {
           </div>
         </div>
       </div>
-      <ol className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
-        {lessons.map((lesson, idx) => {
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
+      {groupByChapter(chapters, lessons).map((g) => (
+      <div key={g.chapter?.id || 'loose'}>
+        {chapters.length > 0 && <p className="px-3 pb-1 text-xs font-bold uppercase tracking-wide text-gold-light">{g.chapter ? g.chapter.title : 'Bài học thêm'}</p>}
+      <ol className="space-y-1">
+        {g.lessons.map((lesson) => {
+          const idx = lessons.indexOf(lesson);
           const active = currentLesson?.id === lesson.id;
           const done = progress.includes(lesson.id);
           const locked = !hasAccess && !lesson.is_free;
@@ -133,6 +143,9 @@ export default function LearningPortal() {
           );
         })}
       </ol>
+      </div>
+      ))}
+      </div>
     </nav>
   );
 

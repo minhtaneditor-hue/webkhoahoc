@@ -106,3 +106,23 @@ export function studentPlaces(students: Student[], works: StudentWork[]): Studen
   }
   return [...byCode.values()].sort((a, b) => b.count - a.count);
 }
+
+export type FeedbackVideo = {
+  id: string;
+  student_name: string;
+  student_title: string | null;
+  country: string | null;
+  quote: string | null;
+  video_url: string;
+  thumbnail_url: string | null;
+  orientation: 'vertical' | 'horizontal';
+};
+
+/** Students' video testimonials. Empty until the admin adds some. */
+export async function getFeedbackVideos(): Promise<FeedbackVideo[]> {
+  const supabase = getPublicSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase.from('feedback_videos').select('*').order('sort_order').order('created_at', { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
