@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/utils/supabase';
 import { calculateDiscount } from '@/lib/promo';
+import { isAdmin } from '@/lib/admin';
 import { formatVND } from '@/lib/supabase-public';
 import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, RotateCcw, X, ChevronLeft } from 'lucide-react';
@@ -63,7 +64,8 @@ export default function CourseDetails() {
 
       if (currentUser) {
         const { data: enrollmentData } = await supabase.from('enrollments').select('*').eq('user_id', currentUser.id).eq('course_id', id).eq('status', 'active').maybeSingle();
-        setEnrolled(!!enrollmentData);
+        // Admins see every lesson without buying
+        setEnrolled(!!enrollmentData || isAdmin(currentUser.email));
       }
       setLoading(false);
     }

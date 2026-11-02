@@ -7,6 +7,7 @@ import { formatVND } from '@/lib/supabase-public';
 import { ShoppingBag, Download, Loader2, BookOpen, Palette, Package } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import BuyDialog from '@/components/shop/BuyDialog';
+import { isAdmin } from '@/lib/admin';
 
 const CATEGORY_LABELS: Record<string, string> = {
   ebook: 'Ebook',
@@ -41,13 +42,15 @@ export default function ShopPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setEmail(user.email || '');
+        // Admins can download every file without buying
+        if (isAdmin(user.email)) setPurchasedIds((data || []).map((a: any) => a.id));
         const { data: paid } = await supabase
           .from('payments')
           .select('asset_id')
           .eq('user_id', user.id)
           .eq('status', 'success')
           .not('asset_id', 'is', null);
-        setPurchasedIds((paid || []).map(p => p.asset_id));
+        if (!isAdmin(user.email)) setPurchasedIds((paid || []).map(p => p.asset_id));
       }
       setLoading(false);
     }
