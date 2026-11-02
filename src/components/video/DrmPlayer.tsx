@@ -33,6 +33,29 @@ export default function DrmPlayer({ videoId, title, watermark }: { videoId: stri
   const [starting, setStarting] = useState(false);
   const [blocked, setBlocked] = useState<string | null>(null);
   const [obscured, setObscured] = useState(false);
+  // Quality: starts at 720p; 1080p / 480p / auto on request (heights come from the playlist)
+  const [heights, setHeights] = useState<number[]>([]);
+  const [quality, setQuality] = useState<number | 'auto'>(720);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const qualityRef = useRef<number | 'auto'>(720);
+
+  const applyQuality = useCallback(() => {
+    const levels = (playerRef.current as any)?.qualityLevels?.();
+    if (!levels?.length) return;
+    const all: number[] = [];
+    for (let i = 0; i < levels.length; i++) all.push(levels[i].height);
+    setHeights([...new Set(all)].filter(Boolean).sort((a, b) => b - a));
+    const want = qualityRef.current;
+    const match = want !== 'auto' && all.includes(want);
+    for (let i = 0; i < levels.length; i++) levels[i].enabled = !match || levels[i].height === want;
+  }, []);
+
+  const chooseQuality = (q: number | 'auto') => {
+    qualityRef.current = q;
+    setQuality(q);
+    setMenuOpen(false);
+    applyQuality();
+  };
 
   const stopPlayback = useCallback((reason?: string) => {
     if (heartbeatRef.current) clearInterval(heartbeatRef.current);
@@ -92,6 +115,7 @@ export default function DrmPlayer({ videoId, title, watermark }: { videoId: stri
       html5: { vhs: { overrideNative: true }, nativeAudioTracks: false, nativeVideoTracks: false },
     });
     player.ready(() => sdkRef.current?.lockElement(player.el().querySelector('video')));
+    (player as any).qualityLevels().on('addqualitytrack', applyQuality);
     player.on('error', () => {
       const code = player.error()?.code;
       const sid = sessionRef.current;
@@ -102,7 +126,7 @@ export default function DrmPlayer({ videoId, title, watermark }: { videoId: stri
     });
     playerRef.current = player;
     return () => { player.dispose(); playerRef.current = null; };
-  }, [videoId, stopPlayback]);
+  }, [videoId, stopPlayback, applyQuality]);
 
   const start = async () => {
     if (!playerRef.current || starting) return;
@@ -152,6 +176,27 @@ export default function DrmPlayer({ videoId, title, watermark }: { videoId: stri
           </div>
           <span className="wm-drift pointer-events-none absolute z-[2] whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] md:text-xs font-semibold text-white/35 bg-black/10" aria-hidden="true">{watermark}</span>
         </>
+      )}
+
+      {loaded && !blocked && heights.length > 1 && (
+        <div className="absolute top-2 right-2 z-[3]">
+          <button type="button" onClick={() => setMenuOpen((o) => !o)} aria-haspopup="menu" aria-expanded={menuOpen}
+                  className="min-h-[36px] px-3 rounded-md bg-black/60 text-white text-xs font-semibold hover:bg-black/80">
+            {quality === 'auto' ? 'Tự động' : `${quality}p`} ▾
+          </button>
+          {menuOpen && (
+            <ul role="menu" aria-label="Chất lượng video" className="absolute right-0 mt-1 w-32 rounded-md bg-black/90 py-1 text-sm text-white shadow-lg">
+              {[...heights, 'auto' as const].map((h) => (
+                <li key={h}>
+                  <button type="button" role="menuitemradio" aria-checked={quality === h} onClick={() => chooseQuality(h)}
+                          className={`w-full text-left px-3 py-2 hover:bg-white/10 ${quality === h ? 'text-gold-light font-semibold' : ''}`}>
+                    {h === 'auto' ? 'Tự động' : `${h}p${h >= 1080 ? ' HD' : ''}`}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
 
       {obscured && loaded && !blocked && (

@@ -45,18 +45,23 @@ const db = createClient(env('NEXT_PUBLIC_SUPABASE_URL'), env('SUPABASE_SERVICE_R
 const work = fs.mkdtempSync(path.join(os.tmpdir(), `tanva-drm-${videoId}-`));
 try {
   // 1. Transcode (fixed GOP keeps segment boundaries aligned across qualities)
-  const srcHeight = Number(execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=height', '-of', 'csv=p=0', input]).toString().trim()) || 1080;
+  const [srcWidth, srcHeight] = execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', input])
+    .toString().trim().split(',').map(Number);
+  // Balanced profile sized for R2's free 10 GB (~40 MB per minute for all three): talking-head
+  // and screen-recorded lessons compress well, so 1080p stays sharp at 3 Mbps.
+  // The player starts at 720p; students can switch to 1080p or 480p.
   const qualities = [
-    { name: '1080p', h: 1080, br: '5000k', buf: '7500k', bw: 5000000 },
-    { name: '720p', h: 720, br: '2500k', buf: '3750k', bw: 2500000 },
-    { name: '480p', h: 480, br: '1000k', buf: '1500k', bw: 1000000 },
-  ].filter((q, i, all) => q.h <= srcHeight || i === all.length - 1);
+    { name: '1080p', h: 1080, br: '3000k', buf: '4500k', bw: 3200000 },
+    { name: '720p', h: 720, br: '1400k', buf: '2100k', bw: 1500000 },
+    { name: '480p', h: 480, br: '600k', buf: '900k', bw: 700000 },
+  ].filter((q, i, all) => q.h <= (srcHeight || 1080) || i === all.length - 1)
+    .map((q) => ({ ...q, w: Math.round(((srcWidth || 16) / (srcHeight || 9)) * q.h / 2) * 2 }));
 
   for (const q of qualities) {
     console.log(`encoding ${q.name}…`);
     execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', input,
       '-vf', `scale=-2:${q.h}`, '-c:v', 'libx264', '-preset', 'veryfast', '-b:v', q.br, '-maxrate', q.br, '-bufsize', q.buf,
-      '-force_key_frames', `expr:gte(t,n_forced*${SEG})`, '-c:a', 'aac', '-b:a', '128k', '-ac', '2',
+      '-force_key_frames', `expr:gte(t,n_forced*${SEG})`, '-c:a', 'aac', '-b:a', '96k', '-ac', '2',
       '-hls_time', String(SEG), '-hls_playlist_type', 'vod',
       '-hls_segment_filename', path.join(work, `${q.name}_%03d.ts`), path.join(work, `${q.name}.m3u8`), '-y'], { stdio: 'inherit' });
   }
@@ -88,7 +93,7 @@ try {
     fs.writeFileSync(file, out.join('\n'));
   }
   fs.writeFileSync(path.join(work, 'index.m3u8'),
-    '#EXTM3U\n#EXT-X-VERSION:3\n' + qualities.map((q) => `#EXT-X-STREAM-INF:BANDWIDTH=${q.bw}\n${q.name}.m3u8`).join('\n') + '\n');
+    '#EXTM3U\n#EXT-X-VERSION:3\n' + qualities.map((q) => `#EXT-X-STREAM-INF:BANDWIDTH=${q.bw},RESOLUTION=${q.w}x${q.h}\n${q.name}.m3u8`).join('\n') + '\n');
   console.log(`encrypted with ${keys.size} keys (${GROUP}s each)`);
 
   // 3. Upload to R2, 6 at a time
