@@ -33,6 +33,7 @@ const columns = [
       { name: 'Điều khoản dịch vụ', href: '/terms' },
       { name: 'Hoàn tiền trong 7 ngày', href: '/refund' },
       { name: 'Bảo mật thông tin', href: '/privacy' },
+      { name: 'Cam kết bảo mật nội dung', href: '/cam-ket-bao-mat' },
     ],
   },
 ];

@@ -8,6 +8,8 @@ import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import { CheckCircle2, Circle, ChevronLeft, Loader2, Menu, X, ArrowRight, Lock, Play, PartyPopper } from 'lucide-react';
 import DrmPlayer from '@/components/video/DrmPlayer';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
+import AgreementGate from '@/components/video/AgreementGate';
+import { studentCode } from '@/lib/content-agreement';
 import { isAdmin } from '@/lib/admin';
 
 export default function LearningPortal() {
@@ -23,6 +25,7 @@ export default function LearningPortal() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [drmToken, setDrmToken] = useState('');
   const [userEmail, setUserEmail] = useState('STUDENT');
+  const [userId, setUserId] = useState('');
   const [hasAccess, setHasAccess] = useState(false);
   const [finished, setFinished] = useState(false);
 
@@ -36,6 +39,7 @@ export default function LearningPortal() {
         return;
       }
       setUserEmail(user.email || 'STUDENT');
+      setUserId(user.id);
 
       // Outline (all titles) is public; full lesson rows are filtered by RLS to free/enrolled lessons
       const [{ data: courseData }, { data: outline }, { data: enrollment }, { data: chapterData }] = await Promise.all([
@@ -152,6 +156,8 @@ export default function LearningPortal() {
 
   return (
     <div className="min-h-screen surface-dark flex">
+      {/* Confidentiality commitment: must be ticked once before any lesson plays */}
+      {userId && <AgreementGate userId={userId} code={studentCode(userId)} email={userEmail}>{null}</AgreementGate>}
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-80 shrink-0 border-r border-white/10 h-screen sticky top-0 flex-col bg-[#141210]">{Curriculum}</aside>
 
@@ -194,10 +200,10 @@ export default function LearningPortal() {
                     <Link href={`/courses/${courseId}#dang-ky`} className="btn btn-gold">Đăng ký khóa học</Link>
                   </div>
                 ) : currentLesson.video_url?.includes('drm:') ? (
-                  <DrmPlayer videoId={currentLesson.video_url.split('drm:')[1]} token={drmToken} watermark={userEmail} />
+                  <DrmPlayer videoId={currentLesson.video_url.split('drm:')[1]} token={drmToken} watermark={`${studentCode(userId)} · ${userEmail}`} />
                 ) : currentLesson.video_url ? (
                   youTubeId(currentLesson.video_url)
-                    ? <GuardedYouTube videoId={youTubeId(currentLesson.video_url)!} title={currentLesson.title} watermark={userEmail} />
+                    ? <GuardedYouTube videoId={youTubeId(currentLesson.video_url)!} title={currentLesson.title} watermark={`${studentCode(userId)} · ${userEmail}`} />
                     : <iframe src={toEmbedUrl(currentLesson.video_url)} title={currentLesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-stone-400">

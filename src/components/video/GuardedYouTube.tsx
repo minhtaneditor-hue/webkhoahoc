@@ -48,7 +48,6 @@ export default function GuardedYouTube({ videoId, title, watermark, autoPlay = f
   const [duration, setDuration] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [full, setFull] = useState(false);
-  const [mark, setMark] = useState({ x: 8, y: 10 });
 
   useEffect(() => {
     let alive = true;
@@ -74,8 +73,7 @@ export default function GuardedYouTube({ videoId, title, watermark, autoPlay = f
       const p = player.current;
       if (p?.getCurrentTime) { setTime(p.getCurrentTime()); if (!duration) setDuration(p.getDuration() || 0); }
     }, 500);
-    const w = setInterval(() => setMark({ x: 5 + Math.random() * 60, y: 8 + Math.random() * 70 }), 7000);
-    return () => { clearInterval(t); clearInterval(w); };
+    return () => clearInterval(t);
   }, [duration]);
 
   useEffect(() => {
@@ -118,8 +116,9 @@ export default function GuardedYouTube({ videoId, title, watermark, autoPlay = f
         </div>
       )}
 
+      {/* Student ID drifting non-stop across the picture (bounces like a screensaver) */}
       {watermark && (
-        <span className="pointer-events-none absolute text-[11px] font-semibold text-white/25 transition-all duration-[2000ms]" style={{ left: `${mark.x}%`, top: `${mark.y}%` }} aria-hidden="true">{watermark}</span>
+        <span className="wm-drift pointer-events-none absolute z-[1] whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] md:text-xs font-semibold text-white/35 bg-black/10" aria-hidden="true">{watermark}</span>
       )}
 
       {/* Own controls */}
