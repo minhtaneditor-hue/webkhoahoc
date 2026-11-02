@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Quote, ArrowRight } from 'lucide-react';
+import { Quote, ArrowRight, Plus } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
 import { getStudents, getFeedbackImages, getStudentWorks, getFeedbackVideos, getSiteSettings, studentPlaces } from '@/lib/content';
@@ -99,6 +99,16 @@ export default async function StudentsPage() {
                 </div>
               </li>
             ))}
+            {/* Last tile: there are more students than the ones listed */}
+            <li>
+              <Link href="#san-pham" className="group h-full min-h-[96px] flex items-center gap-4 rounded-[var(--radius-card)] border-2 border-dashed border-line-strong p-4 transition-colors hover:border-gold hover:bg-gold-soft">
+                <span className="w-16 h-16 shrink-0 rounded-full bg-onyx text-gold-light flex items-center justify-center transition-transform duration-300 group-hover:rotate-90" aria-hidden="true"><Plus size={28} /></span>
+                <span className="min-w-0">
+                  <span className="block font-semibold text-ink">Và còn nhiều học viên khác</span>
+                  <span className="mt-0.5 inline-flex items-center gap-1 text-sm font-semibold text-gold">Xem sản phẩm học viên <ArrowRight size={14} aria-hidden="true" /></span>
+                </span>
+              </Link>
+            </li>
           </ul>
         )}
       </section>
