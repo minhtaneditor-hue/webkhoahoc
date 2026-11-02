@@ -96,7 +96,7 @@ export default async function Home() {
       </section>
 
       {/* About the teacher: the portrait opens like a camera shutter (signature move) */}
-      <section aria-labelledby="advisor-title" className="container-lux pb-20 md:pb-28 grid gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
+      <section aria-labelledby="advisor-title" className="container-lux pt-14 md:pt-20 pb-20 md:pb-28 grid gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
         <Reveal stagger={0.1}>
           <h2 id="advisor-title" className="text-ink text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.15]">Minh Tấn Video Advisor</h2>
           <p className="mt-6 text-xl text-stone leading-relaxed max-w-xl">
@@ -123,14 +123,14 @@ export default async function Home() {
               <h2 id="students-title" className="text-white text-[clamp(1.625rem,5vw,4rem)] leading-[1.2]">{settings.students_title}</h2>
               <p className="mt-5 text-lg text-stone-300 max-w-xl">{settings.students_subtitle}</p>
             </Reveal>
-            <dl className="grid grid-cols-2 gap-6">
-              <div className="rounded-[var(--radius-card)] bg-white/[0.05] p-6 flex flex-col-reverse">
+            <dl className="grid grid-cols-2 gap-3 sm:gap-6">
+              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-6 flex flex-col-reverse">
                 <dt className="mt-2 text-stone-300">học viên đã theo học</dt>
-                <dd className="font-display text-5xl md:text-6xl font-bold text-gold-light"><CountUp to={Number(settings.stat_students) || 0} suffix="+" /></dd>
+                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(2.25rem,3.6vw,3.25rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_students) || 0} suffix="+" /></dd>
               </div>
-              <div className="rounded-[var(--radius-card)] bg-white/[0.05] p-6 flex flex-col-reverse">
+              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-6 flex flex-col-reverse">
                 <dt className="mt-2 text-stone-300">năm làm truyền hình</dt>
-                <dd className="font-display text-5xl md:text-6xl font-bold text-gold-light"><CountUp to={Number(settings.stat_years) || 0} suffix="+" /></dd>
+                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(2.25rem,3.6vw,3.25rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_years) || 0} suffix="+" /></dd>
               </div>
             </dl>
           </div>
