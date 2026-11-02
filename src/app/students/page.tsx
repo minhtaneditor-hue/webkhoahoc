@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Quote, ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
-import { getStudents, getFeedbackImages, getStudentWorks, getFeedbackVideos, studentPlaces } from '@/lib/content';
+import { getStudents, getFeedbackImages, getStudentWorks, getFeedbackVideos, getSiteSettings, studentPlaces } from '@/lib/content';
 import StudentShowcase from '@/components/students/StudentShowcase';
 import WorldStudents from '@/components/students/WorldStudents';
 
@@ -18,9 +18,10 @@ export const metadata: Metadata = {
 
 
 export default async function StudentsPage() {
-  const [students, feedback, works, videos] = await Promise.all([getStudents(), getFeedbackImages(), getStudentWorks(), getFeedbackVideos()]);
+  const [students, feedback, works, videos, settings] = await Promise.all([getStudents(), getFeedbackImages(), getStudentWorks(), getFeedbackVideos(), getSiteSettings()]);
   const places = studentPlaces(students, works);
-  const profileCount = new Set(works.map((w) => w.student_name.trim().toLowerCase())).size;
+  // Headline numbers are set in admin (rounded marketing figures, not live counts)
+  const plus = (v: string | undefined, fallback: number) => `${(Number(v) || fallback).toLocaleString('vi-VN')}+`;
 
   return (
     <main>
@@ -30,9 +31,9 @@ export default async function StudentsPage() {
           <SectionHeading as="h1" title="Học viên & sản phẩm" description="Sản phẩm thật học viên làm ra, trước và sau khóa học. Họ bắt đầu giống bạn, với một chiếc điện thoại." />
           <dl className="grid grid-cols-3 gap-3">
             {[
-              { n: profileCount, label: 'học viên' },
+              { n: plus(settings.students_page_learners, 1000), label: 'học viên' },
               { n: places.length, label: 'quốc gia' },
-              { n: works.length + videos.length, label: 'sản phẩm & clip' },
+              { n: plus(settings.students_page_works, 500), label: 'sản phẩm' },
             ].map((s) => (
               <div key={s.label} className="rounded-[var(--radius-card)] border border-line bg-card p-4 flex flex-col-reverse">
                 <dt className="mt-1 text-sm text-muted-foreground">{s.label}</dt>

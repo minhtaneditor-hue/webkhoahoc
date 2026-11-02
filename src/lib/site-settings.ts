@@ -26,6 +26,8 @@ export const SETTING_FIELDS: SettingField[] = [
   { key: 'students_subtitle', group: 'home', label: 'Mô tả phần học viên', type: 'textarea', default: 'Họ bắt đầu giống bạn: một chiếc điện thoại và mong muốn làm video tốt hơn. Đây là kết quả của họ.' },
   { key: 'stat_students', group: 'home', label: 'Số học viên (chỉ ghi số)', default: '1000' },
   { key: 'stat_years', group: 'home', label: 'Số năm làm truyền hình (chỉ ghi số)', default: '10' },
+  { key: 'students_page_learners', group: 'home', label: 'Trang Học viên: số học viên hiển thị (chỉ ghi số)', default: '1000' },
+  { key: 'students_page_works', group: 'home', label: 'Trang Học viên: số sản phẩm hiển thị (chỉ ghi số)', default: '500' },
   { key: 'statement', group: 'home', label: 'Câu tuyên ngôn (chữ tô dần khi cuộn)', type: 'textarea', default: 'Một video quay tử tế sẽ tiếp tục bán hàng cho bạn nhiều năm sau ngày đăng. Khóa học này dạy bạn làm ra những video như thế.' },
 
   // Contact
