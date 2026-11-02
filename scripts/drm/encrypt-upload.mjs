@@ -96,15 +96,26 @@ try {
     '#EXTM3U\n#EXT-X-VERSION:3\n' + qualities.map((q) => `#EXT-X-STREAM-INF:BANDWIDTH=${q.bw},RESOLUTION=${q.w}x${q.h}\n${q.name}.m3u8`).join('\n') + '\n');
   console.log(`encrypted with ${keys.size} keys (${GROUP}s each)`);
 
-  // 3. Upload to R2, 6 at a time
+  // 3. Upload to R2, 3 at a time (leaves bandwidth for the office), retrying network drops
   const files = fs.readdirSync(work);
   let done = 0;
   const queue = [...files];
-  await Promise.all(Array.from({ length: 6 }, async () => {
+  const put = async (f) => {
+    const type = f.endsWith('.m3u8') ? 'application/vnd.apple.mpegurl' : 'video/mp2t';
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const res = await r2.fetch(`${r2Base}/${videoId}/${f}`, { method: 'PUT', body: fs.readFileSync(path.join(work, f)), headers: { 'Content-Type': type } });
+        if (res.ok) return;
+        if (attempt >= 5) throw new Error(`R2 upload failed for ${f}: ${res.status} ${await res.text()}`);
+      } catch (e) {
+        if (attempt >= 5) throw e;
+      }
+      await new Promise((r) => setTimeout(r, attempt * 3000));
+    }
+  };
+  await Promise.all(Array.from({ length: 3 }, async () => {
     for (let f; (f = queue.shift());) {
-      const type = f.endsWith('.m3u8') ? 'application/vnd.apple.mpegurl' : 'video/mp2t';
-      const res = await r2.fetch(`${r2Base}/${videoId}/${f}`, { method: 'PUT', body: fs.readFileSync(path.join(work, f)), headers: { 'Content-Type': type } });
-      if (!res.ok) throw new Error(`R2 upload failed for ${f}: ${res.status} ${await res.text()}`);
+      await put(f);
       process.stdout.write(`\ruploaded ${++done}/${files.length}`);
     }
   }));

@@ -51,3 +51,4 @@ next-env.d.ts
 src/**/._*
 **/._*
 supabase/data/*course*.sql
+supabase/data/*.local.json
