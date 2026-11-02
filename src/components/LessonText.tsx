@@ -91,8 +91,9 @@ function LineView({ line, k }: { line: Line; k: string }) {
         </aside>
       );
     return (
-      <div className="flex flex-col sm:flex-row sm:items-baseline gap-1.5 sm:gap-3">
-        <span className={`shrink-0 self-start rounded-md border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${TONE[line.label] || NEUTRAL}`}>{line.label}</span>
+      // Fixed-width label column so every label and every text line start on the same edges
+      <div className="grid gap-1.5 sm:grid-cols-[9.5rem_1fr] sm:gap-x-4 sm:items-start">
+        <span className={`justify-self-start sm:justify-self-stretch sm:mt-0.5 rounded-md border px-2.5 py-1 text-[11px] leading-tight text-center font-semibold uppercase tracking-wide ${TONE[line.label] || NEUTRAL}`}>{line.label}</span>
         {line.text && <p>{inline(line.text, k)}</p>}
       </div>
     );
