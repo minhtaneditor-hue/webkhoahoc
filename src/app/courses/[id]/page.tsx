@@ -5,12 +5,11 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/utils/supabase';
-import { calculateDiscount } from '@/lib/promo';
 import { isAdmin } from '@/lib/admin';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import { formatVND } from '@/lib/supabase-public';
 import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
-import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, RotateCcw, X, ChevronLeft, Gift } from 'lucide-react';
+import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, PlayCircle, X, ChevronLeft, Gift } from 'lucide-react';
 
 type Status = { type: 'success' | 'error'; text: string } | null;
 
@@ -24,7 +23,7 @@ const outcomes = [
 const guarantees = [
   { icon: InfinityIcon, text: 'Truy cập trọn đời' },
   { icon: MessageCircle, text: 'Hỗ trợ 1:1 qua Zalo' },
-  { icon: RotateCcw, text: 'Hoàn tiền trong 7 ngày' },
+  { icon: PlayCircle, text: 'Học thử miễn phí trước khi mua' },
   { icon: ShieldCheck, text: 'Thanh toán an toàn, kích hoạt tự động' },
 ];
 
@@ -87,14 +86,16 @@ export default function CourseDetails() {
     return () => document.removeEventListener('keydown', onKey);
   }, [selectedLesson]);
 
-  const handleApplyPromo = (e: React.FormEvent) => {
+  const handleApplyPromo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!course) return;
-    const discount = calculateDiscount(promoCode, Number(course.price) || 0);
+    const res = await fetch('/api/promo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: promoCode, courseId: course.id }) })
+      .then((r) => r.json()).catch(() => ({ ok: false, error: 'Không kiểm tra được mã, thử lại sau.' }));
+    const discount = res.ok ? Number(res.discount) || 0 : 0;
     setAppliedDiscount(discount);
     setPromoStatus(discount > 0
       ? { type: 'success', text: `Đã áp dụng mã — giảm ${formatVND(discount)}.` }
-      : { type: 'error', text: 'Mã không hợp lệ hoặc đã hết hạn.' });
+      : { type: 'error', text: res.error || 'Mã không hợp lệ hoặc đã hết hạn.' });
   };
 
   const handlePayment = async () => {

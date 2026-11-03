@@ -139,7 +139,7 @@ export default function StudentDashboard() {
 
           <div className="card p-6 flex items-center gap-4">
             <Receipt size={20} className="text-gold shrink-0" aria-hidden="true" />
-            <p className="text-sm text-muted-foreground">Cần hoá đơn hoặc hỗ trợ hoàn tiền? Bấm nút <strong className="text-ink">Hỗ trợ</strong> ở góc phải.</p>
+            <p className="text-sm text-muted-foreground">Cần hoá đơn hoặc cần hỗ trợ? Bấm nút <strong className="text-ink">Hỗ trợ</strong> ở góc phải.</p>
           </div>
         </aside>
       </div>

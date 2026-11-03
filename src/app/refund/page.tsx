@@ -6,28 +6,26 @@ export const metadata: Metadata = { title: 'Chính sách hoàn tiền' };
 export default function RefundPage() {
   return (
     <LegalPage
-
       title="Chính sách hoàn tiền"
-      intro="Học thử yên tâm: hoàn 100% học phí trong 7 ngày nếu khóa học chưa phù hợp với bạn."
-      updated="Tháng 4, 2026"
+      intro="Học phí đã thanh toán không được hoàn lại. Vì vậy bạn hãy học thử và hỏi kỹ trước khi đăng ký."
+      updated="Tháng 11, 2026"
       sections={[
         {
-          title: 'Cam kết 7 ngày',
-          body: <p>Nếu trong vòng <strong>7 ngày</strong> kể từ ngày đăng ký, bạn thấy nội dung chưa phù hợp, bạn có quyền yêu cầu hoàn 100% học phí mà không cần nêu lý do (áp dụng cho khóa học online bán lẻ).</p>,
+          title: 'Không hoàn học phí',
+          body: <p>Khóa học online, gói Coaching và sản phẩm số (ebook, preset, template…) được kích hoạt hoặc gửi ngay sau khi thanh toán, nên <strong>học phí đã thanh toán không được hoàn lại</strong> trong mọi trường hợp.</p>,
         },
         {
-          title: 'Điều kiện áp dụng',
+          title: 'Trước khi đăng ký',
           body: (
             <ul>
-              <li>Học viên chưa hoàn thành quá 20% thời lượng khóa học.</li>
-              <li>Không áp dụng cho gói Coaching 1:1 hoặc các buổi tư vấn trực tiếp đã diễn ra.</li>
-              <li>Yêu cầu được gửi qua email hỗ trợ chính thức trong thời hạn quy định.</li>
+              <li>Xem các bài học thử miễn phí trên trang khóa học để biết cách dạy có hợp với bạn không.</li>
+              <li>Nhắn Zalo cho Minh Tấn nếu còn băn khoăn về nội dung, thiết bị hay thời gian học.</li>
             </ul>
           ),
         },
         {
-          title: 'Quy trình hoàn tiền',
-          body: <p>Sau khi nhận yêu cầu hợp lệ, chúng tôi xử lý hoàn tiền trong vòng <strong>3–5 ngày làm việc</strong>. Tiền được hoàn về đúng tài khoản hoặc phương thức bạn đã dùng để thanh toán.</p>,
+          title: 'Chuyển khoản nhầm hoặc chưa được kích hoạt',
+          body: <p>Nếu bạn chuyển khoản trùng, chuyển sai số tiền hoặc đã thanh toán mà khóa học chưa mở, hãy trả lời email xác nhận đơn hàng hoặc nhắn Zalo kèm mã đơn để được kiểm tra và xử lý.</p>,
         },
       ]}
     />

@@ -18,7 +18,7 @@ export const SETTING_FIELDS: SettingField[] = [
   { key: 'showreel_youtube_id', group: 'hero', label: 'Video nền (link YouTube)', hint: 'Dán link YouTube, ví dụ https://youtu.be/CZdPDogA86Q', default: 'CZdPDogA86Q' },
   { key: 'showreel_start', group: 'hero', label: 'Bắt đầu video từ giây thứ', hint: 'Để bỏ qua đoạn chữ mở đầu của video', default: '10' },
   { key: 'showreel_poster', group: 'hero', label: 'Ảnh tĩnh (hiện trên điện thoại)', type: 'image', default: 'https://i.ytimg.com/vi/CZdPDogA86Q/maxres2.jpg' },
-  { key: 'ticker_messages', group: 'hero', label: 'Dải thông báo chạy chữ', type: 'textarea', hint: 'Mỗi dòng là một thông báo', default: 'Khóa “21 Ngày Biến Video Thành Tài Sản” đang mở đăng ký\nHọc thử miễn phí\nTruy cập trọn đời, hỗ trợ 1:1 qua Zalo\nHoàn tiền trong 7 ngày nếu chưa phù hợp' },
+  { key: 'ticker_messages', group: 'hero', label: 'Dải thông báo chạy chữ', type: 'textarea', hint: 'Mỗi dòng là một thông báo', default: 'Khóa “21 Ngày Biến Video Thành Tài Sản” đang mở đăng ký\nHọc thử miễn phí\nTruy cập trọn đời, hỗ trợ 1:1 qua Zalo' },
 
   // Homepage sections
   { key: 'advisor_bio', group: 'home', label: 'Giới thiệu Minh Tấn Video Advisor', type: 'textarea', default: 'Hơn 10 năm làm truyền hình, từng tham gia hậu kỳ 2 Ngày 1 Đêm và Anh Trai Say Hi. Giờ Minh Tấn dạy lại quy trình đó, rút gọn cho chiếc điện thoại của bạn.' },

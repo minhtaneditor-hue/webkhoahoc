@@ -88,20 +88,6 @@ export default async function CoachingPage() {
         </div>
       </section>
 
-      {/* Story */}
-      <section className="section">
-        <div className="container-lux max-w-3xl">
-          <h2>Hành trình thoát khỏi vòng xoáy</h2>
-          <div className="mt-8 space-y-5 text-lg leading-relaxed text-stone">
-            <p>Vài năm trước, tôi cũng như bạn: làm văn phòng 8–10 tiếng mỗi ngày, kiệt sức và bế tắc — cho tới khi phải nhập viện vì áp lực.</p>
-            <p>Đó là lúc tôi bỏ việc và bắt đầu lại từ con số 0 với nghề làm phim. Gia đình phản đối, bạn bè hoài nghi, nhưng tôi tin video là tương lai.</p>
-            <p>Sau nhiều năm, tôi nhận ra khác biệt giữa người làm phim nghiệp dư và người kinh doanh bằng hình ảnh không nằm ở chiếc máy quay, mà ở <strong className="text-ink">tư duy chiến lược</strong>.</p>
-          </div>
-          <blockquote className="mt-10 font-display text-3xl leading-snug text-ink">
-            Hôm nay, tôi ở đây để giúp bạn rút ngắn hành trình đó.
-          </blockquote>
-        </div>
-      </section>
 
       {/* Topics */}
       <section className="section bg-card">
@@ -122,7 +108,7 @@ export default async function CoachingPage() {
       {/* Packages */}
       <section id="goi-coaching" className="section scroll-mt-20">
         <div className="container-lux">
-          <SectionHeading title="Chọn gói phù hợp với bạn" align="center" description="Hoàn tiền trong 7 ngày đầu nếu chương trình chưa phù hợp." />
+          <SectionHeading title="Chọn gói phù hợp với bạn" align="center" description="Nhắn Zalo để được tư vấn gói hợp với mục tiêu của bạn trước khi đăng ký." />
           <Reveal className="mt-12 grid gap-6 lg:grid-cols-3 max-w-6xl mx-auto items-stretch">
             {packages.map((pkg) => (
               <div key={pkg.name} className={`relative rounded-[var(--radius-card)] p-8 md:p-10 flex flex-col ${pkg.featured ? 'surface-dark shadow-[var(--shadow-lift)]' : 'card'}`}>
