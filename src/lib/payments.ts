@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { randomBytes } from 'crypto';
 import { Resend } from 'resend';
-import { calculateDiscount } from './promo';
+import { checkPromo } from './promo';
 import { getSiteSettings } from './content';
 import { contactFrom } from './site-settings';
 import { FROM, welcomeCourse, assetPurchased } from './emails';
@@ -27,7 +27,15 @@ export async function createPendingPayment(
   if (!product) throw new CheckoutError('Sản phẩm không tồn tại.', 404);
 
   const basePrice = Number(product.price) || 0;
-  const amount = Math.max(0, basePrice - calculateDiscount(promoCode, basePrice));
+  let discount = 0;
+  let usedCode: string | null = null;
+  if (promoCode?.trim()) {
+    const promo = await checkPromo(supabase, promoCode, { courseId, price: basePrice });
+    if (!promo.ok) throw new CheckoutError(promo.error, 400);
+    discount = promo.discount;
+    usedCode = promo.code;
+  }
+  const amount = Math.max(0, basePrice - discount);
   if (amount <= 0) throw new CheckoutError('Sản phẩm miễn phí không cần thanh toán.', 400);
 
   // Lets a buyer without an account open the order page and download the file.
@@ -42,6 +50,7 @@ export async function createPendingPayment(
     course_id: courseId || null,
     asset_id: assetId || null,
     amount,
+    promo_code: usedCode,
     payment_method: method,
     status: 'pending',
   });
