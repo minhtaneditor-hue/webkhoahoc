@@ -14,6 +14,7 @@ import FeedbackVideos from '@/components/students/FeedbackVideos';
 import StudentWorks from '@/components/students/StudentWorks';
 import { toYoutubeId } from '@/lib/site-settings';
 import LeadMagnet from '@/components/LeadMagnet';
+import PainPoints from '@/components/PainPoints';
 import ConsultBox from '@/components/ConsultBox';
 import { contactFrom } from '@/lib/site-settings';
 
@@ -175,6 +176,9 @@ export default async function Home() {
           <Link href={works.length ? '/students#san-pham' : '/students'} className="btn btn-outline-light">Xem thêm sản phẩm của học viên khác</Link>
         </div>
       </section>
+
+      {/* The problems the course answers, right before its price */}
+      <PainPoints className="container-lux section" />
 
       {/* Featured course: outcomes as a plain list beside a filled price panel */}
       <section className="section">

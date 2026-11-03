@@ -11,6 +11,7 @@ import { formatVND } from '@/lib/supabase-public';
 import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import ConsultBox from '@/components/ConsultBox';
 import CourseReviews from '@/components/CourseReviews';
+import PainPoints from '@/components/PainPoints';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, PlayCircle, X, ChevronLeft, Gift } from 'lucide-react';
 
 type Status = { type: 'success' | 'error'; text: string } | null;
@@ -200,6 +201,9 @@ export default function CourseDetails() {
 
       <div className="container-lux section grid gap-12 lg:grid-cols-[1fr_380px] items-start">
         <div className="space-y-16 min-w-0">
+          {/* Pain points are written for the 21 Ngày course */}
+          {/21 Ngày/i.test(course.title) && <PainPoints />}
+
           {/* Outcomes */}
           <section aria-labelledby="outcomes">
             <h2 id="outcomes" className="text-4xl">Bạn sẽ nhận được gì</h2>
