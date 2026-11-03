@@ -11,6 +11,11 @@ const supabaseHost = (() => {
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Fonts and pictures read from disk by the link-preview images (src/lib/og.tsx)
+  outputFileTracingIncludes: {
+    '/opengraph-image': ['./src/assets/**/*'],
+    '/courses/**': ['./src/assets/**/*'],
+  },
   // Baseline security headers: no framing by other sites (clickjacking), no MIME sniffing,
   // no full URLs leaked to other sites, no camera/mic/location access.
   async headers() {

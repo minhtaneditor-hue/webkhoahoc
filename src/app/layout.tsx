@@ -22,8 +22,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "vi_VN",
     siteName: "TẤN VA",
-    images: ["/asset/avatar/hero_expert.jpg"],
   },
+  // Share image: src/app/opengraph-image.tsx (and one per course)
 };
 
 export const viewport: Viewport = {
