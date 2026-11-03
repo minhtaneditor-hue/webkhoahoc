@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { CHECKLIST, CHECKLIST_TITLE } from '@/lib/checklist';
+import { emailBrand } from '@/lib/email-brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
       to: email,
       subject: `Quà của bạn: ${CHECKLIST_TITLE}`,
       html: `<div style="max-width:560px;margin:0 auto;font-family:Arial,sans-serif;color:#242321;line-height:1.6;">
-        <p style="font-size:13px;font-weight:700;color:#A84E3C;letter-spacing:0.08em;">TẤN VA · MINH TẤN VIDEO ADVISOR</p>
+        ${emailBrand()}
         <h1 style="font-size:22px;margin:8px 0;">${CHECKLIST_TITLE}</h1>
         <p>Chào ${esc(name || 'bạn')}, đây là checklist Minh Tấn dùng trước mỗi lần quay. Lưu email này và mở ra trước khi bấm quay nhé.</p>
         ${list}

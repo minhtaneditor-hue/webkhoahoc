@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { calculateDiscount } from './promo';
 import { getSiteSettings } from './content';
 import { contactFrom } from './site-settings';
+import { emailBrand } from './email-brand';
 
 // Shared checkout pieces for every payment method (VNPay, SePay bank transfer).
 
@@ -126,7 +127,7 @@ export async function fulfillPayment(supabase: SupabaseClient, payment: any) {
       subject: `Chào mừng bạn vào học: ${course.title}`,
       html: `
         <div style="max-width: 560px; margin: 0 auto; font-family: Arial, sans-serif; color: #242321; line-height: 1.6;">
-          <p style="font-size: 13px; font-weight: 700; color: #A84E3C; letter-spacing: 0.08em;">TẤN VA · MINH TẤN VIDEO ADVISOR</p>
+          ${emailBrand()}
           <h1 style="font-size: 24px; margin: 8px 0 12px;">Kích hoạt thành công!</h1>
           <p style="font-size: 15px;">Bạn đã có quyền học khóa <strong>${esc(course.title)}</strong>. Đăng nhập bằng email <strong>${esc(user.email)}</strong> và mật khẩu bạn đã đặt.</p>
           <p style="margin: 24px 0;"><a href="${base}/dashboard" style="background: #A84E3C; color: #fff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700;">Vào học ngay</a></p>
@@ -176,6 +177,7 @@ async function emailAssetBuyer(supabase: SupabaseClient, resend: Resend, payment
     subject: `Đã thanh toán: ${asset.title}`,
     html: `
       <div style="font-family: 'Be Vietnam Pro', Arial, sans-serif; color: #242321; max-width: 520px; margin: 0 auto; padding: 32px;">
+        ${emailBrand()}
         <h1 style="font-size: 24px; margin: 0 0 12px;">Cảm ơn ${esc(payment.buyer_name || 'bạn')}!</h1>
         <p style="font-size: 15px; line-height: 1.6;">TẤN VA đã nhận thanh toán cho <strong>${esc(asset.title)}</strong> (mã đơn ${payment.order_id}).</p>
         <p style="margin: 28px 0;"><a href="${link}" style="background: #A84E3C; color: #fff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700;">Tải về</a></p>

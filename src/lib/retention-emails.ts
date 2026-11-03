@@ -1,3 +1,5 @@
+import { emailBrand } from './email-brand';
+
 export const getRetentionEmailTemplate = (type: 'inactivity' | 'expiry' | 'lead-fomo' | 'renewal-privilege', data: { name: string; courseTitle?: string; days?: number; expiryDate?: string }) => {
   const styles = `
     background-color: #050507;
@@ -19,6 +21,7 @@ export const getRetentionEmailTemplate = (type: 'inactivity' | 'expiry' | 'lead-
   if (type === 'inactivity') {
     return `
       <div style="${styles}">
+        ${emailBrand(true)}
         <div style="text-align: center; margin-bottom: 30px;">
            <div style="display: inline-block; padding: 8px 16px; background: rgba(227, 38, 54, 0.1); color: #e32636; border-radius: 50px; font-size: 10px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase;">
              Mission Alert // Pending Action
@@ -42,6 +45,7 @@ export const getRetentionEmailTemplate = (type: 'inactivity' | 'expiry' | 'lead-
   if (type === 'expiry') {
     return `
       <div style="${styles}">
+        ${emailBrand(true)}
         <div style="text-align: center; margin-bottom: 30px;">
            <div style="display: inline-block; padding: 8px 16px; background: rgba(245, 188, 27, 0.1); color: #f5bc1b; border-radius: 50px; font-size: 10px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase;">
              Access Warning // Expiration Imminent
@@ -63,6 +67,7 @@ export const getRetentionEmailTemplate = (type: 'inactivity' | 'expiry' | 'lead-
   if (type === 'lead-fomo') {
     return `
       <div style="${styles}">
+        ${emailBrand(true)}
         <div style="text-align: center; margin-bottom: 30px;">
            <div style="display: inline-block; padding: 8px 16px; background: rgba(245, 188, 27, 0.1); color: #f5bc1b; border-radius: 50px; font-size: 10px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase;">
              Exclusive Invitation // 2026
@@ -87,6 +92,7 @@ export const getRetentionEmailTemplate = (type: 'inactivity' | 'expiry' | 'lead-
   if (type === 'renewal-privilege') {
     return `
       <div style="${styles}">
+        ${emailBrand(true)}
         <div style="text-align: center; margin-bottom: 30px;">
            <div style="display: inline-block; padding: 8px 16px; background: rgba(227, 38, 54, 0.1); color: #e32636; border-radius: 50px; font-size: 10px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase;">
              Mission Status // Ending Soon
