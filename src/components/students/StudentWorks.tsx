@@ -150,7 +150,6 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
 }
 
 function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void }) {
-  const vertical = work.orientation !== 'horizontal';
   const place = placeOf(work);
   return (
     <div className="p-5 md:p-8">
@@ -162,7 +161,7 @@ function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void 
         <button type="button" onClick={onClose} className="w-11 h-11 shrink-0 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center" aria-label="Đóng"><X size={20} aria-hidden="true" /></button>
       </div>
 
-      {pairsOf(work).map((pair, i) => <PairView key={i} sides={sidesOf(pair)} vertical={vertical} />)}
+      {pairsOf(work).map((pair, i) => <PairView key={i} sides={sidesOf(pair)} vertical={(pair.orientation || work.orientation) !== 'horizontal'} />)}
 
       {(work.result || work.description) && (
         <div className="mt-6 max-w-3xl">

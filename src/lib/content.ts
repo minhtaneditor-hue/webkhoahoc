@@ -70,6 +70,8 @@ export type MediaPair = {
   /** more pictures on the same side, after the main one */
   before_more?: string[] | null;
   after_more?: string[] | null;
+  /** frame of this pair; pairs 2+ fall back to the work's own orientation */
+  orientation?: 'vertical' | 'horizontal' | null;
 };
 
 export const pairHasMedia = (p: MediaPair) =>

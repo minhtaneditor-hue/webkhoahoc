@@ -76,6 +76,8 @@ export default function PairsEditor({ form, update, folder }: { form: any; updat
       // Extra-picture columns are only sent once used, or when the row already has them
       ...Object.fromEntries(MORE_KEYS.filter((k) => head[k] !== undefined || form[k] !== undefined).map((k) => [k, head[k] ?? []])),
       _firstPairOpen: next.length > 0,
+      // A pair moved up to first place brings its own frame to the work
+      ...(head.orientation ? { orientation: head.orientation } : {}),
       ...(rest.length || form.extra_pairs !== undefined ? { extra_pairs: rest } : {}),
     });
   }
@@ -119,6 +121,13 @@ export default function PairsEditor({ form, update, folder }: { form: any; updat
         <div key={i} className="rounded-[var(--radius-md)] border border-line p-4 space-y-4">
           <div className="flex items-center justify-between gap-2">
             <p className="font-semibold">Cặp {i + 1}</p>
+            {i > 0 && (
+              <select aria-label={`Khung hình cặp ${i + 1}`} className="input !min-h-[36px] !w-auto !py-1 text-sm mr-auto" value={p.orientation ?? ''} onChange={(e) => set(i, { orientation: (e.target.value || null) as MediaPair['orientation'] })}>
+                <option value="">Khung như cặp 1</option>
+                <option value="vertical">Dọc 9:16</option>
+                <option value="horizontal">Ngang 16:9</option>
+              </select>
+            )}
             <button type="button" onClick={() => remove(i)} className="inline-flex items-center gap-1.5 min-h-[36px] px-3 rounded-md text-sm font-semibold text-muted-foreground hover:bg-red-50 hover:text-danger">
               <Trash2 size={14} aria-hidden="true" /> Xóa cặp
             </button>

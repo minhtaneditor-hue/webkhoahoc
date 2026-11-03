@@ -254,11 +254,10 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
             {!open.works.some(hasMedia) && <p className="mt-8 text-stone-300">Sản phẩm của học viên đang được cập nhật. Xem kênh của học viên qua các nút ở trên.</p>}
             <ol className="mt-8 space-y-10">
               {open.works.filter(hasMedia).map((w, i) => {
-                const vertical = w.orientation !== 'horizontal';
                 return (
                   <li key={w.id}>
                     <p className="font-semibold text-white">{i + 1}. {w.title}{w.result ? <span className="badge ml-2 !bg-gold-light !text-onyx">{w.result}</span> : null}</p>
-                    {pairsOf(w).map((pair, j) => <PairView key={j} sides={sidesOf(pair)} vertical={vertical} />)}
+                    {pairsOf(w).map((pair, j) => <PairView key={j} sides={sidesOf(pair)} vertical={(pair.orientation || w.orientation) !== 'horizontal'} />)}
                     {w.description && <p className="mt-3 text-stone-300 leading-relaxed">{w.description}</p>}
                   </li>
                 );
