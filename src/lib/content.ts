@@ -48,7 +48,7 @@ export async function getFeedbackImages(): Promise<FeedbackImage[]> {
 export const DEFAULT_FAQS = [
   { q: 'Điện thoại cũ có học được không?', a: 'Được. Khóa học dạy bạn làm chủ ánh sáng và góc máy để bù lại giới hạn của thiết bị; điện thoại vài năm tuổi vẫn cho ra hình đẹp.' },
   { q: 'Tôi ngại lên hình thì sao?', a: 'Bạn có thể làm video voice-over, quay tay, quay sản phẩm hoặc bối cảnh. Khóa học có riêng chiến lược cho người không muốn lộ mặt.' },
-  { q: 'Học xong chưa ra kết quả thì sao?', a: 'Bạn được hỗ trợ 1:1 cho tới khi dựng xong phễu bán hàng đầu tiên.' },
+  { q: 'Học xong chưa ra kết quả thì sao?', a: 'Bạn nộp bài trong nhóm Zalo học viên để được góp ý, và nhắn Zalo cho Minh Tấn khi vướng ở bài nào.' },
   { q: 'Đăng ký rồi có được hoàn tiền không?', a: 'Học phí đã thanh toán không được hoàn lại. Bạn hãy xem các bài học thử miễn phí và nhắn Zalo hỏi kỹ trước khi đăng ký.' },
   { q: 'Tôi học được bao lâu?', a: 'Truy cập trọn đời, bao gồm mọi bài học cập nhật sau này.' },
 ];

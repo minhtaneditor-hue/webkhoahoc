@@ -31,8 +31,8 @@ export const SETTING_FIELDS: SettingField[] = [
   { key: 'statement', group: 'home', label: 'Câu tuyên ngôn (chữ tô dần khi cuộn)', type: 'textarea', default: 'Một video quay tử tế sẽ tiếp tục bán hàng cho bạn nhiều năm sau ngày đăng. Khóa học này dạy bạn làm ra những video như thế.' },
 
   // Contact
-  { key: 'contact_phone', group: 'contact', label: 'Hotline', default: '0922 255 861' },
-  { key: 'contact_zalo', group: 'contact', label: 'Link Zalo', type: 'url', default: 'https://zalo.me/0922255861' },
+  { key: 'contact_phone', group: 'contact', label: 'Hotline', default: '0962 255 861' },
+  { key: 'contact_zalo', group: 'contact', label: 'Link Zalo', type: 'url', default: 'https://zalo.me/0962255861' },
   { key: 'contact_zalo_group', group: 'contact', label: 'Link nhóm Zalo cộng đồng (học viên nộp bài tập)', type: 'url', hint: 'Để trống thì nút Nộp bài tập mở Zalo cá nhân ở trên', default: '' },
   { key: 'contact_email', group: 'contact', label: 'Email', default: 'tanva@minhtanacademy.com' },
   { key: 'fb_pixel_id', group: 'contact', label: 'Facebook Pixel ID (chỉ ghi dãy số)', hint: 'Lấy trong Meta Events Manager. Để trống là không gắn Pixel', default: '' },

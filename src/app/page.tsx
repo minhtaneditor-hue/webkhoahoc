@@ -186,7 +186,7 @@ export default async function Home() {
           <div>
             <SectionHeading
               title={course?.title || '21 Ngày Biến Video Thành Tài Sản'}
-              description={course?.description || 'Trại huấn luyện 21 ngày giúp bạn xây cỗ máy nội dung và thu nhập từ smartphone.'}
+              description={course?.description || 'Đừng làm video chỉ để giải trí. 21 ngày học cách tự quay, tự dựng và bán hàng bằng video, chỉ với chiếc điện thoại của bạn.'}
             />
             <Reveal as="ul" className="mt-10 space-y-5" from="left">
               {outcomes.map((o) => (

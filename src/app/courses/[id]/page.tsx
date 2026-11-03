@@ -19,7 +19,7 @@ type Status = { type: 'success' | 'error'; text: string } | null;
 const outcomes = [
   { t: 'Hình ảnh chuẩn điện ảnh', d: 'Quy trình quay dựng chuẩn truyền hình, chỉ với điện thoại.' },
   { t: 'Chiến lược lan tỏa', d: 'Hiểu thuật toán để tiếp cận khách hàng tự nhiên.' },
-  { t: 'Phễu bán hàng tự động', d: 'Chăm sóc và chốt đơn từ người xem thành khách hàng.' },
+  { t: 'Video bán được hàng', d: 'Ba loại video khách hàng sẵn sàng trả tiền và cách làm từng loại.' },
   { t: 'Thương hiệu cá nhân', d: 'Định vị bạn là chuyên gia trong lĩnh vực của mình.' },
 ];
 
