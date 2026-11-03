@@ -9,6 +9,7 @@ import { isAdmin } from '@/lib/admin';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import { formatVND } from '@/lib/supabase-public';
 import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
+import ConsultBox from '@/components/ConsultBox';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, PlayCircle, X, ChevronLeft, Gift } from 'lucide-react';
 
 type Status = { type: 'success' | 'error'; text: string } | null;
@@ -297,6 +298,9 @@ export default function CourseDetails() {
                   {paymentLoading ? <><Loader2 className="animate-spin" size={18} aria-hidden="true" /> Đang tạo đơn…</> : <>{user ? 'Thanh toán ngay' : 'Đăng nhập để đăng ký'} <ArrowRight size={18} aria-hidden="true" /></>}
                 </button>
                 {payError && <p role="alert" className="mt-3 text-sm text-danger">{payError}</p>}
+                <div className="mt-3">
+                  <ConsultBox kind="course" product={course.title} label="Cần tư vấn trước khi mua?" />
+                </div>
 
                 {/* Why buy here rather than on Unica */}
                 <div className="mt-6 rounded-lg border border-gold/30 bg-gold-soft p-4">

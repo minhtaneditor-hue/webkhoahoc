@@ -5,16 +5,19 @@ import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
 import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
+import ConsultBox from '@/components/ConsultBox';
 
 export const metadata: Metadata = {
   title: 'Coaching 1:1',
-  description: 'Học 1-1 cùng Minh Tấn: chụp ảnh, quay và dựng video bằng điện thoại hoặc bằng AI. Gói Audit 1,5 triệu, gói 6 buổi và 10 buổi.',
+  description: 'Học 1-1 cùng Minh Tấn: chụp ảnh, quay và dựng video bằng điện thoại hoặc bằng AI. Audit miễn phí, gói 6 buổi và 10 buổi, học online hoặc offline.',
 };
 
 const packages = [
   {
     name: 'Gói Audit',
-    price: '1.500.000đ',
+    price: 'Miễn phí',
+    oldPrice: '1.500.000đ',
+    kind: 'audit' as const,
     duration: 'Tư vấn online · hơn 1 giờ',
     features: [
       'Xem kênh và video hiện tại của bạn',
@@ -22,13 +25,14 @@ const packages = [
       'Định hướng nội dung phù hợp với bạn',
       'Gợi ý hướng đi và các bước làm tiếp theo',
     ],
-    cta: 'Đặt lịch Audit',
+    cta: 'Đặt lịch Audit miễn phí',
     featured: false,
   },
   {
     name: 'Gói 6 buổi',
     price: '10.000.000đ',
-    duration: '6 buổi học 1-1',
+    kind: 'coaching' as const,
+    duration: '6 buổi học 1-1 · online hoặc offline',
     features: [
       'Mỗi buổi 2 tiếng, học cá nhân hóa',
       'Học được toàn bộ nội dung khóa 21 Ngày',
@@ -42,7 +46,8 @@ const packages = [
   {
     name: 'Gói 10 buổi',
     price: '15.000.000đ',
-    duration: '10 buổi học 1-1 · có thể đến tận nơi',
+    kind: 'coaching' as const,
+    duration: '10 buổi học 1-1 · online hoặc offline, có thể đến tận nơi',
     features: [
       'Mỗi buổi 2 tiếng, học cá nhân hóa',
       'Học được toàn bộ nội dung khóa 21 Ngày',
@@ -114,15 +119,25 @@ export default async function CoachingPage() {
                 {pkg.featured && <span className="badge absolute -top-3 left-8 !bg-gold-light !text-onyx">Được chọn nhiều nhất</span>}
                 <p className={`text-sm font-semibold ${pkg.featured ? 'text-gold-light' : 'text-gold'}`}>{pkg.duration}</p>
                 <h3 className={`mt-2 text-3xl ${pkg.featured ? 'text-white' : ''}`}>{pkg.name}</h3>
-                <p className={`mt-4 text-4xl font-extrabold tabular-nums ${pkg.featured ? 'text-white' : ''}`}>{pkg.price}</p>
+                <div className="mt-4 flex items-baseline gap-3 flex-wrap">
+                  <p className={`text-4xl font-extrabold tabular-nums ${pkg.featured ? 'text-white' : ''}`}>{pkg.price}</p>
+                  {'oldPrice' in pkg && <p className="text-lg text-muted-foreground line-through">{pkg.oldPrice}</p>}
+                </div>
                 <ul className={`mt-8 space-y-3 flex-1 ${pkg.featured ? 'text-stone-300' : 'text-stone'}`}>
                   {pkg.features.map((f) => (
                     <li key={f} className="flex gap-3"><Check size={18} className={`shrink-0 mt-0.5 ${pkg.featured ? 'text-gold-light' : 'text-gold'}`} aria-hidden="true" /> {f}</li>
                   ))}
                 </ul>
-                <a href={CONTACT.zaloHref} target="_blank" rel="noopener noreferrer" className={`btn mt-8 w-full ${pkg.featured ? 'btn-gold' : 'btn-dark'}`}>
-                  {pkg.cta} <ArrowRight size={18} aria-hidden="true" />
-                </a>
+                <div className="mt-8">
+                  {pkg.kind === 'audit' ? (
+                    <ConsultBox kind="audit" product={pkg.name} zaloHref={CONTACT.zaloHref} label={pkg.cta} variant="dark" />
+                  ) : (
+                    <ConsultBox kind="coaching" product={pkg.name} zaloHref={CONTACT.zaloHref} label={pkg.cta} variant={pkg.featured ? 'gold' : 'dark'} />
+                  )}
+                  <a href={CONTACT.zaloHref} target="_blank" rel="noopener noreferrer" className={`mt-2 flex items-center justify-center gap-2 min-h-[44px] text-sm hover:underline ${pkg.featured ? 'text-gold-light' : 'text-gold'}`}>
+                    Hoặc nhắn Zalo hỏi trước <ArrowRight size={16} aria-hidden="true" />
+                  </a>
+                </div>
               </div>
             ))}
           </Reveal>

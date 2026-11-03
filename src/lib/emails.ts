@@ -413,6 +413,58 @@ export function leadDay6(d: { name?: string | null; email: string }, c: Featured
   };
 }
 
+// ---------------------------------------------------------------- consult / free Audit booking (/api/consult)
+
+export type ConsultRequest = { kind: 'audit' | 'coaching' | 'course'; product?: string | null; format?: string | null; name: string; email: string; phone: string; message?: string | null };
+
+const consultWhat = (r: ConsultRequest) =>
+  r.kind === 'audit' ? 'buổi Audit miễn phí' : r.product ? esc(r.product) : 'tư vấn';
+
+/** To the customer: we got it, Minh Tấn will reach out on Zalo. */
+export function consultReceived(r: ConsultRequest, contact: Contact): Mail {
+  const audit = r.kind === 'audit';
+  return {
+    subject: audit ? 'Đã nhận lịch Audit miễn phí của bạn' : 'TẤN VA đã nhận yêu cầu tư vấn của bạn',
+    html: layout({
+      preheader: 'Minh Tấn sẽ liên hệ qua Zalo trong vòng 24 giờ.',
+      body: `
+        ${eyebrow(audit ? 'Đặt lịch thành công' : 'Đã nhận yêu cầu')}
+        ${h1(`Cảm ơn ${esc(firstName(r.name))}!`)}
+        ${p(`TẤN VA đã nhận yêu cầu <strong>${consultWhat(r)}</strong> của bạn${r.format ? ` (hình thức <strong>${esc(r.format)}</strong>)` : ''}. Minh Tấn sẽ nhắn Zalo số <strong>${esc(r.phone)}</strong> trong vòng 24 giờ để ${audit ? 'chốt lịch' : 'tư vấn'}.`)}
+        ${audit ? box(`<strong style="color:${C.ink};">Chuẩn bị trước buổi Audit</strong><br>
+          • Link kênh (TikTok, Facebook, YouTube…) hoặc 2–3 video bạn muốn được xem.<br>
+          • Mục tiêu của bạn: bán hàng, xây thương hiệu cá nhân hay làm nghề video.<br>
+          • Điều bạn đang vướng nhất khi quay hoặc dựng.`) : ''}
+        ${p('Muốn trao đổi ngay? Bấm nút bên dưới để nhắn Zalo cho Minh Tấn.')}
+        ${button(contact.zaloHref, 'Nhắn Zalo ngay')}
+        ${signature}`,
+    }),
+  };
+}
+
+/** To Minh Tấn: a new lead to call back. */
+export function consultNotify(r: ConsultRequest): Mail {
+  const rows: [string, string][] = [
+    ['Loại', r.kind === 'audit' ? 'Đặt lịch Audit miễn phí' : r.kind === 'coaching' ? 'Tư vấn Coaching' : 'Tư vấn khóa học'],
+    ['Gói / khóa', r.product || '—'], ['Hình thức', r.format || '—'],
+    ['Tên', r.name], ['Zalo / SĐT', r.phone], ['Email', r.email], ['Lời nhắn', r.message || '—'],
+  ];
+  return {
+    subject: `[${r.kind === 'audit' ? 'Audit' : 'Tư vấn'}] ${r.name} · ${r.phone}`,
+    html: layout({
+      preheader: `${r.name} vừa ${r.kind === 'audit' ? 'đặt lịch Audit' : 'gửi yêu cầu tư vấn'}.`,
+      body: `
+        ${eyebrow('Khách mới')}
+        ${h1(r.kind === 'audit' ? 'Có người đặt lịch Audit' : 'Có người cần tư vấn')}
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px;font-size:15px;">
+          ${rows.map(([k, v]) => `<tr><td style="padding:8px 0;color:${C.muted};width:110px;vertical-align:top;">${k}</td><td style="padding:8px 0;color:${C.ink};font-weight:600;">${esc(v)}</td></tr>`).join('')}
+        </table>
+        ${button(`https://zalo.me/${r.phone.replace(/\D/g, '')}`, 'Nhắn Zalo cho khách')}
+        ${p(`<a href="${SITE}/admin/consults" style="color:${C.gold};">Xem tất cả yêu cầu trong Admin</a>`)}`,
+    }),
+  };
+}
+
 // ---------------------------------------------------------------- auth (pasted into Supabase > Authentication > Emails)
 
 export function authEmail(kind: 'confirm' | 'recovery'): Mail {

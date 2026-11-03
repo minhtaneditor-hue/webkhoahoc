@@ -13,6 +13,8 @@ import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWor
 import StudentWorks from '@/components/students/StudentWorks';
 import { toYoutubeId } from '@/lib/site-settings';
 import LeadMagnet from '@/components/LeadMagnet';
+import ConsultBox from '@/components/ConsultBox';
+import { contactFrom } from '@/lib/site-settings';
 
 export const revalidate = 60;
 
@@ -196,6 +198,10 @@ export default async function Home() {
             <Link href={courseHref} className="mt-3 flex items-center justify-center gap-2 text-gold-light hover:underline min-h-[44px]">
               <PlayCircle size={18} aria-hidden="true" /> Học thử miễn phí bài đầu tiên
             </Link>
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <p className="text-sm text-stone-400 mb-3 text-center">Còn băn khoăn? Để lại số Zalo, Minh Tấn tư vấn cho bạn.</p>
+              <ConsultBox kind="course" product={course?.title} zaloHref={contactFrom(settings).zaloHref} dark />
+            </div>
           </div>
         </div>
       </section>
