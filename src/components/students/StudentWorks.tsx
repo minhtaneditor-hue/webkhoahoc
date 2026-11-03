@@ -8,15 +8,24 @@ import { parseMedia, sideThumbnail, WORK_CATEGORIES, type ParsedMedia } from '@/
 import { COUNTRY_BY_CODE } from '@/lib/countries';
 import { pairsOf, type MediaPair, type StudentWork } from '@/lib/content';
 
-export type Side = { label: 'Trước' | 'Sau'; media: ParsedMedia | null; thumb: string | null };
+export type Side = { label: 'Trước' | 'Sau'; media: ParsedMedia | null; thumb: string | null; more: string[] };
+
+function sideOf(label: Side['label'], url?: string | null, thumb?: string | null, extra?: string[] | null): Side | null {
+  const media = parseMedia(url);
+  const more = (extra ?? []).filter(Boolean);
+  if (!media && !thumb) {
+    // Only extra pictures: the first one becomes the main picture
+    if (!more.length) return null;
+    return { label, media: null, thumb: more[0], more: more.slice(1) };
+  }
+  return { label, media, thumb: sideThumbnail(media, thumb), more };
+}
 
 export function sidesOf(w: MediaPair): Side[] {
-  const before = parseMedia(w.before_url);
-  const after = parseMedia(w.after_url);
-  const sides: Side[] = [];
-  if (before || w.before_thumbnail_url) sides.push({ label: 'Trước', media: before, thumb: sideThumbnail(before, w.before_thumbnail_url) });
-  if (after || w.after_thumbnail_url) sides.push({ label: 'Sau', media: after, thumb: sideThumbnail(after, w.after_thumbnail_url) });
-  return sides;
+  return [
+    sideOf('Trước', w.before_url, w.before_thumbnail_url, w.before_more),
+    sideOf('Sau', w.after_url, w.after_thumbnail_url, w.after_more),
+  ].filter((s): s is Side => !!s);
 }
 
 export function placeOf(w: StudentWork) {
@@ -176,9 +185,34 @@ export function PairView({ sides, vertical }: { sides: Side[]; vertical: boolean
               {s.label === 'Trước' ? 'Trước khi học' : 'Sau khi học'}
             </figcaption>
           )}
-          <Player side={s} vertical={vertical} />
+          <SideView side={s} vertical={vertical} />
         </figure>
       ))}
+    </div>
+  );
+}
+
+/** One side: its main clip or picture, then a strip of its extra pictures (click one to show it large). */
+function SideView({ side, vertical }: { side: Side; vertical: boolean }) {
+  const [shown, setShown] = useState(0);
+  if (!side.more.length) return <Player side={side} vertical={vertical} />;
+  const all: Side[] = [side, ...side.more.map((src) => ({ ...side, media: null, thumb: src, more: [] }))];
+  const current = all[shown] ?? side;
+  return (
+    <div>
+      <Player key={shown} side={current} vertical={vertical} />
+      <div className="mt-2 flex gap-2 overflow-x-auto pb-1" role="group" aria-label={`Ảnh ${side.label.toLowerCase()} khi học`}>
+        {all.map((s, i) => (
+          <button key={i} type="button" onClick={() => setShown(i)} aria-pressed={i === shown} aria-label={`Ảnh ${i + 1} / ${all.length}`}
+            className={`relative shrink-0 w-14 h-14 rounded-md overflow-hidden bg-black ring-2 transition ${i === shown ? 'ring-gold-light' : 'ring-transparent opacity-60 hover:opacity-100'}`}>
+            {s.thumb ? (
+              <Image src={s.thumb} alt="" fill sizes="56px" unoptimized={s.thumb.startsWith('http')} className="!rounded-none object-cover" />
+            ) : (
+              <span className="absolute inset-0 flex items-center justify-center text-white"><Play size={16} aria-hidden="true" /></span>
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

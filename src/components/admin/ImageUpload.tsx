@@ -18,6 +18,17 @@ function readSize(file: File): Promise<{ width: number; height: number }> {
   });
 }
 
+/** Uploads one picture to the public "media" bucket and returns its URL. */
+export async function uploadImage(file: File | Blob, folder: string) {
+  if (!file.type.startsWith('image/')) throw new Error('Vui lòng chọn file ảnh (JPG, PNG, WebP).');
+  if (file.size > MAX_MB * 1024 * 1024) throw new Error(`Ảnh quá lớn, tối đa ${MAX_MB} MB.`);
+  const ext = (file instanceof File ? file.name.split('.').pop()?.toLowerCase() : '') || 'jpg';
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabase.storage.from('media').upload(path, file, { cacheControl: '31536000', upsert: false });
+  if (error) throw error;
+  return supabase.storage.from('media').getPublicUrl(path).data.publicUrl;
+}
+
 /**
  * Upload an image to the public Supabase Storage bucket "media" (admins only, see migration 004),
  * or paste a link. Calls onChange with the public URL.
@@ -45,16 +56,10 @@ export default function ImageUpload({
 
   async function handleFile(file: File | Blob) {
     setError('');
-    if (!file.type.startsWith('image/')) return setError('Vui lòng chọn file ảnh (JPG, PNG, WebP).');
-    if (file.size > MAX_MB * 1024 * 1024) return setError(`Ảnh quá lớn, tối đa ${MAX_MB} MB.`);
     setBusy(true);
     try {
-      if (onSize) onSize(await readSize(file as File));
-      const ext = (file instanceof File ? file.name.split('.').pop()?.toLowerCase() : '') || 'jpg';
-      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('media').upload(path, file, { cacheControl: '31536000', upsert: false });
-      if (upErr) throw upErr;
-      onChange(supabase.storage.from('media').getPublicUrl(path).data.publicUrl);
+      if (onSize && file.type.startsWith('image/')) onSize(await readSize(file as File));
+      onChange(await uploadImage(file, folder));
     } catch (e: any) {
       setError(e.message?.includes('Bucket not found')
         ? 'Chưa có kho ảnh "media". Hãy chạy file migration 004 trong Supabase.'

@@ -67,9 +67,13 @@ export type MediaPair = {
   before_thumbnail_url?: string | null;
   after_url?: string | null;
   after_thumbnail_url?: string | null;
+  /** more pictures on the same side, after the main one */
+  before_more?: string[] | null;
+  after_more?: string[] | null;
 };
 
-export const pairHasMedia = (p: MediaPair) => !!(p.before_url || p.after_url || p.before_thumbnail_url || p.after_thumbnail_url);
+export const pairHasMedia = (p: MediaPair) =>
+  !!(p.before_url || p.after_url || p.before_thumbnail_url || p.after_thumbnail_url || p.before_more?.length || p.after_more?.length);
 
 export type StudentWork = {
   id: string;
