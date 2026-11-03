@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const list = CHECKLIST.map((g) => `<h3 style="font-size:16px;margin:20px 0 6px;color:#A84E3C;">${g.group}</h3>` +
       g.items.map((i) => `<p style="margin:4px 0;">☐ ${esc(i)}</p>`).join('')).join('');
     await new Resend(process.env.RESEND_API_KEY).emails.send({
-      from: 'TẤN VA <customer@minhtanacademy.com>',
+      from: 'TẤN VA <tanva@minhtanacademy.com>',
       to: email,
       subject: `Quà của bạn: ${CHECKLIST_TITLE}`,
       html: `<div style="max-width:560px;margin:0 auto;font-family:Arial,sans-serif;color:#242321;line-height:1.6;">

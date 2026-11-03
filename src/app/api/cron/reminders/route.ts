@@ -45,7 +45,7 @@ export async function GET(req: Request) {
         const course = (enrollment as any).courses;
         
         await resend.emails.send({
-          from: 'Minh Tan Academy <customer@minhtanacademy.com>',
+          from: 'TẤN VA <tanva@minhtanacademy.com>',
           to: user.email,
           subject: '🔥 BÀI GIẢNG ĐANG CHỜ ĐỢI BẠN!',
           html: getRetentionEmailTemplate('inactivity', { 
@@ -81,7 +81,7 @@ export async function GET(req: Request) {
         const course = (enrollment as any).courses;
         
         await resend.emails.send({
-          from: 'Minh Tan Academy <customer@minhtanacademy.com>',
+          from: 'TẤN VA <tanva@minhtanacademy.com>',
           to: user.email,
           subject: '⚠️ CẢNH BÁO: GIA HẠN ĐẶC QUYỀN TRUY CẬP CỦA BẠN!',
           html: getRetentionEmailTemplate('renewal-privilege', { 
@@ -116,7 +116,7 @@ export async function GET(req: Request) {
 
         if (count === 0) {
           await resend.emails.send({
-            from: 'Minh Tan Academy <customer@minhtanacademy.com>',
+            from: 'TẤN VA <tanva@minhtanacademy.com>',
             to: lead.email,
             subject: '🚀 MÓN QUÀ KHỞI ĐẦU DÀNH RIÊNG CHO BẠN!',
             html: getRetentionEmailTemplate('lead-fomo', { 

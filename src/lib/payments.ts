@@ -121,7 +121,7 @@ export async function fulfillPayment(supabase: SupabaseClient, payment: any) {
     const contact = contactFrom(await getSiteSettings());
     const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.minhtanacademy.com';
     await resend.emails.send({
-      from: 'TẤN VA <customer@minhtanacademy.com>',
+      from: 'TẤN VA <tanva@minhtanacademy.com>',
       to: user.email,
       subject: `Chào mừng bạn vào học: ${course.title}`,
       html: `
@@ -171,7 +171,7 @@ async function emailAssetBuyer(supabase: SupabaseClient, resend: Resend, payment
   const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.minhtanacademy.com';
   const link = `${base}/payment/bank/${payment.order_id}?t=${payment.access_token}`;
   const { error } = await resend.emails.send({
-    from: 'Minh Tan Academy <customer@minhtanacademy.com>',
+    from: 'TẤN VA <tanva@minhtanacademy.com>',
     to,
     subject: `Đã thanh toán: ${asset.title}`,
     html: `
