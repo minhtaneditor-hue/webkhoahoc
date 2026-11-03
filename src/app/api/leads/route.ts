@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { CHECKLIST, CHECKLIST_TITLE } from '@/lib/checklist';
-import { FROM, checklistEmail, unsubscribeHeaders } from '@/lib/emails';
+import { FROM, checklistEmail, unsubscribeHeaders, getFeaturedCourse } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       from: FROM,
       to: email,
       headers: unsubscribeHeaders(email),
-      ...checklistEmail({ name, email, title: CHECKLIST_TITLE, groups: CHECKLIST }),
+      ...checklistEmail({ name, email, title: CHECKLIST_TITLE, groups: CHECKLIST, course: await getFeaturedCourse(admin) }),
     }).catch(() => {});
   }
   return NextResponse.json({ ok: true });

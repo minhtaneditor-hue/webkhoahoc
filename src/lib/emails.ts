@@ -1,4 +1,5 @@
 import { createHmac } from 'crypto';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Every email the site sends: one shared layout (logo, white card, button, signature, footer)
 // and the copy for each message. Table layout + inline styles because email clients ignore <style>.
@@ -39,7 +40,7 @@ const steps = (items: [string, string][]) => `
         <div style="width:30px;height:30px;line-height:30px;border-radius:15px;background:${C.ivory};color:${C.gold};font-weight:800;font-size:14px;text-align:center;">${i + 1}</div>
       </td>
       <td valign="top" style="padding:3px 0 16px;font-size:15px;line-height:1.6;color:${C.text};">
-        <strong style="color:${C.ink};">${title}</strong><br>${text}
+        <strong style="color:${C.ink};">${title}</strong>${text ? `<br>${text}` : ''}
       </td>
     </tr>`).join('')}
   </table>`;
@@ -116,6 +117,32 @@ function layout(o: { preheader: string; body: string; unsubscribeFor?: string })
 }
 
 type Mail = { subject: string; html: string };
+
+/** The course promoted to people who have not bought yet: title, free lessons and parts come from the database. */
+export type FeaturedCourse = { id: string; title: string; freeLessons: string[]; chapters: string[]; lessonCount: number };
+
+export async function getFeaturedCourse(db: SupabaseClient): Promise<FeaturedCourse | null> {
+  const { data: lessons } = await db.from('lesson_outline').select('course_id, title, is_free, order_index').order('order_index');
+  const counts = new Map<string, number>();
+  for (const l of lessons || []) counts.set(l.course_id, (counts.get(l.course_id) || 0) + 1);
+  const id = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (!id) return null;
+  const [{ data: course }, { data: chapters }] = await Promise.all([
+    db.from('courses').select('title').eq('id', id).single(),
+    db.from('chapters').select('title, order_index').eq('course_id', id).order('order_index'),
+  ]);
+  if (!course) return null;
+  return {
+    id, title: course.title, lessonCount: counts.get(id) || 0,
+    freeLessons: (lessons || []).filter((l) => l.course_id === id && l.is_free).map((l) => l.title),
+    chapters: (chapters || []).map((c) => c.title.replace(/^Phần\s*\d+\s*:\s*/i, '')),
+  };
+}
+
+const courseUrl = (c: FeaturedCourse) => `${SITE}/courses/${c.id}`;
+/** The free lessons as a short list. */
+const freeList = (c: FeaturedCourse) => c.freeLessons
+  .map((t) => `<p style="margin:0 0 6px;font-size:15px;line-height:1.6;color:${C.text};">▶&nbsp; ${esc(t)}</p>`).join('');
 type Contact = { zaloHref: string; zaloGroupHref: string };
 const lessonLink = (courseId: string, lessonId?: string | null) => `${SITE}/learn/${courseId}${lessonId ? `/${lessonId}` : ''}`;
 
@@ -131,12 +158,12 @@ export function welcomeCourse(d: { name?: string | null; email: string; courseTi
       body: `
         ${eyebrow('Kích hoạt thành công')}
         ${h1(`Chào mừng ${esc(firstName(d.name))} vào lớp!`)}
-        ${p(`Khóa <strong>${course}</strong> đã mở cho tài khoản <strong>${esc(d.email)}</strong>. Bạn học được trên điện thoại lẫn máy tính, không giới hạn số lần xem.`)}
+        ${p(`Khóa <strong>${course}</strong> đã mở cho tài khoản <strong>${esc(d.email)}</strong>. Bạn học được trên cả điện thoại lẫn máy tính.`)}
         ${p('Để không bị “mua rồi để đó”, bạn làm 3 việc nhỏ này ngay hôm nay:')}
         ${steps([
-          ['Xem bài đầu tiên (chưa tới 15 phút)', 'Chỉ cần bắt đầu. Bài 1 giúp bạn biết mình sẽ đi qua những gì trong khóa.'],
+          ['Xem bài đầu tiên ngay bây giờ', 'Mỗi bài chỉ vài phút. Chỉ cần bắt đầu, phần khó nhất là bài đầu tiên.'],
           ['Vào nhóm Zalo học viên', `Nơi bạn nộp bài, hỏi bài và được sửa. <a href="${d.contact.zaloGroupHref}" style="color:${C.gold};font-weight:700;">Vào nhóm tại đây</a>.`],
-          ['Chọn giờ học cố định', 'Mỗi ngày 15–20 phút cùng một khung giờ. Đều đặn quan trọng hơn học nhiều một lúc.'],
+          ['Mỗi ngày 1 bài, cùng một khung giờ', 'Học đều mỗi ngày hiệu quả hơn học dồn. Xem xong bấm “Hoàn thành” để theo dõi tiến độ.'],
         ])}
         ${button(lessonLink(d.courseId), 'Vào học bài đầu tiên')}
         ${box(`<strong style="color:${C.ink};">Quà dành cho học viên đăng ký trên website</strong><br>
@@ -165,7 +192,7 @@ export function assetPurchased(d: { name?: string | null; title: string; orderId
   };
 }
 
-export function checklistEmail(d: { name?: string | null; title: string; groups: { group: string; items: string[] }[]; email: string }): Mail {
+export function checklistEmail(d: { name?: string | null; title: string; groups: { group: string; items: string[] }[]; email: string; course: FeaturedCourse | null }): Mail {
   const list = d.groups.map((g) => `
     <p style="margin:20px 0 8px;font-size:15px;font-weight:800;color:${C.gold};">${esc(g.group)}</p>
     ${g.items.map((i) => `<p style="margin:0 0 6px;font-size:15px;line-height:1.6;color:${C.text};">☐&nbsp; ${esc(i)}</p>`).join('')}`).join('');
@@ -180,8 +207,8 @@ export function checklistEmail(d: { name?: string | null; title: string; groups:
         ${p(`Chào ${esc(firstName(d.name))}, đây là checklist Minh Tấn kiểm tra trước mỗi lần quay. Lưu email này, mở ra trước khi bấm quay và đánh dấu từng mục nhé.`)}
         ${list}
         <div style="height:24px;"></div>
-        ${box(`<strong style="color:${C.ink};">Muốn học bài bản từ đầu?</strong><br>Khóa 21 Ngày có bài học thử miễn phí, xem ngay không cần thanh toán.`)}
-        ${button(`${SITE}/courses`, 'Học thử miễn phí')}
+        ${d.course ? `${box(`<strong style="color:${C.ink};">Muốn học bài bản từ đầu?</strong><br>Khóa <strong>${esc(d.course.title)}</strong> có ${d.course.freeLessons.length} bài học thử miễn phí, xem ngay không cần thanh toán.`)}
+        ${button(courseUrl(d.course), 'Học thử miễn phí')}` : ''}
         ${signature}`,
     }),
   };
@@ -196,16 +223,16 @@ const nextUp = (s: Student) => s.nextLessonTitle ? box(`<span style="font-size:1
 /** Day 2: build the habit. */
 export function onboardDay2(s: Student): Mail {
   return {
-    subject: `${firstName(s.name)} ơi, 15 phút hôm nay cho khóa học nhé`,
+    subject: `${firstName(s.name)} ơi, hôm nay học bài tiếp theo nhé`,
     html: layout({
       preheader: 'Cách học để thật sự xong khóa, không bỏ ngang giữa chừng.',
       unsubscribeFor: s.email,
       body: `
         ${eyebrow('Ngày 2 · Tạo thói quen')}
-        ${h1('Bí quyết để học xong khóa: nhỏ mà đều')}
+        ${h1('Bí quyết để học xong khóa: mỗi ngày 1 bài')}
         ${p(`Chào ${esc(firstName(s.name))}, phần lớn người bỏ ngang khóa học không phải vì khó, mà vì đợi “có thời gian rảnh” mới học. Cách Minh Tấn khuyên học viên:`)}
         ${steps([
-          ['Mỗi ngày một bài', 'Bài nào cũng ngắn. Xem xong là đánh dấu “Hoàn thành” để thấy mình tiến lên.'],
+          ['Mỗi ngày một bài', 'Mỗi bài chỉ vài phút. Xem xong bấm “Hoàn thành” để thấy mình tiến lên từng ngày.'],
           ['Quay ngay bằng điện thoại', 'Học xong thử liền 1 clip ngắn. Làm rồi mới nhớ lâu.'],
           ['Chưa đẹp cũng nộp', 'Clip đầu tiên ai cũng vụng. Nộp vào nhóm Zalo để được góp ý sớm.'],
         ])}
@@ -244,7 +271,7 @@ export function onboardDay5(s: Student, contact: Contact): Mail {
 export function onboardDay10(s: Student): Mail {
   const half = s.total && s.done / s.total >= 0.5;
   return {
-    subject: `Bạn đã học ${s.done}/${s.total} bài khóa ${s.courseTitle}`,
+    subject: s.done ? `Bạn đã học ${s.done}/${s.total} bài khóa ${s.courseTitle}` : `${firstName(s.name)} ơi, khóa ${s.courseTitle} vẫn chờ bạn bắt đầu`,
     html: layout({
       preheader: half ? 'Đã qua nửa chặng đường, giữ nhịp này nhé.' : 'Xem bạn đang ở đâu và bài tiếp theo là gì.',
       unsubscribeFor: s.email,
@@ -267,15 +294,15 @@ export function inactiveStudent(s: Student): Mail {
   return {
     subject: `${firstName(s.name)} ơi, bài học vẫn đang đợi bạn`,
     html: layout({
-      preheader: s.nextLessonTitle ? `Bài tiếp theo: ${s.nextLessonTitle}` : 'Quay lại 15 phút thôi là đủ.',
+      preheader: s.nextLessonTitle ? `Bài tiếp theo: ${s.nextLessonTitle}` : 'Quay lại học 1 bài thôi là đủ.',
       unsubscribeFor: s.email,
       body: `
         ${eyebrow('Nhắc học')}
         ${h1('Mình quay lại học tiếp nhé?')}
-        ${p(`Chào ${esc(firstName(s.name))}, mấy hôm nay bạn chưa vào học khóa <strong>${esc(s.courseTitle)}</strong>. Bận là chuyện bình thường. Bạn không cần bù lại, chỉ cần học tiếp 1 bài hôm nay.`)}
+        ${p(`Chào ${esc(firstName(s.name))}, mấy hôm nay bạn chưa vào học khóa <strong>${esc(s.courseTitle)}</strong>. Bận là chuyện bình thường. Bạn không cần học bù, chỉ cần học tiếp 1 bài hôm nay, mỗi bài chỉ vài phút.`)}
         ${progress(s.done, s.total)}
         ${nextUp(s)}
-        ${button(lessonLink(s.courseId, s.nextLessonId), 'Học tiếp 15 phút')}
+        ${button(lessonLink(s.courseId, s.nextLessonId), 'Học tiếp bài của tôi')}
         ${p(`<span style="font-size:14px;color:${C.muted};">Đang vướng chỗ nào? Trả lời email này, Minh Tấn sẽ hỗ trợ.</span>`)}
         ${signature}`,
     }),
@@ -320,33 +347,28 @@ export function accessExpiring(s: Student & { expiryDate: string }): Mail {
 
 // ---------------------------------------------------------------- not yet a student (cron)
 
-const promoBox = box(`<strong style="color:${C.ink};">Ưu đãi cho bạn</strong><br>Nhập mã <strong style="color:${C.gold};font-size:17px;letter-spacing:0.05em;">TANLAB</strong> khi thanh toán để giảm <strong>500.000đ</strong>.`);
 
 /** Signed up 1 day ago but no course yet. */
-export function signupNudge(d: { name?: string | null; email: string }): Mail {
+export function signupNudge(d: { name?: string | null; email: string }, c: FeaturedCourse): Mail {
   return {
-    subject: 'Bài học thử miễn phí đang chờ bạn',
+    subject: `${c.freeLessons.length} bài học thử miễn phí đang chờ bạn`,
     html: layout({
-      preheader: 'Xem thử trước, thấy hợp rồi mới quyết định.',
+      preheader: `Khóa ${c.title}: xem thử trước, thấy hợp rồi mới quyết định.`,
       unsubscribeFor: d.email,
       body: `
         ${eyebrow('Học thử miễn phí')}
         ${h1(`Chào ${esc(firstName(d.name))}, bạn đã xem bài học thử chưa?`)}
-        ${p('Cảm ơn bạn đã tạo tài khoản TẤN VA. Khóa 21 Ngày có các bài học thử miễn phí để bạn xem cách Minh Tấn dạy trước khi quyết định.')}
-        ${steps([
-          ['Tự tin trước ống kính', 'Đứng trước camera mà không gượng, không đơ.'],
-          ['Quay đẹp bằng điện thoại', 'Ánh sáng, khung hình, âm thanh, không cần máy xịn.'],
-          ['Dựng video gọn gàng', 'Từ clip thô thành video đăng được.'],
-        ])}
-        ${button(`${SITE}/courses`, 'Xem bài học thử')}
-        ${promoBox}
+        ${p(`Cảm ơn bạn đã tạo tài khoản TẤN VA. Khóa <strong>${esc(c.title)}</strong> có ${c.freeLessons.length} bài học thử miễn phí để bạn xem cách Minh Tấn dạy trước khi quyết định:`)}
+        ${freeList(c)}
+        <div style="height:16px;"></div>
+        ${button(courseUrl(c), 'Xem bài học thử')}
         ${signature}`,
     }),
   };
 }
 
 /** Checklist lead, day 2: value first. */
-export function leadDay2(d: { name?: string | null; email: string }): Mail {
+export function leadDay2(d: { name?: string | null; email: string }, c: FeaturedCourse): Mail {
   return {
     subject: '3 lỗi khiến video quay bằng điện thoại trông “nghiệp dư”',
     html: layout({
@@ -361,30 +383,31 @@ export function leadDay2(d: { name?: string | null; email: string }): Mail {
           ['Đặt điện thoại thấp hơn mắt', 'Góc từ dưới lên làm mặt to và mất thiện cảm. Để camera ngang tầm mắt.'],
           ['Đứng xa điện thoại để nói', 'Tiếng bị vang, xa. Lại gần hơn hoặc dùng mic cài áo.'],
         ])}
-        ${p('Sửa 3 điều này thôi là video đã khác hẳn. Muốn học bài bản từ đầu, bạn xem thử khóa 21 Ngày miễn phí:')}
-        ${button(`${SITE}/courses`, 'Học thử miễn phí')}
+        ${p(`Sửa 3 điều này thôi là video đã khác hẳn. Muốn học bài bản từ đầu, bạn xem thử miễn phí ${c.freeLessons.length} bài đầu của khóa <strong>${esc(c.title)}</strong>:`)}
+        ${button(courseUrl(c), 'Học thử miễn phí')}
         ${signature}`,
     }),
   };
 }
 
-/** Checklist lead, day 6: the offer. */
-export function leadDay6(d: { name?: string | null; email: string }): Mail {
+/** Checklist lead, day 6: the course itself. */
+export function leadDay6(d: { name?: string | null; email: string }, c: FeaturedCourse): Mail {
   return {
-    subject: `${firstName(d.name)} ơi, sẵn sàng tự tin làm video chưa?`,
+    subject: `${firstName(d.name)} ơi, sẵn sàng biến video thành tài sản chưa?`,
     html: layout({
-      preheader: 'Khóa 21 Ngày + nhóm Zalo sửa bài + 1 buổi Audit 1-1.',
+      preheader: `${c.title}: ${c.lessonCount} bài, nhóm Zalo sửa bài và 1 buổi Audit 1-1.`,
       unsubscribeFor: d.email,
       body: `
-        ${eyebrow('Khóa 21 Ngày')}
-        ${h1('21 ngày để tự tin trước ống kính')}
-        ${p(`Chào ${esc(firstName(d.name))}, nếu bạn đã thử checklist và muốn đi xa hơn, khóa 21 Ngày dẫn bạn từng bước: từ đứng trước camera, quay bằng điện thoại đến dựng video hoàn chỉnh.`)}
+        ${eyebrow('Khóa học của Minh Tấn')}
+        ${h1(esc(c.title))}
+        ${p(`Chào ${esc(firstName(d.name))}, nếu bạn đã thử checklist và muốn đi xa hơn, khóa này dẫn bạn đi từng bước qua ${c.lessonCount} bài ngắn, mỗi ngày 1 bài:`)}
+        ${c.chapters.length ? steps(c.chapters.map((t) => [esc(t), ''] as [string, string])) : ''}
         ${box(`<strong style="color:${C.ink};">Đăng ký trên website, bạn nhận thêm</strong><br>
           • Nhóm Zalo học viên: nộp bài và được sửa bài.<br>
           • 1 buổi Audit 15 phút 1-1 với Minh Tấn.<br>
-          • Bài học mới cập nhật sau này: miễn phí.`)}
-        ${promoBox}
-        ${button(`${SITE}/courses`, 'Xem khóa học')}
+          • Bài học mới cập nhật sau này: miễn phí.<br>
+          • Chứng chỉ hoàn thành khóa học.`)}
+        ${button(courseUrl(c), `Học thử ${c.freeLessons.length} bài miễn phí`)}
         ${signature}`,
     }),
   };

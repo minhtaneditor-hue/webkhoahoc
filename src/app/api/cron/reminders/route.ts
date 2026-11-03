@@ -6,7 +6,7 @@ import { contactFrom } from '@/lib/site-settings';
 import { isAdmin } from '@/lib/admin';
 import {
   FROM, unsubscribeHeaders, onboardDay2, onboardDay5, onboardDay10, inactiveStudent,
-  courseCompleted, accessExpiring, signupNudge, leadDay2, leadDay6,
+  courseCompleted, accessExpiring, signupNudge, leadDay2, leadDay6, getFeaturedCourse,
 } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const now = Date.now();
   const age = (iso?: string | null) => (iso ? (now - Date.parse(iso)) / DAY : Infinity);
-  const contact = contactFrom(await getSiteSettings());
+  const [contact, featured] = await Promise.all([getSiteSettings().then(contactFrom), getFeaturedCourse(db)]);
 
   const [{ data: optouts }, { data: log, error: logError }] = await Promise.all([
     db.from('email_optouts').select('email'),
@@ -113,7 +113,7 @@ export async function GET(req: Request) {
   const { data: signups } = await db.from('users').select('id, email, full_name, created_at')
     .gte('created_at', new Date(now - 3 * DAY).toISOString()).lt('created_at', new Date(now - DAY).toISOString());
   for (const u of signups || []) {
-    if (u.email && !enrolledUsers.has(u.id)) await send(u.email, 'signup-1', '', signupNudge({ name: u.full_name, email: u.email }));
+    if (featured && u.email && !enrolledUsers.has(u.id)) await send(u.email, 'signup-1', '', signupNudge({ name: u.full_name, email: u.email }, featured));
   }
 
   // ------------------------------------------------------------ checklist leads
@@ -121,10 +121,10 @@ export async function GET(req: Request) {
   const { data: leads } = await db.from('leads').select('email, name, created_at')
     .gte('created_at', new Date(now - 8 * DAY).toISOString());
   for (const l of leads || []) {
-    if (studentEmails.has(l.email)) continue;
+    if (!featured || studentEmails.has(l.email)) continue;
     const a = age(l.created_at);
-    if (a >= 2 && a < 4) await send(l.email, 'lead-2', '', leadDay2(l));
-    else if (a >= 6 && a < 8) await send(l.email, 'lead-6', '', leadDay6(l));
+    if (a >= 2 && a < 4) await send(l.email, 'lead-2', '', leadDay2(l, featured));
+    else if (a >= 6 && a < 8) await send(l.email, 'lead-6', '', leadDay6(l, featured));
   }
 
   return NextResponse.json({ success: true, sent: counts });

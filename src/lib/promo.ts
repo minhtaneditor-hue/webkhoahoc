@@ -4,8 +4,7 @@ export function calculateDiscount(code: string | undefined | null, price: number
   if (!code) return 0;
   const normalized = code.trim().toUpperCase();
   let discount = 0;
-  if (normalized === 'TANLAB') discount = 500000;
-  else if (normalized === 'GIAM10') discount = Math.round(price * 0.1);
+  if (normalized === 'GIAM10') discount = Math.round(price * 0.1);
   else if (normalized === 'CHALLENGE') discount = 1000000;
   return Math.min(discount, price);
 }
