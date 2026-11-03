@@ -111,7 +111,7 @@ export function workCounts(works: StudentWork[]) {
   const counts: Record<string, number> = {};
   for (const w of works) {
     const k = studentKey(w.student_name);
-    counts[k] = (counts[k] || 0) + (pairsOf(w).length ? 1 : 0);
+    counts[k] = (counts[k] || 0) + pairsOf(w).length;
   }
   return counts;
 }

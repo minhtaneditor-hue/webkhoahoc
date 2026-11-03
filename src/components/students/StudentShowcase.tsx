@@ -16,6 +16,8 @@ type Kind = 'all' | 'image' | 'video';
 const isVideo = (w: StudentWork) => pairsOf(w).some((p) => [p.before_url, p.after_url].some((u) => { const m = parseMedia(u); return !!m && m.kind !== 'image'; }));
 // A "work" row with no picture or clip yet: the student is listed with their channels only.
 const hasMedia = (w: StudentWork) => pairsOf(w).length > 0;
+// One before/after pair = one piece of work, however the admin grouped them
+const pieces = (ws: StudentWork[]) => ws.reduce((n, w) => n + pairsOf(w).length, 0);
 const isImage = (w: StudentWork) => hasMedia(w) && !isVideo(w);
 
 type Profile = {
@@ -171,7 +173,7 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
                         <span className="text-sm font-semibold text-stone-300">Xem kênh của học viên</span>
                       </div>
                     )}
-                    {p.works.some(hasMedia) && <span className="absolute top-3 right-3 rounded-full bg-black/65 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-white">{p.works.filter(hasMedia).length} sản phẩm</span>}
+                    {p.works.some(hasMedia) && <span className="absolute top-3 right-3 rounded-full bg-black/65 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-white">{pieces(p.works)} sản phẩm</span>}
                   </button>
                   <div className="flex-1 flex flex-col p-5">
                     <div className="flex items-start gap-3">
@@ -243,7 +245,7 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
                 {open.title && <p className="mt-1 text-stone-300">{open.title}</p>}
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                   <CountryTag code={open.country} city={open.city} dark />
-                  {open.works.some(hasMedia) && <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-white/10 text-white">{open.works.filter(hasMedia).length} sản phẩm</span>}
+                  {open.works.some(hasMedia) && <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-white/10 text-white">{pieces(open.works)} sản phẩm</span>}
                   <SocialLinks links={open.links} name={open.name} dark />
                 </div>
               </div>
