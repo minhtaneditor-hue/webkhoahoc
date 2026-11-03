@@ -10,6 +10,7 @@ import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import { formatVND } from '@/lib/supabase-public';
 import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import ConsultBox from '@/components/ConsultBox';
+import CourseReviews from '@/components/CourseReviews';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, PlayCircle, X, ChevronLeft, Gift } from 'lucide-react';
 
 type Status = { type: 'success' | 'error'; text: string } | null;
@@ -254,6 +255,8 @@ export default function CourseDetails() {
             {lessons.length === 0 && <p className="card p-6 text-muted-foreground">Nội dung đang được cập nhật.</p>}
             </div>
           </section>
+
+          <CourseReviews courseId={course.id} user={user} enrolled={enrolled} />
         </div>
 
         {/* Pricing card */}
