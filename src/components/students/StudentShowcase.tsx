@@ -99,6 +99,8 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
       return true;
     };
     openKey(location.hash);
+    // Links from the home page ("Xem thêm các video feedback khác") land before this section exists
+    if (location.hash === '#video-feedback') setTimeout(() => document.getElementById('video-feedback')?.scrollIntoView({ block: 'start' }), 100);
     const onClick = (e: MouseEvent) => {
       const a = (e.target as HTMLElement).closest?.('a[href^="#hv-"]') as HTMLAnchorElement | null;
       if (a && openKey(a.getAttribute('href')!)) e.preventDefault();

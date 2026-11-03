@@ -9,7 +9,8 @@ import ShowreelVideo from '@/components/motion/ShowreelVideo';
 import CountUp from '@/components/motion/CountUp';
 import FeedbackMarquee from '@/components/FeedbackMarquee';
 import StudentsMarquee from '@/components/students/StudentsMarquee';
-import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWorks, workCounts } from '@/lib/content';
+import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWorks, getFeedbackVideos, workCounts } from '@/lib/content';
+import FeedbackVideos from '@/components/students/FeedbackVideos';
 import StudentWorks from '@/components/students/StudentWorks';
 import { toYoutubeId } from '@/lib/site-settings';
 import LeadMagnet from '@/components/LeadMagnet';
@@ -59,9 +60,11 @@ async function getFeaturedCourse() {
 
 export default async function Home() {
   // Everything below is editable in /admin (falls back to built-in content when the tables are empty)
-  const [course, settings, students, feedback, faqs, works] = await Promise.all([
-    getFeaturedCourse(), getSiteSettings(), getStudents(), getFeedbackImages(), getFaqs(), getStudentWorks(),
+  const [course, settings, students, feedback, faqs, works, feedbackVideos] = await Promise.all([
+    getFeaturedCourse(), getSiteSettings(), getStudents(), getFeedbackImages(), getFaqs(), getStudentWorks(), getFeedbackVideos(),
   ]);
+  // Home shows a few portrait feedback clips; the rest live on /students#video-feedback
+  const homeFeedback = feedbackVideos.filter((v) => v.orientation !== 'horizontal').slice(0, 5);
   const featuredWorks = works.filter((w) => w.is_featured).slice(0, 3);
   const youtubeId = toYoutubeId(settings.showreel_youtube_id);
   const SHOWREEL = {
@@ -148,6 +151,17 @@ export default async function Home() {
           <div className="container-lux mt-20">
             <h3 className="text-white text-[clamp(1.375rem,3vw,2.25rem)]">Sản phẩm học viên làm ra, trước và sau khóa học</h3>
             <StudentWorks works={featuredWorks} light />
+          </div>
+        )}
+
+        {homeFeedback.length > 0 && (
+          <div className="container-lux mt-20">
+            <h3 className="text-white text-[clamp(1.375rem,3vw,2.25rem)]">Video feedback từ học viên</h3>
+            <p className="mt-2 text-stone-400">Học viên tự kể về khóa học và về Minh Tấn.</p>
+            <div className="mt-8"><FeedbackVideos videos={homeFeedback} /></div>
+            {feedbackVideos.length > homeFeedback.length && (
+              <Link href="/students#video-feedback" className="btn btn-outline-light mt-8">Xem thêm các video feedback khác <ArrowRight size={18} aria-hidden="true" /></Link>
+            )}
           </div>
         )}
 

@@ -25,47 +25,59 @@ export default function FeedbackVideos({ videos }: { videos: FeedbackVideo[] }) 
   }
 
   const media = open ? parseMedia(open.video_url) : null;
+  const vertical = videos.filter((v) => v.orientation !== 'horizontal');
+  const horizontal = videos.filter((v) => v.orientation === 'horizontal');
+
+  const card = (v: FeedbackVideo) => {
+    const m = parseMedia(v.video_url);
+    const thumb = sideThumbnail(m, v.thumbnail_url);
+    const country = v.country ? COUNTRY_BY_CODE[v.country]?.name : null;
+    return (
+      <li key={v.id} className="h-full">
+        <button type="button" data-hover-card onClick={() => show(v)} className="group h-full w-full text-left flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-card hover:shadow-[var(--shadow-lift)] transition-shadow" aria-label={`Xem video feedback của ${v.student_name}`}>
+          <div className={`relative bg-onyx overflow-hidden ${v.orientation === 'horizontal' ? 'aspect-video' : 'aspect-[4/5]'}`}>
+            {thumb ? (
+              <Image src={thumb} alt="" fill sizes={v.orientation === 'horizontal' ? '(min-width: 1024px) 50vw, (min-width: 768px) 66vw, 100vw' : '(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw'} unoptimized={thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-stone-700 to-onyx" />
+            )}
+            <HoverPreview url={v.video_url} />
+            {previewSource(v.video_url) ? (
+              <span className="absolute top-3 right-3 h-9 pl-2.5 pr-3 rounded-full bg-black/60 text-white text-xs font-semibold hidden [@media(hover:hover)]:flex items-center gap-1.5 backdrop-blur-sm" aria-hidden="true">
+                <VolumeX size={14} /> Rê chuột để xem
+              </span>
+            ) : (
+              <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                <span className="w-14 h-14 rounded-full bg-gold-light text-onyx flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"><Play size={22} className="ml-1" /></span>
+              </span>
+            )}
+          </div>
+          <div className="flex-1 flex flex-col p-4">
+            {v.quote && <p className="text-sm leading-relaxed text-ink line-clamp-3"><Quote size={14} className="inline -mt-1 mr-1 text-gold" aria-hidden="true" />{v.quote}</p>}
+            <p className="mt-auto pt-3 text-sm truncate">
+              <span className="font-semibold text-ink">{v.student_name}</span>
+              <span className="text-muted-foreground">{country ? ` · ${country}` : v.student_title ? ` · ${v.student_title}` : ''}</span>
+            </p>
+          </div>
+        </button>
+      </li>
+    );
+  };
+
 
   return (
     <>
-      {/* Landscape clips take two columns at 16:9; dense flow fills the gaps they leave */}
-      <ul className="grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 grid-flow-row-dense">
-        {videos.map((v) => {
-          const m = parseMedia(v.video_url);
-          const thumb = sideThumbnail(m, v.thumbnail_url);
-          const country = v.country ? COUNTRY_BY_CODE[v.country]?.name : null;
-          return (
-            <li key={v.id} className={`h-full ${v.orientation === 'horizontal' ? 'col-span-2' : ''}`}>
-              <button type="button" data-hover-card onClick={() => show(v)} className="group h-full w-full text-left flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-card hover:shadow-[var(--shadow-lift)] transition-shadow" aria-label={`Xem video feedback của ${v.student_name}`}>
-                <div className={`relative bg-onyx overflow-hidden ${v.orientation === 'horizontal' ? 'aspect-video' : 'aspect-[4/5]'}`}>
-                  {thumb ? (
-                    <Image src={thumb} alt="" fill sizes={v.orientation === 'horizontal' ? '(min-width: 1024px) 50vw, (min-width: 768px) 66vw, 100vw' : '(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw'} unoptimized={thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-stone-700 to-onyx" />
-                  )}
-                  <HoverPreview url={v.video_url} />
-                  {previewSource(v.video_url) ? (
-                    <span className="absolute top-3 right-3 h-9 pl-2.5 pr-3 rounded-full bg-black/60 text-white text-xs font-semibold hidden [@media(hover:hover)]:flex items-center gap-1.5 backdrop-blur-sm" aria-hidden="true">
-                      <VolumeX size={14} /> Rê chuột để xem
-                    </span>
-                  ) : (
-                    <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-                      <span className="w-14 h-14 rounded-full bg-gold-light text-onyx flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"><Play size={22} className="ml-1" /></span>
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 flex flex-col p-4">
-                  {v.quote && <p className="text-sm leading-relaxed text-ink line-clamp-3"><Quote size={14} className="inline -mt-1 mr-1 text-gold" aria-hidden="true" />{v.quote}</p>}
-                  <p className="mt-auto pt-3 text-sm truncate">
-                    <span className="font-semibold text-ink">{v.student_name}</span>
-                    <span className="text-muted-foreground">{country ? ` · ${country}` : v.student_title ? ` · ${v.student_title}` : ''}</span>
-                  </p>
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      {/* Portrait clips in one row on top, landscape clips two per row underneath */}
+      {vertical.length > 0 && (
+        <ul className={`grid gap-5 grid-cols-2 sm:grid-cols-3 ${vertical.length >= 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+          {vertical.map(card)}
+        </ul>
+      )}
+      {horizontal.length > 0 && (
+        <ul className={`grid gap-5 sm:grid-cols-2 ${vertical.length ? 'mt-5' : ''}`}>
+          {horizontal.map(card)}
+        </ul>
+      )}
 
       <dialog
         ref={dialog}

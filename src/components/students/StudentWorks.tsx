@@ -174,7 +174,8 @@ function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void 
 
 export function Player({ side, vertical }: { side: Side; vertical: boolean }) {
   const { media, thumb } = side;
-  const frame = `relative w-full overflow-hidden rounded-[var(--radius-img)] bg-black ${vertical ? 'aspect-[9/16] max-h-[70dvh] mx-auto' : 'aspect-video'}`;
+  // Vertical clips cap their height and their width, so a lone 9:16 clip is not stretched sideways
+  const frame = `relative w-full overflow-hidden rounded-[var(--radius-img)] bg-black ${vertical ? 'aspect-[9/16] max-h-[70dvh] max-w-[calc(70dvh*9/16)] mx-auto' : 'aspect-video'}`;
 
   if (media?.embedUrl) {
     return (
