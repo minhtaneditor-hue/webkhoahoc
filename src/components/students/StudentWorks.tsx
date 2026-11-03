@@ -6,11 +6,11 @@ import HoverPreview from '@/components/HoverPreview';
 import { Play, X, ExternalLink } from 'lucide-react';
 import { parseMedia, sideThumbnail, WORK_CATEGORIES, type ParsedMedia } from '@/lib/media';
 import { COUNTRY_BY_CODE } from '@/lib/countries';
-import type { StudentWork } from '@/lib/content';
+import { pairsOf, type MediaPair, type StudentWork } from '@/lib/content';
 
 export type Side = { label: 'Trước' | 'Sau'; media: ParsedMedia | null; thumb: string | null };
 
-export function sidesOf(w: StudentWork): Side[] {
+export function sidesOf(w: MediaPair): Side[] {
   const before = parseMedia(w.before_url);
   const after = parseMedia(w.after_url);
   const sides: Side[] = [];
@@ -73,7 +73,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
           {/* Every card has the same frame: a 4:3 picture split Trước | Sau, then a fixed-height caption */}
           <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {g.items.map((w) => {
-              const sides = sidesOf(w);
+              const sides = sidesOf(pairsOf(w)[0] ?? {});
               const place = placeOf(w);
               return (
                 <li key={w.id} className="h-full">
@@ -112,7 +112,12 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
                           <span className={`font-semibold ${light ? 'text-white' : 'text-ink'}`}>{w.student_name}</span>{place ? ` · ${place}` : ''}
                         </p>
                       </div>
-                      {w.result && <span className="badge mt-3 self-start max-w-full truncate">{w.result}</span>}
+                      {(w.result || pairsOf(w).length > 1) && (
+                        <div className="mt-3 flex flex-wrap gap-2 min-w-0">
+                          {w.result && <span className="badge max-w-full truncate">{w.result}</span>}
+                          {pairsOf(w).length > 1 && <span className={`badge ${light ? '!bg-white/10 !text-white' : ''}`}>{pairsOf(w).length} cặp Trước/Sau</span>}
+                        </div>
+                      )}
                     </div>
                   </button>
                 </li>
@@ -136,7 +141,6 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
 }
 
 function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void }) {
-  const sides = sidesOf(work);
   const vertical = work.orientation !== 'horizontal';
   const place = placeOf(work);
   return (
@@ -149,18 +153,7 @@ function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void 
         <button type="button" onClick={onClose} className="w-11 h-11 shrink-0 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center" aria-label="Đóng"><X size={20} aria-hidden="true" /></button>
       </div>
 
-      <div className={`mt-6 grid gap-4 ${sides.length === 2 ? (vertical ? 'grid-cols-2' : 'md:grid-cols-2') : ''} ${vertical && sides.length === 1 ? 'max-w-sm mx-auto' : ''}`}>
-        {sides.map((s) => (
-          <figure key={s.label} className="min-w-0">
-            {sides.length === 2 && (
-              <figcaption className={`mb-2 text-sm font-bold ${s.label === 'Sau' ? 'text-gold-light' : 'text-stone-300'}`}>
-                {s.label === 'Trước' ? 'Trước khi học' : 'Sau khi học'}
-              </figcaption>
-            )}
-            <Player side={s} vertical={vertical} />
-          </figure>
-        ))}
-      </div>
+      {pairsOf(work).map((pair, i) => <PairView key={i} sides={sidesOf(pair)} vertical={vertical} />)}
 
       {(work.result || work.description) && (
         <div className="mt-6 max-w-3xl">
@@ -168,6 +161,24 @@ function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void 
           {work.description && <p className="mt-3 text-stone-200 leading-relaxed whitespace-pre-line">{work.description}</p>}
         </div>
       )}
+    </div>
+  );
+}
+
+/** One Trước / Sau pair side by side (a lone side is centred). */
+export function PairView({ sides, vertical }: { sides: Side[]; vertical: boolean }) {
+  return (
+    <div className={`mt-6 grid gap-4 ${sides.length === 2 ? (vertical ? 'grid-cols-2' : 'md:grid-cols-2') : ''} ${vertical && sides.length === 1 ? 'max-w-sm mx-auto' : ''}`}>
+      {sides.map((s) => (
+        <figure key={s.label} className="min-w-0">
+          {sides.length === 2 && (
+            <figcaption className={`mb-2 text-sm font-bold ${s.label === 'Sau' ? 'text-gold-light' : 'text-stone-300'}`}>
+              {s.label === 'Trước' ? 'Trước khi học' : 'Sau khi học'}
+            </figcaption>
+          )}
+          <Player side={s} vertical={vertical} />
+        </figure>
+      ))}
     </div>
   );
 }

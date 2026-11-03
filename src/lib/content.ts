@@ -61,6 +61,16 @@ export async function getFaqs(): Promise<{ q: string; a: string }[]> {
   return data.map((r) => ({ q: r.question, a: r.answer }));
 }
 
+/** One Trước / Sau pair. A work's first pair lives in its own columns, the rest in extra_pairs. */
+export type MediaPair = {
+  before_url?: string | null;
+  before_thumbnail_url?: string | null;
+  after_url?: string | null;
+  after_thumbnail_url?: string | null;
+};
+
+export const pairHasMedia = (p: MediaPair) => !!(p.before_url || p.after_url || p.before_thumbnail_url || p.after_thumbnail_url);
+
 export type StudentWork = {
   id: string;
   student_name: string;
@@ -83,7 +93,11 @@ export type StudentWork = {
   instagram_url?: string | null;
   youtube_url?: string | null;
   website_url?: string | null;
+  extra_pairs?: MediaPair[] | null;
 };
+
+/** Every pair of a work with a picture or clip, first pair first. */
+export const pairsOf = (w: StudentWork): MediaPair[] => [w, ...(w.extra_pairs ?? [])].filter(pairHasMedia);
 
 /** Former students' work (before / after). Empty until the admin adds some. */
 /** Name → stable key / URL anchor: no accents, no "Anh/Chị" prefix. Links featured students to their works. */
@@ -97,7 +111,7 @@ export function workCounts(works: StudentWork[]) {
   const counts: Record<string, number> = {};
   for (const w of works) {
     const k = studentKey(w.student_name);
-    counts[k] = (counts[k] || 0) + (w.before_url || w.after_url || w.before_thumbnail_url || w.after_thumbnail_url ? 1 : 0);
+    counts[k] = (counts[k] || 0) + (pairsOf(w).length ? 1 : 0);
   }
   return counts;
 }

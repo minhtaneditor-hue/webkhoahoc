@@ -6,16 +6,16 @@ import HoverPreview from '@/components/HoverPreview';
 import { X, ArrowRight, Images, PlayCircle, LayoutGrid } from 'lucide-react';
 import { parseMedia, WORK_CATEGORIES } from '@/lib/media';
 import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
-import { studentKey, type StudentWork, type FeedbackVideo } from '@/lib/content';
-import { sidesOf, Player } from './StudentWorks';
+import { studentKey, pairsOf, type StudentWork, type FeedbackVideo } from '@/lib/content';
+import { sidesOf, PairView } from './StudentWorks';
 import SocialLinks, { type Links } from './SocialLinks';
 import FeedbackVideos from './FeedbackVideos';
 
 type Kind = 'all' | 'image' | 'video';
 
-const isVideo = (w: StudentWork) => [w.before_url, w.after_url].some((u) => { const m = parseMedia(u); return !!m && m.kind !== 'image'; });
+const isVideo = (w: StudentWork) => pairsOf(w).some((p) => [p.before_url, p.after_url].some((u) => { const m = parseMedia(u); return !!m && m.kind !== 'image'; }));
 // A "work" row with no picture or clip yet: the student is listed with their channels only.
-const hasMedia = (w: StudentWork) => !!(w.before_url || w.after_url || w.before_thumbnail_url || w.after_thumbnail_url);
+const hasMedia = (w: StudentWork) => pairsOf(w).length > 0;
 const isImage = (w: StudentWork) => hasMedia(w) && !isVideo(w);
 
 type Profile = {
@@ -150,7 +150,7 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
       {profiles.length > 0 && (
         <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {profiles.map((p) => {
-            const cover = sidesOf(p.works[0]);
+            const cover = sidesOf(pairsOf(p.works[0])[0] ?? {});
             const label = WORK_CATEGORIES.find((c) => c.value === p.category)?.label;
             return (
               <li key={p.name} className="h-full">
@@ -251,21 +251,12 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
 
             {!open.works.some(hasMedia) && <p className="mt-8 text-stone-300">Sản phẩm của học viên đang được cập nhật. Xem kênh của học viên qua các nút ở trên.</p>}
             <ol className="mt-8 space-y-10">
-              {open.works.map((w, i) => {
-                const sides = sidesOf(w);
-                if (!sides.length) return null;
+              {open.works.filter(hasMedia).map((w, i) => {
                 const vertical = w.orientation !== 'horizontal';
                 return (
                   <li key={w.id}>
                     <p className="font-semibold text-white">{i + 1}. {w.title}{w.result ? <span className="badge ml-2 !bg-gold-light !text-onyx">{w.result}</span> : null}</p>
-                    <div className={`mt-3 grid gap-3 ${sides.length === 2 ? 'grid-cols-2' : ''}`}>
-                      {sides.map((s) => (
-                        <figure key={s.label} className="min-w-0">
-                          <figcaption className={`mb-2 text-xs font-bold uppercase tracking-wide ${s.label === 'Sau' ? 'text-gold-light' : 'text-stone-400'}`}>{s.label === 'Trước' ? 'Trước khi học' : 'Sau khi học'}</figcaption>
-                          <Player side={s} vertical={vertical} />
-                        </figure>
-                      ))}
-                    </div>
+                    {pairsOf(w).map((pair, j) => <PairView key={j} sides={sidesOf(pair)} vertical={vertical} />)}
                     {w.description && <p className="mt-3 text-stone-300 leading-relaxed">{w.description}</p>}
                   </li>
                 );

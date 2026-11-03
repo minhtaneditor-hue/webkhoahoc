@@ -2,11 +2,10 @@
 
 import { Clapperboard } from 'lucide-react';
 import AdminCrud from '@/components/admin/AdminCrud';
+import PairsEditor, { PAIR_COLUMNS } from '@/components/admin/PairsEditor';
 import { parseMedia, WORK_CATEGORIES } from '@/lib/media';
 import { COUNTRY_OPTIONS, COUNTRY_BY_CODE } from '@/lib/countries';
-
-
-const LINK_HINT = 'Link YouTube, TikTok, Facebook, Instagram, Google Drive, hoặc tải ảnh lên bên dưới. Để trống nếu không có.';
+import { pairsOf } from '@/lib/content';
 
 export default function AdminStudentWorksPage() {
   return (
@@ -42,21 +41,19 @@ export default function AdminStudentWorksPage() {
         { key: 'description', label: 'Mô tả ngắn', type: 'textarea' },
         { key: 'category', label: 'Ngành nghề', type: 'select', options: WORK_CATEGORIES },
         { key: 'orientation', label: 'Khung hình', type: 'select', options: [{ value: 'vertical', label: 'Dọc 9:16 (TikTok, Reels)' }, { value: 'horizontal', label: 'Ngang 16:9 (YouTube)' }] },
-        { key: 'before_url', label: 'TRƯỚC khi học: link video / ảnh', hint: LINK_HINT },
-        { key: 'before_thumbnail_url', label: 'TRƯỚC khi học: ảnh đại diện / ảnh', type: 'image', hint: 'Bắt buộc nếu là ảnh. Với video TikTok/Facebook nên tải ảnh chụp màn hình lên.' },
-        { key: 'after_url', label: 'SAU khi học: link video / ảnh', hint: LINK_HINT },
-        { key: 'after_thumbnail_url', label: 'SAU khi học: ảnh đại diện / ảnh', type: 'image', hint: 'Bắt buộc nếu là ảnh. Với video TikTok/Facebook nên tải ảnh chụp màn hình lên.' },
+        { key: 'pairs', label: 'Trước / Sau', type: 'custom', keys: PAIR_COLUMNS, render: (form, update) => <PairsEditor form={form} update={update} folder="student_works" /> },
         { key: 'is_featured', label: 'Nổi bật', type: 'checkbox', hint: 'Hiện trên trang chủ' },
         { key: 'sort_order', label: 'Thứ tự hiển thị', type: 'number', step: 1 },
       ]}
       renderMeta={(row) => {
+        const pairs = pairsOf(row);
         const before = parseMedia(row.before_url) || (row.before_thumbnail_url ? { label: 'Ảnh' } : null);
         const after = parseMedia(row.after_url) || (row.after_thumbnail_url ? { label: 'Ảnh' } : null);
         return (
           <>
             {row.student_name}{row.city || row.country ? ` (${[row.city, COUNTRY_BY_CODE[row.country]?.name].filter(Boolean).join(', ')})` : ''}{row.result ? ` · ${row.result}` : ''}
             <br />
-            Trước: {before ? before.label : '—'} · Sau: {after ? after.label : '—'}{row.is_featured ? ' · Nổi bật' : ''}
+            {pairs.length > 1 ? `${pairs.length} cặp Trước/Sau` : `Trước: ${before ? before.label : '—'} · Sau: ${after ? after.label : '—'}`}{row.is_featured ? ' · Nổi bật' : ''}
           </>
         );
       }}

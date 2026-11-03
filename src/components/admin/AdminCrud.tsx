@@ -11,7 +11,7 @@ import ImageUpload from './ImageUpload';
 export type CrudField = {
   key: string;
   label: string;
-  type?: 'text' | 'textarea' | 'number' | 'select' | 'url' | 'image' | 'checkbox';
+  type?: 'text' | 'textarea' | 'number' | 'select' | 'url' | 'image' | 'checkbox' | 'custom';
   options?: { value: string; label: string }[];
   hint?: string;
   required?: boolean;
@@ -21,6 +21,9 @@ export type CrudField = {
   sizeKeys?: { width: string; height: string };
   /** image fields: also offer picking a frame from a local video file */
   videoFrame?: boolean;
+  /** custom fields: draws its own editor and owns these columns (saved as is, '' → null) */
+  render?: (form: any, update: (patch: Record<string, any>) => void) => ReactNode;
+  keys?: string[];
 };
 
 // Generic list + create/edit/delete screen for a simple Supabase table.
@@ -78,6 +81,11 @@ export default function AdminCrud({
     setError('');
     const payload: Record<string, any> = {};
     for (const f of fields) {
+      if (f.type === 'custom') {
+        // Columns a custom editor never touched stay out, so a missing optional column does not break saving
+        for (const k of f.keys ?? [f.key]) if (form[k] !== undefined) payload[k] = form[k] === '' ? null : form[k];
+        continue;
+      }
       const v = form[f.key];
       payload[f.key] = f.type === 'number' ? Number(v) || 0 : f.type === 'checkbox' ? !!v : v === '' ? null : v;
       if (f.sizeKeys) {
@@ -99,6 +107,7 @@ export default function AdminCrud({
     if (!confirm(`Xóa “${row[titleKey] || itemLabel}”? Không thể hoàn tác.`)) return;
     const { error } = await supabase.from(table).delete().eq('id', row.id);
     if (error) return alert(`Không xóa được: ${error.message}`);
+    setForm(null);
     load();
     revalidateSite();
   }
@@ -160,7 +169,9 @@ export default function AdminCrud({
       <Modal title={form?.id ? `Sửa ${itemLabel}` : `Thêm ${itemLabel}`} open={!!form} onClose={() => setForm(null)}>
         {form && (
           <form onSubmit={save} className="space-y-5">
-            {fields.map((f) => (
+            {fields.map((f) => f.type === 'custom' ? (
+              <div key={f.key}>{f.render?.(form, (patch) => setForm((cur: any) => ({ ...cur, ...patch })))}</div>
+            ) : (
               <Field key={f.key} id={`f-${f.key}`} label={f.label} hint={f.type === 'checkbox' ? undefined : f.hint}>
                 {f.type === 'checkbox' ? (
                   <label className="flex items-center gap-3 min-h-[44px]">
@@ -192,6 +203,9 @@ export default function AdminCrud({
             ))}
             {error && <p role="alert" className="p-3 rounded-md bg-red-50 text-danger text-sm flex justify-between">{error}<button type="button" onClick={() => setError('')} aria-label="Đóng"><X size={14} aria-hidden="true" /></button></p>}
             <div className="flex justify-end gap-2">
+              {form.id && (
+                <button type="button" onClick={() => remove(form)} className="btn btn-outline mr-auto !text-danger hover:!bg-red-50"><Trash2 size={15} aria-hidden="true" /> Xóa {itemLabel}</button>
+              )}
               <button type="button" onClick={() => setForm(null)} className="btn btn-outline">Hủy</button>
               <button type="submit" disabled={busy} className="btn btn-gold">Lưu</button>
             </div>
