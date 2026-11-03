@@ -110,9 +110,9 @@ export default function ShopPage() {
 
       <section className="container-lux pb-24" aria-live="polite">
         {loading ? (
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-label="Đang tải sản phẩm">
-            {[0, 1, 2].map((i) => (
-              <li key={i} className="card overflow-hidden">
+          <ul className="space-y-6" aria-busy="true" aria-label="Đang tải sản phẩm">
+            {[0, 1].map((i) => (
+              <li key={i} className="card overflow-hidden grid md:grid-cols-2">
                 <div className="aspect-[4/3] bg-muted animate-pulse" />
                 <div className="p-6 space-y-3"><div className="h-6 w-2/3 bg-muted rounded animate-pulse" /><div className="h-4 w-full bg-muted rounded animate-pulse" /></div>
               </li>
@@ -125,39 +125,48 @@ export default function ShopPage() {
             <p className="mt-2 text-muted-foreground">Ebook và preset sẽ sớm có mặt. Bấm nút Hỗ trợ để được báo khi mở bán.</p>
           </div>
         ) : (
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          // One product per row: picture and name on the left, price, details and the buy button on the right
+          <ul className="space-y-6">
             {filteredAssets.map((asset) => {
               const owned = purchasedIds.includes(asset.id) || Number(asset.price) === 0;
               const Icon = categoryIcon(asset.category);
               return (
-                <li key={asset.id} className="card card-hover overflow-hidden flex flex-col">
-                  <div className="relative aspect-[4/3] bg-muted">
-                    {asset.thumbnail_url ? (
-                      <Image src={asset.thumbnail_url} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" unoptimized={asset.thumbnail_url.startsWith('http')} />
-                    ) : (
-                      <div className="absolute inset-0 surface-dark flex items-center justify-center"><Icon size={40} className="text-gold-light" aria-hidden="true" /></div>
-                    )}
-                    {asset.category && <span className="badge absolute top-3 left-3">{CATEGORY_LABELS[asset.category] || asset.category}</span>}
+                <li key={asset.id} className="card overflow-hidden grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+                  <div className="flex flex-col">
+                    <div className="relative aspect-[4/3] bg-muted">
+                      {asset.thumbnail_url ? (
+                        <Image src={asset.thumbnail_url} alt="" fill sizes="(min-width: 768px) 45vw, 100vw" className="object-cover" unoptimized={asset.thumbnail_url.startsWith('http')} />
+                      ) : (
+                        <div className="absolute inset-0 surface-dark flex items-center justify-center"><Icon size={48} className="text-gold-light" aria-hidden="true" /></div>
+                      )}
+                      {asset.category && <span className="badge absolute top-3 left-3">{CATEGORY_LABELS[asset.category] || asset.category}</span>}
+                    </div>
+                    <h2 className="p-6 md:p-7 text-2xl md:text-3xl leading-snug">{asset.title}</h2>
                   </div>
-                  <div className="p-6 flex flex-col flex-1">
-                    <h2 className="text-2xl">{asset.title}</h2>
-                    {asset.description && <p className="mt-2 text-muted-foreground line-clamp-3">{asset.description}</p>}
-                    {/* Price panel right under the description, with a one-click buy */}
-                    <div className="mt-auto pt-6">
-                      <div className="rounded-[var(--radius-md)] bg-muted p-4 flex items-end justify-between gap-3">
-                        <span className="text-sm text-muted-foreground">{owned && Number(asset.price) > 0 ? 'Bạn đã mua' : 'Giá'}</span>
-                        <span className="font-display text-3xl font-bold text-ink">{Number(asset.price) > 0 ? formatVND(asset.price) : 'Miễn phí'}</span>
+
+                  <div className="p-6 md:p-8 md:border-l border-t md:border-t-0 border-line flex flex-col">
+                    <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                      <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{owned && Number(asset.price) > 0 ? 'Bạn đã mua' : 'Giá'}</span>
+                      <span className="font-display text-4xl font-extrabold text-ink tabular-nums">{Number(asset.price) > 0 ? formatVND(asset.price) : 'Miễn phí'}</span>
+                    </div>
+                    {asset.description && (
+                      <div className="mt-6">
+                        <p className="text-sm font-bold text-ink">Thông tin sản phẩm</p>
+                        <p className="mt-2 text-stone leading-relaxed whitespace-pre-line">{asset.description}</p>
                       </div>
+                    )}
+                    <div className="mt-auto pt-8">
                       <button
                         onClick={() => (owned ? handleDownload(asset) : handlePurchase(asset))}
                         disabled={busyId === asset.id}
-                        className={`btn w-full mt-3 ${owned ? 'btn-dark' : 'btn-gold'}`}
+                        className={`btn w-full ${owned ? 'btn-dark' : 'btn-gold'}`}
                       >
                         {busyId === asset.id ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : owned ? <Download size={16} aria-hidden="true" /> : <ShoppingBag size={16} aria-hidden="true" />}
                         {owned ? 'Tải về' : 'Mua ngay'}
                       </button>
+                      {!owned && <p className="mt-3 text-center text-xs text-muted-foreground">Thanh toán xong nhận link tải ngay qua email.</p>}
+                      {errors[asset.id] && <p role="alert" className="mt-3 text-sm text-danger">{errors[asset.id]}</p>}
                     </div>
-                    {errors[asset.id] && <p role="alert" className="mt-3 text-sm text-danger">{errors[asset.id]}</p>}
                   </div>
                 </li>
               );
