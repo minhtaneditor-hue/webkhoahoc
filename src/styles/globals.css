@@ -407,3 +407,11 @@
   .protected-text > :not(.print-only) { display: none !important; }
   .protected-text .print-only { display: block !important; color: #000; }
 }
+
+/* Certificate page prints the certificate alone, landscape A4 */
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  body:has(.certificate) * { visibility: hidden; }
+  body:has(.certificate) .certificate, body:has(.certificate) .certificate * { visibility: visible; }
+  body:has(.certificate) .certificate { position: fixed; inset: 0; margin: auto; max-width: none; width: 100%; height: 100%; aspect-ratio: auto; }
+}

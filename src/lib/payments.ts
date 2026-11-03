@@ -2,6 +2,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { randomBytes } from 'crypto';
 import { Resend } from 'resend';
 import { calculateDiscount } from './promo';
+import { getSiteSettings } from './content';
+import { contactFrom } from './site-settings';
 
 // Shared checkout pieces for every payment method (VNPay, SePay bank transfer).
 
@@ -116,38 +118,25 @@ export async function fulfillPayment(supabase: SupabaseClient, payment: any) {
     : await supabase.from('digital_assets').select('title').eq('id', payment.asset_id).single();
 
   if (user && course && process.env.RESEND_API_KEY) {
+    const contact = contactFrom(await getSiteSettings());
+    const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.minhtanacademy.com';
     await resend.emails.send({
-      from: 'Minh Tan Academy <customer@minhtanacademy.com>',
+      from: 'TẤN VA <customer@minhtanacademy.com>',
       to: user.email,
-      subject: '🚀 CHÀO MỪNG BẠN GIA NHẬP MINH TAN ACADEMY!',
+      subject: `Chào mừng bạn vào học: ${course.title}`,
       html: `
-        <div style="background-color: #050507; color: #f5f5f5; font-family: 'Be Vietnam Pro', Arial, sans-serif; padding: 40px; border-radius: 20px; border: 1px solid rgba(245, 188, 27, 0.1);">
-          <div style="text-align: center; margin-bottom: 40px;">
-            <div style="display: inline-block; padding: 10px 20px; background-color: rgba(245, 188, 27, 0.1); border-radius: 50px; font-size: 10px; font-weight: 900; color: #f5bc1b; letter-spacing: 0.3em;">
-              OFFICIAL ENROLLMENT // 2026
-            </div>
+        <div style="max-width: 560px; margin: 0 auto; font-family: Arial, sans-serif; color: #242321; line-height: 1.6;">
+          <p style="font-size: 13px; font-weight: 700; color: #A84E3C; letter-spacing: 0.08em;">TẤN VA · MINH TẤN VIDEO ADVISOR</p>
+          <h1 style="font-size: 24px; margin: 8px 0 12px;">Kích hoạt thành công!</h1>
+          <p style="font-size: 15px;">Bạn đã có quyền học khóa <strong>${esc(course.title)}</strong>. Đăng nhập bằng email <strong>${esc(user.email)}</strong> và mật khẩu bạn đã đặt.</p>
+          <p style="margin: 24px 0;"><a href="${base}/dashboard" style="background: #A84E3C; color: #fff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700;">Vào học ngay</a></p>
+          <div style="background: #F5F0E9; border-radius: 12px; padding: 16px 20px; margin: 24px 0;">
+            <p style="font-weight: 700; margin: 0 0 8px;">Quyền lợi khi đăng ký trên website</p>
+            <p style="margin: 4px 0;">• <a href="${contact.zaloGroupHref}" style="color: #A84E3C;">Vào nhóm Zalo cộng đồng</a> để nộp bài và được sửa bài.</p>
+            <p style="margin: 4px 0;">• Tặng 1 buổi Audit 15 phút 1-1: <a href="${contact.zaloHref}" style="color: #A84E3C;">nhắn Zalo Minh Tấn</a> để hẹn lịch.</p>
+            <p style="margin: 4px 0;">• Bài học mới cập nhật sau này được học miễn phí.</p>
           </div>
-          
-          <h1 style="font-size: 28px; font-weight: 900; text-align: center; margin-bottom: 20px;">XÁC NHẬN KÍCH HOẠT THÀNH CÔNG</h1>
-          <p style="text-align: center; color: #888888; font-size: 14px; margin-bottom: 40px;">Hệ thống đã ghi nhận thanh toán cho khóa học: <strong style="color: #f5f5f5;">${course.title}</strong></p>
-          
-          <div style="background-color: rgba(255, 255, 255, 0.02); padding: 30px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 40px;">
-            <h3 style="font-size: 14px; font-weight: 900; color: #e32636; letter-spacing: 0.1em; margin-bottom: 20px; text-transform: uppercase;">Thông tin truy cập:</h3>
-            <p style="font-size: 14px; margin-bottom: 10px;">• <strong>Email:</strong> ${user.email}</p>
-            <p style="font-size: 14px; margin-bottom: 25px;">• <strong>Mật khẩu:</strong> mật khẩu bạn đã đặt khi đăng ký</p>
-            
-            <div style="padding: 15px; background-color: rgba(227, 38, 54, 0.05); border-left: 3px solid #e32636; font-size: 12px; color: #888888;">
-              <strong>Gợi ý bảo mật:</strong> Chúng tôi khuyên bạn nên truy cập vào mục "Security Hub" trong Dashboard để đổi mật khẩu hoặc kích hoạt xác thực 2 lớp (2FA) ngay lập tức.
-            </div>
-          </div>
-          
-          <div style="text-align: center;">
-            <a href="${process.env.NEXT_PUBLIC_BASE_URL}/dashboard" style="background-color: #f5bc1b; color: #000000; padding: 18px 36px; text-decoration: none; border-radius: 50px; font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; display: inline-block;">TRUY CẬP MISSION CONTROL</a>
-          </div>
-          
-          <p style="text-align: center; font-size: 10px; color: #333333; margin-top: 50px; letter-spacing: 0.2em;">
-            SECURED BY TANLAB // ENCRYPTED SESSION // © 2026
-          </p>
+          <p style="font-size: 13px; color: #78716C;">Cần hỗ trợ, trả lời email này hoặc nhắn Zalo ${esc(contact.phone || '')}.</p>
         </div>
       `
     });
@@ -188,7 +177,7 @@ async function emailAssetBuyer(supabase: SupabaseClient, resend: Resend, payment
     html: `
       <div style="font-family: 'Be Vietnam Pro', Arial, sans-serif; color: #242321; max-width: 520px; margin: 0 auto; padding: 32px;">
         <h1 style="font-size: 24px; margin: 0 0 12px;">Cảm ơn ${esc(payment.buyer_name || 'bạn')}!</h1>
-        <p style="font-size: 15px; line-height: 1.6;">Minh Tấn Academy đã nhận thanh toán cho <strong>${esc(asset.title)}</strong> (mã đơn ${payment.order_id}).</p>
+        <p style="font-size: 15px; line-height: 1.6;">TẤN VA đã nhận thanh toán cho <strong>${esc(asset.title)}</strong> (mã đơn ${payment.order_id}).</p>
         <p style="margin: 28px 0;"><a href="${link}" style="background: #A84E3C; color: #fff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700;">Tải về</a></p>
         <p style="font-size: 13px; color: #78716C;">Giữ email này để tải lại khi cần. Cần hỗ trợ, trả lời email này hoặc nhắn Zalo cho Minh Tấn.</p>
       </div>

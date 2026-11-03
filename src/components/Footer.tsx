@@ -24,7 +24,6 @@ const columns = [
     links: [
       { name: 'Học viên tiêu biểu', href: '/students' },
       { name: 'Dự án', href: '/work' },
-      { name: 'Blog', href: '/blog' },
     ],
   },
   {

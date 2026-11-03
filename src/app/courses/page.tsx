@@ -5,12 +5,13 @@ import { ArrowRight, BookOpen, Check, Compass, Crown } from 'lucide-react';
 import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
+import LeadMagnet from '@/components/LeadMagnet';
 
 export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Khóa học',
-  description: 'Các khóa học làm video, sáng tạo nội dung và sản xuất truyền hình của Minh Tấn Academy.',
+  description: 'Các khóa học làm video, sáng tạo nội dung và sản xuất truyền hình của TẤN VA.',
 };
 
 const FALLBACK_THUMBS = ['/asset/hoc_vien/tan.jpg', '/asset/du_an_tieu_bieu/project_2n1d.webp', '/asset/du_an_tieu_bieu/project_nhth.jpg'];
@@ -106,6 +107,8 @@ export default async function CoursesPage() {
           </Reveal>
         )}
       </section>
+
+      <LeadMagnet source="courses" />
 
       <section className="section surface-dark">
         <div className="container-lux">

@@ -164,7 +164,7 @@ export default function BankTransferPage() {
               Đang chờ tiền về. Trang sẽ tự chuyển khi thanh toán thành công, thường trong vòng 1 phút.
             </p>
             <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-              <ShieldCheck size={14} aria-hidden="true" /> Tiền chuyển thẳng vào tài khoản ngân hàng của Minh Tấn Academy.
+              <ShieldCheck size={14} aria-hidden="true" /> Tiền chuyển thẳng vào tài khoản ngân hàng của TẤN VA.
             </p>
           </div>
         </div>

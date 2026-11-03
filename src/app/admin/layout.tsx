@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import { Logo } from '@/components/Navbar';
-import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart, Activity, ShieldCheck } from 'lucide-react';
+import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart, Activity, ShieldCheck, Inbox } from 'lucide-react';
 
 const sidebarItems = [
   { group: 'Tổng quan', items: [
@@ -17,6 +17,7 @@ const sidebarItems = [
   { group: 'Bán hàng', items: [
     { title: 'Đơn hàng', icon: CreditCard, href: '/admin/orders' },
     { title: 'Học viên', icon: Users, href: '/admin/students' },
+    { title: 'Khách tiềm năng', icon: Inbox, href: '/admin/leads' },
   ]},
   { group: 'Khóa học', items: [
     { title: 'Khóa học & bài học', icon: Database, href: '/admin/courses' },
@@ -124,7 +125,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button onClick={() => setMobileOpen(true)} className="lg:hidden w-11 h-11 -ml-2 flex items-center justify-center rounded-md hover:bg-muted" aria-label="Mở menu">
             <Menu size={20} aria-hidden="true" />
           </button>
-          <p className="hidden lg:block text-sm text-muted-foreground">Khu vực quản trị Minh Tấn Academy</p>
+          <p className="hidden lg:block text-sm text-muted-foreground">Khu vực quản trị TẤN VA</p>
           <div className="flex items-center gap-3">
             <span className="hidden sm:block text-sm text-muted-foreground">{email}</span>
             <span className="w-9 h-9 rounded-full bg-onyx text-gold-light flex items-center justify-center font-display font-bold">{email.charAt(0).toUpperCase()}</span>

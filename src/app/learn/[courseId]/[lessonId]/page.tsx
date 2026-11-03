@@ -215,10 +215,11 @@ export default function LearningPortal() {
               </div>
               )}
 
-              {finished && (
-                <div role="status" className="mt-6 p-5 rounded-md bg-gold-light/10 border border-gold-light/30 flex items-center gap-3 text-white">
+              {(finished || (lessons.length > 0 && lessons.every((l) => progress.includes(l.id)))) && (
+                <div role="status" className="mt-6 p-5 rounded-md bg-gold-light/10 border border-gold-light/30 flex flex-col sm:flex-row sm:items-center gap-3 text-white">
                   <PartyPopper size={22} className="text-gold-light shrink-0" aria-hidden="true" />
-                  Chúc mừng! Bạn đã hoàn thành tất cả bài học của khóa này.
+                  <span className="flex-1">Chúc mừng! Bạn đã hoàn thành tất cả bài học của khóa này.</span>
+                  <Link href={`/certificate/${courseId}`} className="btn btn-gold shrink-0">Nhận chứng chỉ</Link>
                 </div>
               )}
 

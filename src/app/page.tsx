@@ -12,6 +12,7 @@ import StudentsMarquee from '@/components/students/StudentsMarquee';
 import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWorks } from '@/lib/content';
 import StudentWorks from '@/components/students/StudentWorks';
 import { toYoutubeId } from '@/lib/site-settings';
+import LeadMagnet from '@/components/LeadMagnet';
 
 export const revalidate = 60;
 
@@ -240,6 +241,8 @@ export default async function Home() {
       </section>
 
       {/* Closing call to action */}
+      <LeadMagnet source="home" />
+
       <section className="surface-dark">
         <div className="container-lux py-20 md:py-28 grid gap-10 lg:grid-cols-[1.3fr_0.7fr] items-end">
           <h2 className="text-white text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1.15]">Học thử bài đầu tiên, miễn phí.</h2>

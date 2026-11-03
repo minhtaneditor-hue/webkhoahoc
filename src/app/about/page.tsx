@@ -6,7 +6,7 @@ import SectionHeading from '@/components/SectionHeading';
 
 export const metadata: Metadata = {
   title: 'Về Minh Tấn',
-  description: 'Sứ mệnh của Minh Tấn Academy: giúp người kinh doanh làm chủ kỹ năng video và xây phễu bán hàng tự động.',
+  description: 'Sứ mệnh của TẤN VA: giúp người kinh doanh làm chủ kỹ năng video và xây phễu bán hàng tự động.',
 };
 
 const values = [
@@ -23,7 +23,7 @@ export default function AboutPage() {
           <SectionHeading
             as="h1"
 
-            title="Về Minh Tấn Academy"
+            title="Về TẤN VA"
             description="Sứ mệnh của chúng tôi là giúp một triệu doanh nhân và nhà sáng tạo làm chủ kỹ năng video chuẩn điện ảnh, rồi biến nó thành phễu bán hàng tự động."
           />
           <Link href="/courses" className="btn btn-gold mt-8">Khám phá khóa học <ArrowRight size={18} aria-hidden="true" /></Link>
@@ -35,7 +35,7 @@ export default function AboutPage() {
 
       <section className="section bg-card">
         <div className="container-lux">
-          <SectionHeading title="Điều làm nên Minh Tấn Academy" />
+          <SectionHeading title="Điều làm nên TẤN VA" />
           <dl className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-3">
             {values.map(({ t, d }) => (
               <div key={t}>

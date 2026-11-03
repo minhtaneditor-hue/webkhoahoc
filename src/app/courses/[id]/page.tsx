@@ -10,7 +10,7 @@ import { isAdmin } from '@/lib/admin';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import { formatVND } from '@/lib/supabase-public';
 import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
-import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, RotateCcw, X, ChevronLeft } from 'lucide-react';
+import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, RotateCcw, X, ChevronLeft, Gift } from 'lucide-react';
 
 type Status = { type: 'success' | 'error'; text: string } | null;
 
@@ -26,6 +26,13 @@ const guarantees = [
   { icon: MessageCircle, text: 'Hỗ trợ 1:1 qua Zalo' },
   { icon: RotateCcw, text: 'Hoàn tiền trong 7 ngày' },
   { icon: ShieldCheck, text: 'Thanh toán an toàn, kích hoạt tự động' },
+];
+
+// Extras that only come with buying on this site (not on Unica)
+const webOnly = [
+  'Vào nhóm Zalo cộng đồng: nộp bài và được Minh Tấn sửa bài',
+  'Tặng 1 buổi Audit 15 phút 1-1 cùng Minh Tấn',
+  'Cập nhật bài học mới miễn phí, không tốn thêm',
 ];
 
 export default function CourseDetails() {
@@ -290,7 +297,15 @@ export default function CourseDetails() {
                 </button>
                 {payError && <p role="alert" className="mt-3 text-sm text-danger">{payError}</p>}
 
-                <ul className="mt-8 space-y-3">
+                {/* Why buy here rather than on Unica */}
+                <div className="mt-6 rounded-lg border border-gold/30 bg-gold-soft p-4">
+                  <p className="flex items-center gap-2 text-sm font-bold text-ink"><Gift size={16} className="text-gold" aria-hidden="true" /> Chỉ khi đăng ký trên website</p>
+                  <ul className="mt-3 space-y-2 text-sm text-stone">
+                    {webOnly.map((t) => <li key={t} className="flex gap-2"><Check size={16} className="text-gold shrink-0 mt-0.5" aria-hidden="true" /> {t}</li>)}
+                  </ul>
+                </div>
+
+                <ul className="mt-6 space-y-3">
                   {guarantees.map(({ icon: Icon, text }) => (
                     <li key={text} className="flex items-center gap-3 text-sm text-stone"><Icon size={18} className="text-gold shrink-0" aria-hidden="true" /> {text}</li>
                   ))}
