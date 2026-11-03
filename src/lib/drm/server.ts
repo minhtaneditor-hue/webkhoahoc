@@ -73,11 +73,14 @@ const r2Url = (key: string) =>
   `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.R2_BUCKET}/${key}`;
 
 export const r2Get = (key: string) => r2Client().fetch(r2Url(key));
+export const r2Put = (key: string, body: Uint8Array, type: string) =>
+  r2Client().fetch(r2Url(key), { method: 'PUT', body: body as BodyInit, headers: { 'Content-Type': type } });
 
-/** Short-lived signed URL for one encrypted segment (useless without the keys). */
-export async function r2SignedUrl(key: string, seconds = 120) {
+/** Short-lived signed URL for one encrypted segment (useless without the keys), or a shop file (downloadAs). */
+export async function r2SignedUrl(key: string, seconds = 120, downloadAs?: string) {
   const url = new URL(r2Url(key));
   url.searchParams.set('X-Amz-Expires', String(seconds));
+  if (downloadAs) url.searchParams.set('response-content-disposition', `attachment; filename="${downloadAs.replace(/"/g, '')}"`);
   const signed = await r2Client().sign(new Request(url), { aws: { signQuery: true } });
   return signed.url;
 }

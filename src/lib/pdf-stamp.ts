@@ -3,16 +3,20 @@ import { join } from 'node:path';
 import { PDFDocument, rgb } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { r2Get, r2Put, r2SignedUrl } from './drm/server';
 
-// A shop file kept in a private Supabase Storage bucket is written as `storage:<bucket>/<path>` in
-// digital_assets.download_url. PDFs from there are stamped with the buyer's name, phone and order
+// A private shop file is written in digital_assets.download_url as `storage:<bucket>/<path>`
+// (Supabase Storage) or `r2:<key>` (Cloudflare R2, the video bucket: large uploads from the
+// office connection only work there). PDFs are stamped with the buyer's name, phone and order
 // on every page, so a copy that gets passed around shows who it came from.
 const PREFIX = 'storage:';
+const R2_PREFIX = 'r2:';
 const LINK_TTL = 60 * 60; // signed links last 1 hour; the buyer can always ask for a new one
 
 export type Buyer = { name: string; phone?: string | null; email?: string | null; orderId: string; paidAt?: string | null };
 
 export function storageFile(url: string): { bucket: string; path: string } | null {
+  if (url.startsWith(R2_PREFIX)) return { bucket: R2_PREFIX, path: url.slice(R2_PREFIX.length).replace(/^\/+/, '') };
   if (!url.startsWith(PREFIX)) return null;
   const [bucket, ...rest] = url.slice(PREFIX.length).replace(/^\/+/, '').split('/');
   return bucket && rest.length ? { bucket, path: rest.join('/') } : null;
@@ -41,6 +45,7 @@ export async function stampPdf(original: Uint8Array, b: Buyer) {
 
 // Signed link to the buyer's own copy. A stamped PDF is made once per order and reused.
 export async function buyerLink(supabase: SupabaseClient, file: { bucket: string; path: string }, b: Buyer | null) {
+  if (file.bucket === R2_PREFIX) return r2BuyerLink(file.path, b);
   const store = supabase.storage.from(file.bucket);
   const name = file.path.split('/').pop()!;
   if (!b || !name.toLowerCase().endsWith('.pdf')) return signed(store, file.path, name);
@@ -61,4 +66,20 @@ async function signed(store: ReturnType<SupabaseClient['storage']['from']>, path
   const { data, error } = await store.createSignedUrl(path, LINK_TTL, { download: name });
   if (error || !data) throw new Error(`Cannot sign ${path}: ${error?.message}`);
   return data.signedUrl;
+}
+
+// Same as buyerLink, for a file in R2: stamped copies live next to it under stamped/<order>/.
+async function r2BuyerLink(key: string, b: Buyer | null) {
+  const name = key.split('/').pop()!;
+  if (!b || !name.toLowerCase().endsWith('.pdf')) return r2SignedUrl(key, LINK_TTL, name);
+  const copy = `${key.split('/').slice(0, -1).join('/')}/stamped/${b.orderId}/${name}`;
+  const exists = await r2Get(copy).then((r) => { r.body?.cancel(); return r.ok; });
+  if (!exists) {
+    const res = await r2Get(key);
+    if (!res.ok) throw new Error(`Cannot read r2:${key}: ${res.status}`);
+    const stamped = await stampPdf(new Uint8Array(await res.arrayBuffer()), b);
+    const put = await r2Put(copy, stamped, 'application/pdf');
+    if (!put.ok) throw new Error(`Cannot save stamped copy r2:${copy}: ${put.status}`);
+  }
+  return r2SignedUrl(copy, LINK_TTL, name);
 }
