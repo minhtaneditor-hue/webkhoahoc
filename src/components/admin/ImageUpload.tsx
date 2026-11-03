@@ -2,7 +2,8 @@
 
 import { useRef, useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Upload, Loader2, X, ImageIcon } from 'lucide-react';
+import { Upload, Loader2, X, ImageIcon, Film } from 'lucide-react';
+import VideoFramePicker from './VideoFramePicker';
 
 const MAX_MB = 5;
 
@@ -20,6 +21,7 @@ function readSize(file: File): Promise<{ width: number; height: number }> {
 /**
  * Upload an image to the public Supabase Storage bucket "media" (admins only, see migration 004),
  * or paste a link. Calls onChange with the public URL.
+ * videoFrame: also offer "Chọn từ clip" (capture a frame of a local video file as the image).
  */
 export default function ImageUpload({
   id,
@@ -27,25 +29,28 @@ export default function ImageUpload({
   onChange,
   folder = 'misc',
   onSize,
+  videoFrame = false,
 }: {
   id: string;
   value: string;
   onChange: (url: string) => void;
   folder?: string;
   onSize?: (size: { width: number; height: number }) => void;
+  videoFrame?: boolean;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [picking, setPicking] = useState(false);
 
-  async function handleFile(file: File) {
+  async function handleFile(file: File | Blob) {
     setError('');
     if (!file.type.startsWith('image/')) return setError('Vui lòng chọn file ảnh (JPG, PNG, WebP).');
     if (file.size > MAX_MB * 1024 * 1024) return setError(`Ảnh quá lớn, tối đa ${MAX_MB} MB.`);
     setBusy(true);
     try {
-      if (onSize) onSize(await readSize(file));
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      if (onSize) onSize(await readSize(file as File));
+      const ext = (file instanceof File ? file.name.split('.').pop()?.toLowerCase() : '') || 'jpg';
       const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: upErr } = await supabase.storage.from('media').upload(path, file, { cacheControl: '31536000', upsert: false });
       if (upErr) throw upErr;
@@ -77,6 +82,11 @@ export default function ImageUpload({
               {busy ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Upload size={15} aria-hidden="true" />}
               {busy ? 'Đang tải…' : 'Tải ảnh lên'}
             </button>
+            {videoFrame && (
+              <button type="button" onClick={() => setPicking(true)} disabled={busy} className="btn btn-outline !min-h-[40px] !px-3 text-sm">
+                <Film size={15} aria-hidden="true" /> Chọn từ clip
+              </button>
+            )}
             {value && (
               <button type="button" onClick={() => onChange('')} className="btn btn-outline !min-h-[40px] !px-3 text-sm" aria-label="Xóa ảnh">
                 <X size={15} aria-hidden="true" />
@@ -88,6 +98,7 @@ export default function ImageUpload({
       </div>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+      {picking && <VideoFramePicker onPick={(blob) => handleFile(blob)} onClose={() => setPicking(false)} />}
     </div>
   );
 }

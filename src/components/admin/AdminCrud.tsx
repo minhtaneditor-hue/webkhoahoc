@@ -19,6 +19,8 @@ export type CrudField = {
   step?: number;
   /** image fields: also store the uploaded picture's size in these columns */
   sizeKeys?: { width: string; height: string };
+  /** image fields: also offer picking a frame from a local video file */
+  videoFrame?: boolean;
 };
 
 // Generic list + create/edit/delete screen for a simple Supabase table.
@@ -169,6 +171,7 @@ export default function AdminCrud({
                   <ImageUpload
                     id={`f-${f.key}`}
                     folder={table}
+                    videoFrame={f.videoFrame}
                     value={form[f.key] ?? ''}
                     onChange={(url) => setForm((cur: any) => ({ ...cur, [f.key]: url }))}
                     onSize={f.sizeKeys ? (size) => setForm((cur: any) => ({ ...cur, [f.sizeKeys!.width]: size.width, [f.sizeKeys!.height]: size.height })) : undefined}
