@@ -1,53 +1,20 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import HoverPreview, { previewSource } from '@/components/HoverPreview';
 import Image from 'next/image';
 import { Play, X, ExternalLink, Quote, VolumeX } from 'lucide-react';
 import { parseMedia, sideThumbnail, type ParsedMedia } from '@/lib/media';
 import { COUNTRY_BY_CODE } from '@/lib/countries';
 import type { FeedbackVideo } from '@/lib/content';
 
-/**
- * Muted, looping preview for a card. Loads only while the card is on screen (6+ players at
- * once would be heavy) and ignores clicks: the card button opens the dialog with sound.
- * Only YouTube and MP4 can do this: Facebook's embed does not autoplay and covers the card with
- * its own header, so Facebook clips keep the cover image and play in the dialog.
- */
-function MutedPreview({ media }: { media: ParsedMedia }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { rootMargin: '200px' });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  const yt = media.kind === 'youtube' ? media.embedUrl?.match(/embed\/([\w-]{11})/)?.[1] : null;
-  const src =
-    yt ? `https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&loop=1&playlist=${yt}&controls=0&playsinline=1&modestbranding=1&rel=0` :
-    null;
-
-  return (
-    <div ref={ref} className="absolute inset-0 pointer-events-none" aria-hidden="true">
-      {visible && (media.kind === 'video' ? (
-        <video src={media.url} muted autoPlay loop playsInline className="!rounded-none absolute inset-0 w-full h-full object-cover" />
-      ) : src ? (
-        <iframe src={src} title="" tabIndex={-1} className="absolute inset-0 w-full h-full" allow="autoplay; encrypted-media" />
-      ) : null)}
-    </div>
-  );
-}
 
 /** Player URL for the dialog: autoplay with sound after the visitor's click. */
 const withSound = (m: ParsedMedia) =>
   m.kind === 'youtube' ? `${m.embedUrl}&autoplay=1` : m.kind === 'facebook' ? `${m.embedUrl}&autoplay=true&mute=false` : m.embedUrl!;
 
-const canPreview = (m: ParsedMedia | null) => !!m && ['youtube', 'video'].includes(m.kind);
-
-// Students' video testimonials: same-size portrait cards that play muted; clicking opens the clip with sound.
+// Students' video testimonials: cards preview muted on hover (YouTube / MP4; Facebook keeps its cover);
+// clicking opens the clip with sound.
 export default function FeedbackVideos({ videos }: { videos: FeedbackVideo[] }) {
   const [open, setOpen] = useState<FeedbackVideo | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -69,17 +36,17 @@ export default function FeedbackVideos({ videos }: { videos: FeedbackVideo[] }) 
           const country = v.country ? COUNTRY_BY_CODE[v.country]?.name : null;
           return (
             <li key={v.id} className={`h-full ${v.orientation === 'horizontal' ? 'col-span-2' : ''}`}>
-              <button type="button" onClick={() => show(v)} className="group h-full w-full text-left flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-card hover:shadow-[var(--shadow-lift)] transition-shadow" aria-label={`Xem video feedback của ${v.student_name}`}>
+              <button type="button" data-hover-card onClick={() => show(v)} className="group h-full w-full text-left flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-card hover:shadow-[var(--shadow-lift)] transition-shadow" aria-label={`Xem video feedback của ${v.student_name}`}>
                 <div className={`relative bg-onyx overflow-hidden ${v.orientation === 'horizontal' ? 'aspect-video' : 'aspect-[4/5]'}`}>
                   {thumb ? (
                     <Image src={thumb} alt="" fill sizes={v.orientation === 'horizontal' ? '(min-width: 1024px) 50vw, (min-width: 768px) 66vw, 100vw' : '(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw'} unoptimized={thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-stone-700 to-onyx" />
                   )}
-                  {m && canPreview(m) && <MutedPreview media={m} />}
-                  {m && canPreview(m) ? (
-                    <span className="absolute top-3 right-3 h-9 pl-2.5 pr-3 rounded-full bg-black/60 text-white text-xs font-semibold flex items-center gap-1.5 backdrop-blur-sm" aria-hidden="true">
-                      <VolumeX size={14} /> Bấm để nghe
+                  <HoverPreview url={v.video_url} />
+                  {previewSource(v.video_url) ? (
+                    <span className="absolute top-3 right-3 h-9 pl-2.5 pr-3 rounded-full bg-black/60 text-white text-xs font-semibold hidden [@media(hover:hover)]:flex items-center gap-1.5 backdrop-blur-sm" aria-hidden="true">
+                      <VolumeX size={14} /> Rê chuột để xem
                     </span>
                   ) : (
                     <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">

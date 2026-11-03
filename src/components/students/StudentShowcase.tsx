@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
+import HoverPreview from '@/components/HoverPreview';
 import { X, ArrowRight, Images, PlayCircle, LayoutGrid } from 'lucide-react';
 import { parseMedia, WORK_CATEGORIES } from '@/lib/media';
 import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
@@ -152,11 +153,12 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
             return (
               <li key={p.name} className="h-full">
                 <article className="h-full flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-card">
-                  <button type="button" onClick={() => show(p)} className="group relative block aspect-[4/3] overflow-hidden" aria-label={`Xem sản phẩm của ${p.name}`}>
+                  <button type="button" data-hover-card onClick={() => show(p)} className="group relative block aspect-[4/3] overflow-hidden" aria-label={`Xem sản phẩm của ${p.name}`}>
                     <div className={`absolute inset-0 grid gap-px bg-black/20 ${cover.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                       {cover.map((s) => (
                         <div key={s.label} className="relative overflow-hidden bg-onyx">
                           {s.thumb && <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 17vw, (min-width: 640px) 25vw, 50vw" unoptimized={s.thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />}
+                          <HoverPreview url={s.media?.url} />
                           <span className={`absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/65 text-white'}`}>{s.label}</span>
                         </div>
                       ))}

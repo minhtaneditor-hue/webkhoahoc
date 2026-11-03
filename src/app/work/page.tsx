@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { supabase } from '@/utils/supabase';
 import { Play, X, Layers, Lock } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
+import HoverPreview from '@/components/HoverPreview';
 
 const CATEGORY_LABELS: Record<string, string> = {
   'game-show': 'Game show',
@@ -86,6 +87,7 @@ export default function WorkPage() {
                         <span className="w-14 h-14 rounded-full bg-gold-light text-onyx flex items-center justify-center opacity-90"><Play size={22} fill="currentColor" aria-hidden="true" /></span>
                       </span>
                     )}
+                    <HoverPreview url={p.video_url} />
                   </span>
                   {p.client_name && <span className="mt-4 block text-sm text-gold font-semibold">{p.client_name}</span>}
                   <span className="mt-1 block font-display text-2xl font-bold group-hover:text-gold transition-colors">{p.title}</span>

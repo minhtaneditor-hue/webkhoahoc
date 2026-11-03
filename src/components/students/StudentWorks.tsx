@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
+import HoverPreview from '@/components/HoverPreview';
 import { Play, X, ExternalLink } from 'lucide-react';
 import { parseMedia, sideThumbnail, WORK_CATEGORIES, type ParsedMedia } from '@/lib/media';
 import { COUNTRY_BY_CODE } from '@/lib/countries';
@@ -78,6 +79,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
                 <li key={w.id} className="h-full">
                   <button
                     type="button"
+                    data-hover-card
                     onClick={() => show(w)}
                     className={`group h-full w-full text-left flex flex-col overflow-hidden rounded-[var(--radius-card)] border transition-shadow hover:shadow-[var(--shadow-lift)] ${light ? 'border-white/10 bg-white/[0.04]' : 'border-line bg-card'}`}
                     aria-label={`Xem ${w.title} của ${w.student_name}`}
@@ -90,6 +92,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-stone-800 to-onyx text-stone-400 text-sm">{s.media?.label}</div>
                           )}
+                          <HoverPreview url={s.media?.url} />
                           {s.media && s.media.kind !== 'image' && (
                             <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
                               <span className="w-11 h-11 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center text-white"><Play size={18} className="ml-0.5" /></span>
