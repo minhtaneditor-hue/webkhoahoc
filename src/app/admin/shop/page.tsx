@@ -27,7 +27,7 @@ export default function AdminShopPage() {
         { key: 'description', label: 'Mô tả', type: 'textarea' },
         { key: 'price', label: 'Giá (VNĐ)', type: 'number', hint: 'Để 0 nếu muốn tặng miễn phí.' },
         { key: 'thumbnail_url', label: 'Ảnh bìa', type: 'image', hint: 'Ảnh tỉ lệ 4:3, tối đa 5 MB.' },
-        { key: 'download_url', label: 'Link tải file', type: 'url', hint: 'Google Drive, Dropbox… Chỉ người mua mới nhận được link này.' },
+        { key: 'download_url', label: 'Link tải file', type: 'url', hint: 'Google Drive, Dropbox… Chỉ người mua mới nhận được link này. Ebook PDF đóng tên người mua: tải file lên kho shop-files trên Supabase rồi ghi storage:shop-files/ten-file.pdf' },
       ]}
       renderMeta={(row) => <>{categories.find((c) => c.value === row.category)?.label || row.category} · {Number(row.price) > 0 ? formatVND(row.price) : 'Miễn phí'}</>}
     />

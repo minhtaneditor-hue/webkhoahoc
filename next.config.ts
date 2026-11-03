@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/opengraph-image': ['./src/assets/**/*'],
     '/courses/**': ['./src/assets/**/*'],
+    // Font used to stamp the buyer's name into shop PDFs (src/lib/pdf-stamp.ts)
+    '/api/shop/download': ['./src/assets/fonts/BeVietnamPro-Medium.ttf'],
   },
   // Baseline security headers: no framing by other sites (clickjacking), no MIME sniffing,
   // no full URLs leaked to other sites, no camera/mic/location access.
