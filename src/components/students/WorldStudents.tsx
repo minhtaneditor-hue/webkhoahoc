@@ -6,7 +6,7 @@ import type { StudentPlace } from '@/lib/content';
 
 // "Students all over the world": map + country list. Renders nothing until the
 // admin has set where at least two countries' worth of students live.
-export default function WorldStudents({ places, title = 'Học viên Minh Tấn Video Advisor ở khắp thế giới' }: { places: StudentPlace[]; title?: string }) {
+export default function WorldStudents({ places, title = 'Học viên TẤN VA ở khắp thế giới' }: { places: StudentPlace[]; title?: string }) {
   const known = places.filter((p) => COUNTRY_BY_CODE[p.code]);
   if (known.length < 2) return null;
   const abroad = known.filter((p) => p.code !== 'VN').length;

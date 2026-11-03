@@ -21,8 +21,8 @@ export const SETTING_FIELDS: SettingField[] = [
   { key: 'ticker_messages', group: 'hero', label: 'Dải thông báo chạy chữ', type: 'textarea', hint: 'Mỗi dòng là một thông báo', default: 'Khóa “21 Ngày Biến Video Thành Tài Sản” đang mở đăng ký\nHọc thử miễn phí\nTruy cập trọn đời, hỗ trợ 1:1 qua Zalo' },
 
   // Homepage sections
-  { key: 'advisor_bio', group: 'home', label: 'Giới thiệu Minh Tấn Video Advisor', type: 'textarea', default: 'Hơn 10 năm làm truyền hình, từng tham gia hậu kỳ 2 Ngày 1 Đêm và Anh Trai Say Hi. Giờ Minh Tấn dạy lại quy trình đó, rút gọn cho chiếc điện thoại của bạn.' },
-  { key: 'students_title', group: 'home', label: 'Tiêu đề phần học viên', default: 'Học viên nói gì về Minh Tấn Video Advisor' },
+  { key: 'advisor_bio', group: 'home', label: 'Giới thiệu Minh Tấn', type: 'textarea', default: 'Hơn 10 năm làm truyền hình, từng tham gia hậu kỳ 2 Ngày 1 Đêm và Anh Trai Say Hi. Giờ Minh Tấn dạy lại quy trình đó, rút gọn cho chiếc điện thoại của bạn.' },
+  { key: 'students_title', group: 'home', label: 'Tiêu đề phần học viên', default: 'Học viên nói gì về Minh Tấn' },
   { key: 'students_subtitle', group: 'home', label: 'Mô tả phần học viên', type: 'textarea', default: 'Họ bắt đầu giống bạn: một chiếc điện thoại và mong muốn làm video tốt hơn. Đây là kết quả của họ.' },
   { key: 'stat_students', group: 'home', label: 'Số học viên (chỉ ghi số)', default: '1000' },
   { key: 'stat_years', group: 'home', label: 'Số năm làm truyền hình (chỉ ghi số)', default: '10' },

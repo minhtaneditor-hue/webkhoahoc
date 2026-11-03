@@ -66,7 +66,7 @@ const progress = (done: number, total: number) => {
 const signature = `
   <p style="margin:28px 0 0;font-size:16px;line-height:1.6;color:${C.text};">Hẹn gặp bạn trong bài học,<br>
   <strong style="color:${C.ink};">Minh Tấn</strong><br>
-  <span style="font-size:13px;color:${C.muted};">Minh Tấn Video Advisor · TẤN VA</span></p>`;
+  <span style="font-size:13px;color:${C.muted};">Người sáng lập TẤN VA</span></p>`;
 
 /** Signed one-click unsubscribe link (reminders and marketing only). */
 export function unsubscribeUrl(email: string) {
@@ -96,8 +96,7 @@ function layout(o: { preheader: string; body: string; unsubscribeFor?: string })
           <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
             <td style="vertical-align:middle;padding-right:12px;"><img src="${LOGO}" alt="TẤN VA" width="44" height="40" style="display:block;border:0;"></td>
             <td style="vertical-align:middle;">
-              <div style="font-size:20px;font-weight:800;line-height:1.1;"><span style="color:${C.ink};">TẤN</span> <span style="color:${C.gold};">VA</span></div>
-              <div style="font-size:10px;font-weight:700;color:${C.muted};letter-spacing:0.12em;">MINH TẤN VIDEO ADVISOR</div>
+              <div style="font-size:22px;font-weight:800;line-height:1.1;"><span style="color:${C.ink};">TẤN</span> <span style="color:${C.gold};">VA</span></div>
             </td>
           </tr></table>
           </a>

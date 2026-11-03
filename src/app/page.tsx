@@ -102,7 +102,7 @@ export default async function Home() {
       {/* About the teacher: the portrait opens like a camera shutter (signature move) */}
       <section aria-labelledby="advisor-title" className="container-lux pt-14 md:pt-20 pb-20 md:pb-28 grid gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
         <Reveal stagger={0.1}>
-          <h2 id="advisor-title" className="text-ink text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.15]">Minh Tấn Video Advisor</h2>
+          <h2 id="advisor-title" className="text-ink text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.15]">Minh Tấn</h2>
           <p className="mt-6 text-xl text-stone leading-relaxed max-w-xl">
             {settings.advisor_bio}
           </p>
@@ -113,9 +113,9 @@ export default async function Home() {
         </Reveal>
 
         <ShutterImage className="relative aspect-[4/5] overflow-hidden bg-onyx rounded-[var(--radius-img)]">
-          <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn, Video Advisor" fill sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" />
+          <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn, người sáng lập TẤN VA" fill sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" />
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-onyx/80 to-transparent" aria-hidden="true" />
-          <p className="absolute left-6 bottom-6 md:left-8 md:bottom-8"><span className="block font-display text-4xl font-bold text-white">Minh Tấn</span><span className="block mt-1 text-gold-light font-semibold">Video Advisor</span></p>
+          <p className="absolute left-6 bottom-6 md:left-8 md:bottom-8"><span className="block font-display text-4xl font-bold text-white">Minh Tấn</span><span className="block mt-1 text-gold-light font-semibold">Người sáng lập TẤN VA</span></p>
         </ShutterImage>
       </section>
 

@@ -15,7 +15,7 @@ export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Học viên & sản phẩm',
-  description: 'Sản phẩm thật của học viên Minh Tấn Video Advisor, trước và sau khóa học, cùng câu chuyện từ học viên ở Việt Nam và khắp thế giới.',
+  description: 'Sản phẩm thật của học viên TẤN VA, trước và sau khóa học, cùng câu chuyện từ học viên ở Việt Nam và khắp thế giới.',
 };
 
 
@@ -57,7 +57,7 @@ export default async function StudentsPage() {
       </section>
 
       <section id="san-pham" aria-label="Sản phẩm của học viên" className="container-lux pb-20 scroll-mt-24">
-        <StudentShowcase works={works} videos={videos} />
+        <StudentShowcase works={works} videos={videos} avatars={Object.fromEntries(students.filter((s) => s.avatar_url).map((s) => [studentKey(s.name), s.avatar_url!]))} />
       </section>
 
       <WorldStudents places={places} />

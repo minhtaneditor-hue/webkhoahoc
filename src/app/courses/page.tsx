@@ -115,7 +115,7 @@ export default async function CoursesPage() {
           <SectionHeading
             light
 
-            title="Coaching 1:1 cùng Minh Tấn Video Advisor"
+            title="Coaching 1:1 cùng Minh Tấn"
             description="Khi bạn cần một người nhìn thẳng vào kênh của mình và chỉ ra bước tiếp theo."
           />
           <div className="mt-12 grid gap-6 md:grid-cols-2">

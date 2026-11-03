@@ -84,7 +84,7 @@ export default function CertificatePage() {
           </div>
           <div className="text-center">
             <p className="font-bold text-ink text-lg">Minh Tấn</p>
-            <p className="text-muted-foreground">Minh Tấn Video Advisor</p>
+            <p className="text-muted-foreground">Giảng viên · TẤN VA</p>
           </div>
           <div className="text-right">
             <p className="text-muted-foreground">Mã chứng chỉ</p>

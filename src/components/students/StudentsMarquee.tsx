@@ -12,7 +12,7 @@ export default function StudentsMarquee({ students, counts = {} }: { students: S
   if (list.length === 0) return null;
   const loop = [...list, ...list];
   return (
-    <div className="overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]" aria-label="Học viên của Minh Tấn Video Advisor">
+    <div className="overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]" aria-label="Học viên của TẤN VA">
       <ul className="marquee-track marquee-reverse gap-5" style={{ ['--marquee-duration' as string]: `${Math.max(40, list.length * 5)}s` }}>
         {loop.map((s, i) => {
           const c = s.country ? COUNTRY_BY_CODE[s.country] : null;

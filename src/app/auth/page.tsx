@@ -173,7 +173,7 @@ export default function AuthPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-onyx via-onyx/40 to-transparent" aria-hidden="true" />
         <blockquote className="absolute bottom-12 left-12 right-12">
           <p className="font-display text-4xl leading-tight text-white">“Mỗi video bạn làm ra đều có thể trở thành một tài sản.”</p>
-          <footer className="mt-4 text-gold-light font-semibold">— Minh Tấn, Video Advisor</footer>
+          <footer className="mt-4 text-gold-light font-semibold">— Minh Tấn, TẤN VA</footer>
         </blockquote>
       </div>
     </main>

@@ -76,7 +76,7 @@ export default async function CoachingPage() {
       <section className="surface-dark">
         <div className="container-lux py-16 md:py-24 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
           <div>
-            <h1 className="text-white text-[clamp(1.75rem,5.5vw,4rem)]">Coaching 1:1 cùng Minh Tấn Video Advisor</h1>
+            <h1 className="text-white text-[clamp(1.75rem,5.5vw,4rem)]">Coaching 1:1 cùng Minh Tấn</h1>
             <p className="mt-6 text-lg text-stone-300 leading-relaxed max-w-xl">
               Học 1-1 theo đúng nhu cầu của bạn: chụp ảnh, quay video và dựng video bằng điện thoại, hoặc dựng video bằng AI. Minh Tấn kèm cặp, giao bài và sửa bài cho bạn.
             </p>

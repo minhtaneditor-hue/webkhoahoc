@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/utils/supabase';
-import { Play, X, Layers } from 'lucide-react';
+import { Play, X, Layers, Lock } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -95,7 +95,15 @@ export default function WorkPage() {
           </ul>
         )}
         {!loading && filter === 'all' && (
-          <p className="mt-10 text-center text-muted-foreground">Và nhiều dự án truyền hình, phim và nhãn hàng khác đang được cập nhật.</p>
+          <div className="mt-12 flex justify-center">
+            <div className="more-note rounded-2xl sm:rounded-full px-6 py-4 md:px-8 text-center text-white">
+              <p className="inline-flex items-center justify-center gap-3 text-base md:text-xl font-bold">
+                <span className="more-note-dot" aria-hidden="true" />
+                Và còn nhiều sản phẩm của <span className="text-gold-light">doanh nghiệp và cá nhân</span> khác nữa
+              </p>
+              <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-stone-300"><Lock size={14} aria-hidden="true" /> Vì lý do bảo mật nên không được đăng tải.</p>
+            </div>
+          </div>
         )}
       </section>
 

@@ -58,7 +58,8 @@ function CountryTag({ code, city, dark = false }: { code: string | null; city?: 
   );
 }
 
-export default function StudentShowcase({ works, videos }: { works: StudentWork[]; videos: FeedbackVideo[] }) {
+/** avatars: featured students' photos by studentKey, used when a work row has no avatar. */
+export default function StudentShowcase({ works, videos, avatars = {} }: { works: StudentWork[]; videos: FeedbackVideo[]; avatars?: Record<string, string> }) {
   const [kind, setKind] = useState<Kind>('all');
   const [industry, setIndustry] = useState('all');
   const [open, setOpen] = useState<Profile | null>(null);
@@ -66,9 +67,11 @@ export default function StudentShowcase({ works, videos }: { works: StudentWork[
 
   const byKind = useMemo(() => (kind === 'all' ? works : works.filter((w) => (kind === 'video' ? isVideo(w) : isImage(w)))), [works, kind]);
   const industries = useMemo(() => WORK_CATEGORIES.filter((c) => byKind.some((w) => w.category === c.value)), [byKind]);
+  const withAvatars = (list: Profile[]) => list.map((p) => (p.avatar ? p : { ...p, avatar: avatars[studentKey(p.name)] || null }));
   const profiles = useMemo(
-    () => toProfiles(industry === 'all' ? byKind : byKind.filter((w) => w.category === industry)),
-    [byKind, industry]
+    () => withAvatars(toProfiles(industry === 'all' ? byKind : byKind.filter((w) => w.category === industry))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [byKind, industry, avatars]
   );
 
   const counts = { all: works.length + videos.length, image: works.filter(isImage).length, video: works.filter(isVideo).length + videos.length };
@@ -88,7 +91,7 @@ export default function StudentShowcase({ works, videos }: { works: StudentWork[
   useEffect(() => {
     const openKey = (hash: string) => {
       if (!hash.startsWith('#hv-')) return false;
-      const p = toProfiles(works).find((x) => studentKey(x.name) === decodeURIComponent(hash.slice(4)));
+      const p = withAvatars(toProfiles(works)).find((x) => studentKey(x.name) === decodeURIComponent(hash.slice(4)));
       if (!p) return false;
       setKind('all'); setIndustry('all');
       show(p);
@@ -223,16 +226,23 @@ export default function StudentShowcase({ works, videos }: { works: StudentWork[
       >
         {open && (
           <div className="p-5 md:p-8">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h2 id="student-dialog-title" className="text-white text-3xl md:text-4xl">{open.name}</h2>
+            {/* Profile header: photo, name, what they do, where, channels */}
+            <div className="relative">
+              <button type="button" onClick={() => dialog.current?.close()} className="absolute top-0 right-0 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center" aria-label="Đóng"><X size={20} aria-hidden="true" /></button>
+              <div className="flex flex-col items-center text-center pt-2 pb-8 border-b border-white/10">
+                {open.avatar ? (
+                  <Image src={open.avatar} alt={open.name} width={112} height={112} unoptimized={open.avatar.startsWith('http')} className="!rounded-full w-24 h-24 md:w-28 md:h-28 object-cover ring-4 ring-gold-light/40" />
+                ) : (
+                  <span className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-white/10 text-gold-light flex items-center justify-center font-display text-5xl font-bold ring-4 ring-gold-light/40" aria-hidden="true">{open.name.replace(/^(Anh|Chị|Team|C|A)\s+/i, '').charAt(0)}</span>
+                )}
+                <h2 id="student-dialog-title" className="mt-4 text-white text-3xl md:text-4xl">{open.name}</h2>
                 {open.title && <p className="mt-1 text-stone-300">{open.title}</p>}
-                <div className="mt-3 flex flex-wrap items-center gap-3">
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                   <CountryTag code={open.country} city={open.city} dark />
+                  {open.works.some(hasMedia) && <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-white/10 text-white">{open.works.filter(hasMedia).length} sản phẩm</span>}
                   <SocialLinks links={open.links} name={open.name} dark />
                 </div>
               </div>
-              <button type="button" onClick={() => dialog.current?.close()} className="w-11 h-11 shrink-0 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center" aria-label="Đóng"><X size={20} aria-hidden="true" /></button>
             </div>
 
             {!open.works.some(hasMedia) && <p className="mt-8 text-stone-300">Sản phẩm của học viên đang được cập nhật. Xem kênh của học viên qua các nút ở trên.</p>}
