@@ -5,6 +5,5 @@ export function calculateDiscount(code: string | undefined | null, price: number
   const normalized = code.trim().toUpperCase();
   let discount = 0;
   if (normalized === 'GIAM10') discount = Math.round(price * 0.1);
-  else if (normalized === 'CHALLENGE') discount = 1000000;
   return Math.min(discount, price);
 }
