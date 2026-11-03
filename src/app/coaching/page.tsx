@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { Check, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
 import { getSiteSettings } from '@/lib/content';
@@ -80,7 +80,6 @@ export default async function CoachingPage() {
               <a href="#goi-coaching" className="btn btn-gold">Xem các gói học <ArrowRight size={18} aria-hidden="true" /></a>
               <a href={CONTACT.zaloHref} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">Nhắn Zalo tư vấn</a>
             </div>
-            <p className="mt-6 flex items-center gap-2 text-sm text-stone-400"><ShieldCheck size={16} className="text-gold-light" aria-hidden="true" /> Mỗi tháng chỉ nhận tối đa 2 học viên</p>
           </div>
           <div className="relative aspect-[4/5] max-w-md w-full mx-auto rounded-[var(--radius-card)] overflow-hidden">
             <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn" fill priority sizes="(min-width: 1024px) 40vw, 90vw" className="object-cover" />
