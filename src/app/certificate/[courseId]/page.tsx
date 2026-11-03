@@ -8,6 +8,7 @@ import { isAdmin } from '@/lib/admin';
 import { studentCode } from '@/lib/content-agreement';
 import { Award, Loader2, Printer, ArrowLeft } from 'lucide-react';
 import BrandMark from '@/components/BrandMark';
+import ConsultBox from '@/components/ConsultBox';
 
 // Completion certificate: available once every lesson of the course is marked done.
 // "Tải PDF" uses the browser's print dialog (Save as PDF); print CSS keeps only the certificate.
@@ -58,7 +59,10 @@ export default function CertificatePage() {
     <main className="container-lux py-10 md:py-16">
       <div className="print:hidden flex flex-wrap items-center justify-between gap-3 mb-6">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-ink min-h-[44px]"><ArrowLeft size={16} aria-hidden="true" /> Khu học tập</Link>
-        <button type="button" onClick={() => window.print()} className="btn btn-gold"><Printer size={18} aria-hidden="true" /> Tải PDF / In chứng chỉ</button>
+        <div className="flex flex-wrap gap-2">
+          <ConsultBox kind="audit" product={`Audit 1 tiếng sau khóa: ${data.course}`} label="Đặt lịch Audit 1 tiếng (quà học xong)" variant="outline" block={false} />
+          <button type="button" onClick={() => window.print()} className="btn btn-gold"><Printer size={18} aria-hidden="true" /> Tải PDF / In chứng chỉ</button>
+        </div>
       </div>
 
       <article className="certificate mx-auto max-w-4xl aspect-[1.414/1] rounded-[var(--radius-card)] bg-card border-[10px] border-double border-gold/60 p-8 md:p-14 flex flex-col items-center justify-between text-center">

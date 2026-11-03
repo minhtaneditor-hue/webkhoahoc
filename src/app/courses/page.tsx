@@ -18,18 +18,18 @@ const FALLBACK_THUMBS = ['/asset/hoc_vien/tan.jpg', '/asset/du_an_tieu_bieu/proj
 
 const coachingPackages = [
   {
-    name: 'Video Strategy Audit',
-    tagline: 'Dành cho người đang mất phương hướng',
+    name: 'Audit miễn phí 30 phút',
+    tagline: 'Minh Tấn xem kênh và video hiện tại của bạn',
     icon: Compass,
-    features: ['Phân tích kênh và định hướng nội dung', 'Lộ trình rõ ràng cho 90 ngày tới', 'Tối ưu phễu chuyển đổi hiện tại', 'Gỡ rối trực tiếp các nút thắt kỹ thuật'],
-    cta: 'Đặt lịch tư vấn',
+    features: ['Bắt lỗi hình ảnh, âm thanh, cách nói và cách dựng', 'Định hướng nội dung phù hợp với bạn', 'Gợi ý các bước làm tiếp theo', 'Tư vấn online qua Google Meet hoặc Zalo'],
+    cta: 'Đặt lịch Audit miễn phí',
   },
   {
-    name: 'Premium Coaching 1:1',
-    tagline: 'Cầm tay chỉ việc, xây hệ thống riêng cho bạn',
+    name: 'Coaching 1:1',
+    tagline: 'Gói 6 hoặc 10 buổi, học online hoặc offline',
     icon: Crown,
-    features: ['Đồng hành xây hệ thống bán hàng bằng video', 'Định vị thương hiệu và tăng trưởng kênh', 'Hỗ trợ setup góc quay tại nhà', 'Kho tài nguyên dùng trọn đời'],
-    cta: 'Đăng ký xét tuyển',
+    features: ['Chụp ảnh, quay và dựng video bằng điện thoại hoặc AI', 'Chương trình riêng theo nhu cầu của bạn', 'Giao bài tập và sửa bài trực tiếp', 'Hỗ trợ sửa bài sau khóa học'],
+    cta: 'Xem các gói Coaching',
   },
 ];
 

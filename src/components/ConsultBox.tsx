@@ -83,7 +83,7 @@ function ConsultModal({ kind, product, zaloHref, title, onClose }: { kind: Kind;
             <form onSubmit={submit} className="grid gap-4" noValidate>
               <p className="text-sm text-muted-foreground">
                 {kind === 'audit'
-                  ? 'Để lại thông tin, Minh Tấn sẽ nhắn Zalo để chốt lịch Audit miễn phí với bạn.'
+                  ? 'Để lại thông tin, Minh Tấn sẽ nhắn Zalo để chốt lịch Audit với bạn.'
                   : 'Để lại thông tin, Minh Tấn sẽ nhắn Zalo tư vấn cho bạn trong vòng 24 giờ.'}
               </p>
               <div>

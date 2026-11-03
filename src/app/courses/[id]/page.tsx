@@ -31,7 +31,7 @@ const guarantees = [
 // Extras that only come with buying on this site (not on Unica)
 const webOnly = [
   'Vào nhóm Zalo cộng đồng: nộp bài và được Minh Tấn sửa bài',
-  'Tặng 1 buổi Audit 15 phút 1-1 cùng Minh Tấn',
+  'Tặng 1 buổi Audit 1 tiếng 1-1 cùng Minh Tấn khi học xong khóa',
   'Cập nhật bài học mới miễn phí, không tốn thêm',
 ];
 

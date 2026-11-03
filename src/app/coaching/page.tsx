@@ -9,16 +9,15 @@ import ConsultBox from '@/components/ConsultBox';
 
 export const metadata: Metadata = {
   title: 'Coaching 1:1',
-  description: 'Học 1-1 cùng Minh Tấn: chụp ảnh, quay và dựng video bằng điện thoại hoặc bằng AI. Audit miễn phí, gói 6 buổi và 10 buổi, học online hoặc offline.',
+  description: 'Học 1-1 cùng Minh Tấn: chụp ảnh, quay và dựng video bằng điện thoại hoặc bằng AI. Audit miễn phí 30 phút, gói 6 buổi và 10 buổi, học online hoặc offline.',
 };
 
 const packages = [
   {
     name: 'Gói Audit',
     price: 'Miễn phí',
-    oldPrice: '1.500.000đ',
     kind: 'audit' as const,
-    duration: 'Tư vấn online · hơn 1 giờ',
+    duration: 'Tư vấn online · 30 phút',
     features: [
       'Xem kênh và video hiện tại của bạn',
       'Bắt lỗi hình ảnh, âm thanh, cách nói và cách dựng',
@@ -121,7 +120,6 @@ export default async function CoachingPage() {
                 <h3 className={`mt-2 text-3xl ${pkg.featured ? 'text-white' : ''}`}>{pkg.name}</h3>
                 <div className="mt-4 flex items-baseline gap-3 flex-wrap">
                   <p className={`text-4xl font-extrabold tabular-nums ${pkg.featured ? 'text-white' : ''}`}>{pkg.price}</p>
-                  {'oldPrice' in pkg && <p className="text-lg text-muted-foreground line-through">{pkg.oldPrice}</p>}
                 </div>
                 <ul className={`mt-8 space-y-3 flex-1 ${pkg.featured ? 'text-stone-300' : 'text-stone'}`}>
                   {pkg.features.map((f) => (

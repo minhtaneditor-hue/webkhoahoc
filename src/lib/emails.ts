@@ -149,7 +149,8 @@ const lessonLink = (courseId: string, lessonId?: string | null) => `${SITE}/lear
 // ---------------------------------------------------------------- transactional
 
 /** Day 0 of the onboarding sequence: sent the moment a course is unlocked. */
-export function welcomeCourse(d: { name?: string | null; email: string; courseTitle: string; courseId: string; contact: Contact }): Mail {
+/** setPasswordUrl: the account was created by an admin (Admin > Học viên > Cấp quyền), so the student sets a password first. */
+export function welcomeCourse(d: { name?: string | null; email: string; courseTitle: string; courseId: string; contact: Contact; setPasswordUrl?: string }): Mail {
   const course = esc(d.courseTitle);
   return {
     subject: `Chào mừng ${firstName(d.name)}! Khóa ${d.courseTitle} đã mở`,
@@ -159,6 +160,8 @@ export function welcomeCourse(d: { name?: string | null; email: string; courseTi
         ${eyebrow('Kích hoạt thành công')}
         ${h1(`Chào mừng ${esc(firstName(d.name))} vào lớp!`)}
         ${p(`Khóa <strong>${course}</strong> đã mở cho tài khoản <strong>${esc(d.email)}</strong>. Bạn học được trên cả điện thoại lẫn máy tính.`)}
+        ${d.setPasswordUrl ? `${box(`<strong style="color:${C.ink};">Tài khoản đã được tạo sẵn cho bạn</strong><br>Bấm nút bên dưới để đặt mật khẩu, sau đó đăng nhập bằng email <strong>${esc(d.email)}</strong>. Link dùng được một lần; nếu hết hạn, bấm “Quên mật khẩu” ở <a href="${SITE}/auth" style="color:${C.gold};">trang đăng nhập</a> để nhận link mới.`)}
+        ${button(d.setPasswordUrl, 'Đặt mật khẩu')}` : ''}
         ${p('Để không bị “mua rồi để đó”, bạn làm 3 việc nhỏ này ngay hôm nay:')}
         ${steps([
           ['Xem bài đầu tiên ngay bây giờ', 'Mỗi bài chỉ vài phút. Chỉ cần bắt đầu, phần khó nhất là bài đầu tiên.'],
@@ -167,7 +170,7 @@ export function welcomeCourse(d: { name?: string | null; email: string; courseTi
         ])}
         ${button(lessonLink(d.courseId), 'Vào học bài đầu tiên')}
         ${box(`<strong style="color:${C.ink};">Quà dành cho học viên đăng ký trên website</strong><br>
-          • 1 buổi Audit 15 phút 1-1 với Minh Tấn: <a href="${d.contact.zaloHref}" style="color:${C.gold};font-weight:700;">nhắn Zalo</a> để hẹn lịch.<br>
+          • 1 buổi Audit 1 tiếng 1-1 với Minh Tấn khi bạn học xong khóa: xem lại toàn bộ video bạn làm và định hướng tiếp theo.<br>
           • Bài học mới cập nhật sau này: học miễn phí.<br>
           • Chứng chỉ hoàn thành khi bạn học xong toàn bộ bài.`)}
         ${p(`Quên mật khẩu? Bấm “Quên mật khẩu” ở <a href="${SITE}/auth" style="color:${C.gold};">trang đăng nhập</a> để đặt lại.`)}
@@ -249,7 +252,7 @@ export function onboardDay5(s: Student, contact: Contact): Mail {
   return {
     subject: 'Nộp clip đầu tiên và nhận góp ý từ Minh Tấn',
     html: layout({
-      preheader: 'Bạn có 1 buổi Audit 15 phút 1-1 miễn phí, đừng để quên.',
+      preheader: 'Nộp clip đầu tiên vào nhóm Zalo để được góp ý sớm.',
       unsubscribeFor: s.email,
       body: `
         ${eyebrow('Ngày 5 · Thực hành')}
@@ -258,7 +261,7 @@ export function onboardDay5(s: Student, contact: Contact): Mail {
         ${steps([
           ['Quay 1 clip 30–60 giây', 'Áp dụng điều bạn vừa học: ánh sáng, khung hình hoặc cách nói.'],
           ['Đăng vào nhóm Zalo học viên', `Ghi rõ bài số mấy để được góp ý đúng chỗ. <a href="${contact.zaloGroupHref}" style="color:${C.gold};font-weight:700;">Mở nhóm Zalo</a>.`],
-          ['Hẹn buổi Audit 15 phút', `Quà của học viên website: Minh Tấn xem trực tiếp video của bạn. <a href="${contact.zaloHref}" style="color:${C.gold};font-weight:700;">Nhắn Zalo hẹn lịch</a>.`],
+          ['Học xong khóa, nhận buổi Audit 1 tiếng', 'Quà của học viên website: khi hoàn thành toàn bộ bài, Minh Tấn xem lại video của bạn trong 1 tiếng 1-1.'],
         ])}
         ${progress(s.done, s.total)}
         ${button(lessonLink(s.courseId, s.nextLessonId), 'Tiếp tục học')}
@@ -320,6 +323,7 @@ export function courseCompleted(s: Student, contact: Contact): Mail {
         ${h1('Bạn làm được rồi! 🎉')}
         ${p(`Chào ${esc(firstName(s.name))}, bạn đã hoàn thành toàn bộ ${s.total} bài của khóa <strong>${esc(s.courseTitle)}</strong>. Không phải ai mua khóa học cũng đi được đến cuối.`)}
         ${button(`${SITE}/certificate/${s.courseId}`, 'Nhận chứng chỉ')}
+        ${box(`<strong style="color:${C.ink};">Quà hoàn thành: 1 buổi Audit 1 tiếng 1-1</strong><br>Minh Tấn sẽ xem lại các video bạn làm trong khóa và định hướng bước tiếp theo. <a href="${contact.zaloHref}" style="color:${C.gold};font-weight:700;">Nhắn Zalo để hẹn lịch</a>.`)}
         ${box(`<strong style="color:${C.ink};">Một việc nhỏ giúp Minh Tấn</strong><br>Gửi 1–2 câu cảm nhận, hoặc video bạn quay sau khóa học, qua <a href="${contact.zaloHref}" style="color:${C.gold};font-weight:700;">Zalo</a>. Câu chuyện của bạn giúp người sau tự tin bắt đầu.`)}
         ${p('Kỹ năng sẽ chắc hơn nếu bạn quay đều. Thử mỗi tuần 1 video và tiếp tục đăng vào nhóm học viên nhé.')}
         ${signature}`,
@@ -395,7 +399,7 @@ export function leadDay6(d: { name?: string | null; email: string }, c: Featured
   return {
     subject: `${firstName(d.name)} ơi, sẵn sàng biến video thành tài sản chưa?`,
     html: layout({
-      preheader: `${c.title}: ${c.lessonCount} bài, nhóm Zalo sửa bài và 1 buổi Audit 1-1.`,
+      preheader: `${c.title}: ${c.lessonCount} bài, nhóm Zalo sửa bài và Audit 1 tiếng sau khóa.`,
       unsubscribeFor: d.email,
       body: `
         ${eyebrow('Khóa học của Minh Tấn')}
@@ -404,7 +408,7 @@ export function leadDay6(d: { name?: string | null; email: string }, c: Featured
         ${c.chapters.length ? steps(c.chapters.map((t) => [esc(t), ''] as [string, string])) : ''}
         ${box(`<strong style="color:${C.ink};">Đăng ký trên website, bạn nhận thêm</strong><br>
           • Nhóm Zalo học viên: nộp bài và được sửa bài.<br>
-          • 1 buổi Audit 15 phút 1-1 với Minh Tấn.<br>
+          • 1 buổi Audit 1 tiếng 1-1 với Minh Tấn khi bạn học xong khóa.<br>
           • Bài học mới cập nhật sau này: miễn phí.<br>
           • Chứng chỉ hoàn thành khóa học.`)}
         ${button(courseUrl(c), `Học thử ${c.freeLessons.length} bài miễn phí`)}
@@ -418,13 +422,13 @@ export function leadDay6(d: { name?: string | null; email: string }, c: Featured
 export type ConsultRequest = { kind: 'audit' | 'coaching' | 'course'; product?: string | null; format?: string | null; name: string; email: string; phone: string; message?: string | null };
 
 const consultWhat = (r: ConsultRequest) =>
-  r.kind === 'audit' ? 'buổi Audit miễn phí' : r.product ? esc(r.product) : 'tư vấn';
+  r.kind === 'audit' ? (r.product?.startsWith('Audit 1 tiếng') ? 'buổi Audit 1 tiếng' : 'buổi Audit miễn phí 30 phút') : r.product ? esc(r.product) : 'tư vấn';
 
 /** To the customer: we got it, Minh Tấn will reach out on Zalo. */
 export function consultReceived(r: ConsultRequest, contact: Contact): Mail {
   const audit = r.kind === 'audit';
   return {
-    subject: audit ? 'Đã nhận lịch Audit miễn phí của bạn' : 'TẤN VA đã nhận yêu cầu tư vấn của bạn',
+    subject: audit ? 'Đã nhận yêu cầu đặt lịch Audit của bạn' : 'TẤN VA đã nhận yêu cầu tư vấn của bạn',
     html: layout({
       preheader: 'Minh Tấn sẽ liên hệ qua Zalo trong vòng 24 giờ.',
       body: `

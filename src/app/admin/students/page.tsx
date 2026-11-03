@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
-import { Users, Search, Plus, KeyRound, Trash2, X, Download, UserCheck, UserPlus, Moon } from 'lucide-react';
+import { Users, Search, Plus, KeyRound, Trash2, X, Download, UserCheck, UserPlus, Moon, Loader2 } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, Modal, Field, StatusBadge, StatCard, thClass, tdClass } from '@/components/admin/AdminUI';
 
 type Notice = { type: 'success' | 'error'; text: string } | null;
@@ -41,6 +41,7 @@ export default function StudentsManagement() {
   const [notice, setNotice] = useState<Notice>(null);
   const [grantFor, setGrantFor] = useState<any>(null);
   const [grantCourse, setGrantCourse] = useState('');
+  const [grantForm, setGrantForm] = useState({ email: '', name: '', sendEmail: true });
   const [detail, setDetail] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [now] = useState(() => Date.now());
@@ -100,14 +101,22 @@ export default function StudentsManagement() {
       (!q || u.email?.toLowerCase().includes(q) || u.full_name?.toLowerCase().includes(q)));
   }, [rows, query, tab]);
 
+  // Opens a course without payment; /api/admin/grant creates the account when the email is new
+  const openGrant = (u?: any) => {
+    setGrantFor(u || { isNew: true });
+    setGrantCourse(courses[0]?.id || '');
+    setGrantForm({ email: u?.email || '', name: u?.full_name || '', sendEmail: true });
+  };
+
   async function grant(e: React.FormEvent) {
     e.preventDefault();
-    if (!grantFor || !grantCourse) return;
+    if (!grantFor || !grantCourse || !grantForm.email.trim()) return;
     setBusy(true);
-    const { error } = await supabase.from('enrollments').upsert({ user_id: grantFor.id, course_id: grantCourse, status: 'active' });
+    const res = await fetch('/api/admin/grant', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...grantForm, courseId: grantCourse }) });
+    const data = await res.json().catch(() => ({}));
     setBusy(false);
-    if (error) return setNotice({ type: 'error', text: `Không ghi danh được: ${error.message}` });
-    setNotice({ type: 'success', text: `Đã mở khóa học cho ${grantFor.email}.` });
+    if (!res.ok) return setNotice({ type: 'error', text: data.error || 'Không cấp quyền được.' });
+    setNotice({ type: 'success', text: data.message });
     setGrantFor(null);
     setGrantCourse('');
     load();
@@ -151,7 +160,10 @@ export default function StudentsManagement() {
       <PageHeader
         title="Học viên"
         description="Theo dõi ai đang học, học tới đâu và đã chi bao nhiêu."
-        actions={<button onClick={exportCsv} disabled={filtered.length === 0} className="btn btn-outline"><Download size={16} aria-hidden="true" /> Xuất CSV</button>}
+        actions={<>
+          <button onClick={() => openGrant()} className="btn btn-gold"><Plus size={16} aria-hidden="true" /> Cấp quyền khóa học</button>
+          <button onClick={exportCsv} disabled={filtered.length === 0} className="btn btn-outline"><Download size={16} aria-hidden="true" /> Xuất CSV</button>
+        </>}
       />
 
       {notice && (
@@ -223,7 +235,7 @@ export default function StudentsManagement() {
                   </td>
                   <td className={`${tdClass} text-right`}>
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => { setGrantFor(u); setGrantCourse(courses[0]?.id || ''); }} className="btn btn-dark !min-h-[40px] !px-3 text-xs"><Plus size={14} aria-hidden="true" /> Ghi danh</button>
+                      <button onClick={() => openGrant(u)} className="btn btn-dark !min-h-[40px] !px-3 text-xs"><Plus size={14} aria-hidden="true" /> Ghi danh</button>
                       <button onClick={() => callAdminApi('POST', u)} className="w-10 h-10 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-ink" aria-label={`Gửi email đặt lại mật khẩu cho ${u.email}`} title="Gửi email đặt lại mật khẩu">
                         <KeyRound size={16} aria-hidden="true" />
                       </button>
@@ -291,17 +303,30 @@ export default function StudentsManagement() {
         )}
       </Modal>
 
-      <Modal title="Ghi danh thủ công" open={!!grantFor} onClose={() => setGrantFor(null)}>
+      <Modal title="Cấp quyền khóa học" open={!!grantFor} onClose={() => setGrantFor(null)}>
         <form onSubmit={grant} className="space-y-5">
-          <p className="text-muted-foreground">Mở quyền học cho <strong className="text-ink">{grantFor?.email}</strong> (ví dụ khi học viên chuyển khoản trực tiếp).</p>
+          <p className="text-muted-foreground">Mở khóa học miễn phí, không cần thanh toán: tặng học viên, học viên chuyển khoản trực tiếp, đối tác… Email chưa có tài khoản thì hệ thống tự tạo và gửi link đặt mật khẩu.</p>
+          <Field id="grant-email" label="Email học viên">
+            <input id="grant-email" type="email" className="input" required value={grantForm.email} disabled={!grantFor?.isNew}
+                   onChange={(e) => setGrantForm({ ...grantForm, email: e.target.value })} placeholder="hocvien@gmail.com" autoComplete="off" />
+          </Field>
+          {grantFor?.isNew && (
+            <Field id="grant-name" label="Họ tên (không bắt buộc)">
+              <input id="grant-name" className="input" value={grantForm.name} onChange={(e) => setGrantForm({ ...grantForm, name: e.target.value })} autoComplete="off" />
+            </Field>
+          )}
           <Field id="grant-course" label="Khóa học">
             <select id="grant-course" className="input" value={grantCourse} onChange={(e) => setGrantCourse(e.target.value)} required>
               {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
           </Field>
+          <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
+            <input type="checkbox" className="w-5 h-5 accent-[var(--color-gold)]" checked={grantForm.sendEmail} onChange={(e) => setGrantForm({ ...grantForm, sendEmail: e.target.checked })} />
+            <span className="text-sm">Gửi email chào mừng (kèm link đặt mật khẩu nếu là tài khoản mới)</span>
+          </label>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setGrantFor(null)} className="btn btn-outline">Hủy</button>
-            <button type="submit" disabled={busy || !grantCourse} className="btn btn-gold">Mở khóa học</button>
+            <button type="submit" disabled={busy || !grantCourse || !grantForm.email.trim()} className="btn btn-gold">{busy && <Loader2 size={16} className="animate-spin" aria-hidden="true" />} Cấp quyền</button>
           </div>
         </form>
       </Modal>
