@@ -56,10 +56,11 @@ export function Modal({ title, open, onClose, children, wide = false }: { title:
   }, [open, onClose]);
 
   if (!open) return null;
+  // Auto margins centre the dialog; when it is taller than the screen it starts at the top and scrolls
   return (
-    <div className="fixed inset-0 z-[1000] flex items-start md:items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="fixed inset-0 z-[1000] flex items-start justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-label={title}>
       <div className="fixed inset-0 bg-onyx/60" onClick={onClose} aria-hidden="true" />
-      <div className={`relative w-full ${wide ? 'max-w-3xl' : 'max-w-xl'} card shadow-[var(--shadow-lift)] animate-fade-up my-8`}>
+      <div className={`relative w-full ${wide ? 'max-w-3xl' : 'max-w-xl'} card shadow-[var(--shadow-lift)] animate-fade-up my-auto`}>
         <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-line">
           <h2 className="text-2xl">{title}</h2>
           <button onClick={onClose} className="w-11 h-11 -mr-2 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-ink" aria-label="Đóng">

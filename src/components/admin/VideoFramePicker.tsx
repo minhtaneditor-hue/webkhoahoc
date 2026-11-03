@@ -76,9 +76,9 @@ export default function VideoFramePicker({ onPick, onClose }: { onPick: (image: 
 
   if (typeof document === 'undefined') return null;
   return createPortal(
-    <div className="fixed inset-0 z-[1100] flex items-start sm:items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Chọn ảnh bìa từ clip">
+    <div className="fixed inset-0 z-[1100] flex items-start justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Chọn ảnh bìa từ clip">
       <div className="fixed inset-0 bg-onyx/70" onClick={onClose} aria-hidden="true" />
-      <div className="relative w-full max-w-lg card shadow-[var(--shadow-lift)] my-8">
+      <div className="relative w-full max-w-lg card shadow-[var(--shadow-lift)] my-auto">
         <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-line">
           <h2 className="text-2xl">Chọn ảnh bìa từ clip</h2>
           <button type="button" onClick={onClose} className="w-11 h-11 -mr-2 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-ink" aria-label="Đóng">

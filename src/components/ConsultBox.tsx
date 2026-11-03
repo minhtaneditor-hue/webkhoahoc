@@ -58,9 +58,9 @@ function ConsultModal({ kind, product, zaloHref, title, onClose }: { kind: Kind;
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-start sm:items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby={id('title')}>
+    <div className="fixed inset-0 z-[1000] flex items-start justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby={id('title')}>
       <div className="fixed inset-0 bg-onyx/60" onClick={onClose} aria-hidden="true" />
-      <div className="relative w-full max-w-md card shadow-[var(--shadow-lift)] my-8 text-ink">
+      <div className="relative w-full max-w-md card shadow-[var(--shadow-lift)] my-auto text-ink">
         <div className="flex items-start justify-between gap-4 px-6 pt-5">
           <div>
             <h2 id={id('title')} className="text-2xl">{title}</h2>
