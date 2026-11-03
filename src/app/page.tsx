@@ -9,7 +9,7 @@ import ShowreelVideo from '@/components/motion/ShowreelVideo';
 import CountUp from '@/components/motion/CountUp';
 import FeedbackMarquee from '@/components/FeedbackMarquee';
 import StudentsMarquee from '@/components/students/StudentsMarquee';
-import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWorks } from '@/lib/content';
+import { getSiteSettings, getStudents, getFeedbackImages, getFaqs, getStudentWorks, workCounts } from '@/lib/content';
 import StudentWorks from '@/components/students/StudentWorks';
 import { toYoutubeId } from '@/lib/site-settings';
 import LeadMagnet from '@/components/LeadMagnet';
@@ -142,7 +142,7 @@ export default async function Home() {
         </div>
 
         {/* All students with a photo, scrolling left to right */}
-        <div className="mt-14"><StudentsMarquee students={students} /></div>
+        <div className="mt-14"><StudentsMarquee students={students} counts={workCounts(works)} /></div>
 
         {featuredWorks.length > 0 && (
           <div className="container-lux mt-20">

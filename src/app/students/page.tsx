@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Quote, ArrowRight, Plus } from 'lucide-react';
+import { Quote, ArrowRight, Plus, Images } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
-import { getStudents, getFeedbackImages, getStudentWorks, getFeedbackVideos, getSiteSettings, studentPlaces } from '@/lib/content';
+import { getStudents, getFeedbackImages, getStudentWorks, getFeedbackVideos, getSiteSettings, studentPlaces, studentKey, workCounts, worksLabel } from '@/lib/content';
 import StudentShowcase from '@/components/students/StudentShowcase';
 import SocialLinks from '@/components/students/SocialLinks';
 import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
@@ -23,6 +23,15 @@ export const metadata: Metadata = {
 export default async function StudentsPage() {
   const [students, feedback, works, videos, settings] = await Promise.all([getStudents(), getFeedbackImages(), getStudentWorks(), getFeedbackVideos(), getSiteSettings()]);
   const places = studentPlaces(students, works);
+  const counts = workCounts(works);
+  const worksLink = (name: string) => {
+    const n = counts[studentKey(name)];
+    return n !== undefined ? (
+      <a href={`#hv-${studentKey(name)}`} className="inline-flex items-center gap-1.5 min-h-[36px] text-sm font-semibold text-gold hover:text-gold-hover">
+        <Images size={16} aria-hidden="true" /> {worksLabel(n)} <ArrowRight size={14} aria-hidden="true" />
+      </a>
+    ) : null;
+  };
   // Headline numbers are set in admin (rounded marketing figures, not live counts)
   const plus = (v: string | undefined, fallback: number) => `${(Number(v) || fallback).toLocaleString('vi-VN')}+`;
 
@@ -68,9 +77,12 @@ export default async function StudentsPage() {
                 {s.results && <span className="badge self-start">{s.results}</span>}
                 <Quote size={24} className="mt-4 text-gold" aria-hidden="true" />
                 <blockquote className="mt-2 font-display text-2xl leading-snug flex-1">“{s.quote || s.story}”</blockquote>
-                <figcaption className="mt-6">
-                  <span className="block font-semibold">{s.name}</span>
-                  <span className="block text-sm text-muted-foreground">{s.title}</span>
+                <figcaption className="mt-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+                  <span>
+                    <span className="block font-semibold">{s.name}</span>
+                    <span className="block text-sm text-muted-foreground">{s.title}</span>
+                  </span>
+                  {worksLink(s.name)}
                 </figcaption>
               </figure>
             </li>
@@ -96,6 +108,7 @@ export default async function StudentsPage() {
                     )}
                     {s.facebook_url && <SocialLinks links={{ facebook: s.facebook_url }} name={s.name} />}
                   </div>
+                  {worksLink(s.name)}
                 </div>
               </li>
             ))}

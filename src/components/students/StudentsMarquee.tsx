@@ -1,11 +1,13 @@
 import Image from 'next/image';
-import { Quote } from 'lucide-react';
+import Link from 'next/link';
+import { Quote, Images } from 'lucide-react';
 import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
-import type { Student } from '@/lib/content';
+import { studentKey, worksLabel, type Student } from '@/lib/content';
 
 // Every student with a photo, drifting left to right in one endless row (same
 // marquee as the partner logos). Pauses on hover; static wrap under reduced motion.
-export default function StudentsMarquee({ students }: { students: Student[] }) {
+// counts (works per studentKey) adds a "Xem sản phẩm" link to the student's works on /students.
+export default function StudentsMarquee({ students, counts = {} }: { students: Student[]; counts?: Record<string, number> }) {
   const list = students.filter((s) => s.avatar_url);
   if (list.length === 0) return null;
   const loop = [...list, ...list];
@@ -36,6 +38,12 @@ export default function StudentsMarquee({ students }: { students: Student[] }) {
                     <img src={flagUrl(c.code)} alt="" width={18} height={12} className="!rounded-[2px] w-[18px] h-3 object-cover" />
                     {s.city ? `${s.city}, ${c.name}` : c.name}
                   </p>
+                ) : null}
+                {counts[studentKey(s.name)] !== undefined ? (
+                  <Link href={`/students#hv-${studentKey(s.name)}`} tabIndex={i >= list.length ? -1 : undefined}
+                        className="mt-3 self-start inline-flex items-center gap-1.5 min-h-[36px] text-sm font-semibold text-gold-light hover:underline">
+                    <Images size={15} aria-hidden="true" /> {worksLabel(counts[studentKey(s.name)])}
+                  </Link>
                 ) : null}
               </figure>
             </li>

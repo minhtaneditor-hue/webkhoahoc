@@ -1,11 +1,11 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { X, ArrowRight, Images, PlayCircle, LayoutGrid } from 'lucide-react';
 import { parseMedia, WORK_CATEGORIES } from '@/lib/media';
 import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
-import type { StudentWork, FeedbackVideo } from '@/lib/content';
+import { studentKey, type StudentWork, type FeedbackVideo } from '@/lib/content';
 import { sidesOf, Player } from './StudentWorks';
 import SocialLinks, { type Links } from './SocialLinks';
 import FeedbackVideos from './FeedbackVideos';
@@ -32,7 +32,7 @@ type Profile = {
 function toProfiles(works: StudentWork[]): Profile[] {
   const map = new Map<string, Profile>();
   for (const w of works) {
-    const key = w.student_name.trim().toLowerCase();
+    const key = studentKey(w.student_name);
     const p = map.get(key) ?? { name: w.student_name, title: null, country: null, city: null, avatar: null, category: null, links: {}, works: [] };
     p.title ||= w.student_title; p.country ||= w.country; p.city ||= w.city; p.avatar ||= w.avatar_url; p.category ||= w.category;
     p.links.facebook ||= w.facebook_url || undefined;
@@ -82,6 +82,28 @@ export default function StudentShowcase({ works, videos }: { works: StudentWork[
     setOpen(p);
     dialog.current?.showModal();
   }
+
+  // "Xem sản phẩm" on a featured student links to #hv-<key> (same page or from the home page):
+  // open that student's works. Clicks are caught too, since re-clicking the same hash fires no event.
+  useEffect(() => {
+    const openKey = (hash: string) => {
+      if (!hash.startsWith('#hv-')) return false;
+      const p = toProfiles(works).find((x) => studentKey(x.name) === decodeURIComponent(hash.slice(4)));
+      if (!p) return false;
+      setKind('all'); setIndustry('all');
+      show(p);
+      return true;
+    };
+    openKey(location.hash);
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement).closest?.('a[href^="#hv-"]') as HTMLAnchorElement | null;
+      if (a && openKey(a.getAttribute('href')!)) e.preventDefault();
+    };
+    const onHash = () => openKey(location.hash);
+    document.addEventListener('click', onClick);
+    window.addEventListener('hashchange', onHash);
+    return () => { document.removeEventListener('click', onClick); window.removeEventListener('hashchange', onHash); };
+  }, [works]);
 
   return (
     <>

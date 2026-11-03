@@ -86,6 +86,25 @@ export type StudentWork = {
 };
 
 /** Former students' work (before / after). Empty until the admin adds some. */
+/** Name → stable key / URL anchor: no accents, no "Anh/Chị" prefix. Links featured students to their works. */
+export function studentKey(name: string) {
+  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase().trim()
+    .replace(/^(anh|chi|em|c|a)\s+/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+/** Works with a picture or clip per studentKey; 0 = listed with channels only. Missing key = no profile. */
+export function workCounts(works: StudentWork[]) {
+  const counts: Record<string, number> = {};
+  for (const w of works) {
+    const k = studentKey(w.student_name);
+    counts[k] = (counts[k] || 0) + (w.before_url || w.after_url || w.before_thumbnail_url || w.after_thumbnail_url ? 1 : 0);
+  }
+  return counts;
+}
+
+/** Link label for a student's profile in the showcase. */
+export const worksLabel = (n: number) => (n ? `Xem ${n} sản phẩm` : 'Xem kênh của học viên');
+
 export async function getStudentWorks(): Promise<StudentWork[]> {
   const supabase = getPublicSupabase();
   if (!supabase) return [];
