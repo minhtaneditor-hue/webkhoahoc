@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import Link from 'next/link';
+import { captionFromAlt, isClosingPanel, sourceHost, type Block, type ParsedPost, type Section, type Source } from '@/lib/blog-content';
 
 // Renders a post written in a small Markdown subset: ## and ### headings, - and 1. lists,
 // > quotes, ![alt](url) pictures on their own line, **bold**, *italic* and [links](url).
@@ -20,8 +21,8 @@ function inline(text: string, key: string): ReactNode[] {
       const [, label, url] = t.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/)!;
       const href = safeHref(url);
       if (!href) out.push(label);
-      else if (href.startsWith('/')) out.push(<Link key={k} href={href} className="text-gold underline underline-offset-4">{label}</Link>);
-      else out.push(<a key={k} href={href} target="_blank" rel="noopener noreferrer" className="text-gold underline underline-offset-4">{label}</a>);
+      else if (href.startsWith('/')) out.push(<Link key={k} href={href} className="text-gold underline underline-offset-4 hover:text-gold-hover">{label}</Link>);
+      else out.push(<a key={k} href={href} target="_blank" rel="noopener noreferrer" className="text-gold underline underline-offset-4 hover:text-gold-hover">{label}</a>);
     } else if (t.startsWith('**')) {
       out.push(<strong key={k} className="font-semibold text-ink">{t.slice(2, -2)}</strong>);
     } else {
@@ -33,68 +34,120 @@ function inline(text: string, key: string): ReactNode[] {
   return out;
 }
 
-type Block =
-  | { kind: 'h2' | 'h3' | 'p' | 'quote'; text: string }
-  | { kind: 'ul' | 'ol'; items: string[] }
-  | { kind: 'img'; alt: string; src: string };
-
-function parse(content: string): Block[] {
-  const blocks: Block[] = [];
-  let paragraph: string[] = [];
-  const flush = () => {
-    if (paragraph.length) blocks.push({ kind: 'p', text: paragraph.join(' ') });
-    paragraph = [];
-  };
-  for (const raw of content.split(/\r?\n/)) {
-    const line = raw.trim();
-    const img = line.match(/^!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)$/);
-    const list = line.match(/^(?:([-*])|\d+[.)])\s+(.*)$/);
-    if (!line) {
-      flush();
-    } else if (line.startsWith('### ')) {
-      flush();
-      blocks.push({ kind: 'h3', text: line.slice(4) });
-    } else if (line.startsWith('## ') || line.startsWith('# ')) {
-      // The post title is the page's only h1, so a "# " line in the text becomes an h2
-      flush();
-      blocks.push({ kind: 'h2', text: line.replace(/^#+\s+/, '') });
-    } else if (line.startsWith('> ')) {
-      flush();
-      blocks.push({ kind: 'quote', text: line.slice(2) });
-    } else if (img) {
-      flush();
-      blocks.push({ kind: 'img', alt: img[1], src: img[2] });
-    } else if (list) {
-      flush();
-      const kind = list[1] ? 'ul' : 'ol';
-      const prev = blocks[blocks.length - 1];
-      if (prev && prev.kind === kind) prev.items.push(list[2]);
-      else blocks.push({ kind, items: [list[2]] });
-    } else {
-      paragraph.push(line);
+function BlockView({ block: b, id, lead }: { block: Block; id: string; lead?: boolean }) {
+  switch (b.kind) {
+    case 'h3':
+      return <h3 className="pt-3 text-xl md:text-2xl font-bold text-ink">{inline(b.text, id)}</h3>;
+    case 'quote':
+      return <blockquote className="rounded-r-[var(--radius-md)] border-l-4 border-gold bg-gold-soft/60 py-4 pl-5 pr-4 text-ink">{inline(b.text, id)}</blockquote>;
+    case 'ul':
+      return (
+        <ul role="list" className="space-y-3">
+          {b.items.map((t, j) => (
+            <li key={j} className="relative pl-6">
+              <span aria-hidden="true" className="absolute left-0.5 top-[0.72em] h-1.5 w-1.5 rounded-full bg-gold" />
+              {inline(t, `${id}-${j}`)}
+            </li>
+          ))}
+        </ul>
+      );
+    case 'ol':
+      return (
+        <ol role="list" className="space-y-3">
+          {b.items.map((t, j) => (
+            <li key={j} className="relative pl-11">
+              <span aria-hidden="true" className="absolute left-0 top-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-gold-soft text-sm font-bold text-gold">{j + 1}</span>
+              {inline(t, `${id}-${j}`)}
+            </li>
+          ))}
+        </ol>
+      );
+    case 'notes':
+      return (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {b.items.map((n, j) => (
+            <div key={j} className="rounded-[var(--radius-card)] border border-line bg-card p-5 text-base leading-relaxed">
+              <p className="font-bold text-ink">{inline(n.label, `${id}-${j}-l`)}</p>
+              <p className="mt-1.5">{inline(n.text, `${id}-${j}`)}</p>
+            </div>
+          ))}
+        </div>
+      );
+    case 'img': {
+      const caption = captionFromAlt(b.alt);
+      return (
+        <figure className="my-8">
+          {/* Pictures come in any size from the admin, so they keep their own shape */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={b.src} alt={b.alt} loading="lazy" className="h-auto w-full rounded-[var(--radius-card)] border border-line" />
+          {caption && <figcaption className="mt-2.5 text-center text-sm leading-snug text-muted-foreground">{caption}</figcaption>}
+        </figure>
+      );
     }
+    default:
+      return lead
+        ? <p className="text-xl md:text-[1.375rem] font-medium leading-relaxed text-ink">{inline(b.text, id)}</p>
+        : <p>{inline(b.text, id)}</p>;
   }
-  flush();
-  return blocks;
 }
 
-export default function PostContent({ content }: { content: string }) {
+function SectionView({ section, number, panel }: { section: Section; number: number; panel: boolean }) {
+  const body = section.blocks.map((b, i) => <BlockView key={i} block={b} id={`${section.id}-${i}`} />);
+  if (panel) {
+    return (
+      <section id={section.id} aria-labelledby={`${section.id}-h`} className="scroll-mt-24 rounded-[var(--radius-card)] bg-gold-soft p-6 md:p-8 text-ink">
+        <h2 id={`${section.id}-h`} className="text-2xl md:text-3xl font-bold leading-tight text-ink">{section.title}</h2>
+        <div className="mt-4 space-y-4">{body}</div>
+      </section>
+    );
+  }
   return (
-    <div className="space-y-5 text-lg leading-relaxed text-stone">
-      {parse(content).map((b, i) => {
-        const k = String(i);
-        switch (b.kind) {
-          case 'h2': return <h2 key={k} className="pt-6 text-3xl md:text-4xl text-ink">{inline(b.text, k)}</h2>;
-          case 'h3': return <h3 key={k} className="pt-3 text-2xl text-ink">{inline(b.text, k)}</h3>;
-          case 'quote': return <blockquote key={k} className="border-l-4 border-gold pl-5 italic">{inline(b.text, k)}</blockquote>;
-          case 'ul': return <ul key={k} className="list-disc space-y-2 pl-6">{b.items.map((t, j) => <li key={j}>{inline(t, `${k}-${j}`)}</li>)}</ul>;
-          case 'ol': return <ol key={k} className="list-decimal space-y-2 pl-6">{b.items.map((t, j) => <li key={j}>{inline(t, `${k}-${j}`)}</li>)}</ol>;
-          // Pictures come in any size from the admin, so they keep their own shape
-          // eslint-disable-next-line @next/next/no-img-element
-          case 'img': return <img key={k} src={b.src} alt={b.alt} loading="lazy" className="w-full h-auto rounded-[var(--radius-card)]" />;
-          default: return <p key={k}>{inline(b.text, k)}</p>;
-        }
-      })}
+    <section id={section.id} aria-labelledby={`${section.id}-h`} className="scroll-mt-24 border-t border-line pt-8 space-y-5">
+      <h2 id={`${section.id}-h`} className="flex gap-3 text-2xl md:text-3xl font-bold leading-tight text-ink">
+        <span aria-hidden="true" className="shrink-0 tabular-nums text-gold">{String(number).padStart(2, '0')}</span>
+        <span>{section.title}</span>
+      </h2>
+      {body}
+    </section>
+  );
+}
+
+export default function PostContent({ post, afterIntro }: { post: ParsedPost; afterIntro?: ReactNode }) {
+  const last = post.sections[post.sections.length - 1];
+  const hasPanel = post.sections.length >= 3 && !!last && isClosingPanel(last);
+  return (
+    <div className="space-y-10 text-[1.0625rem] md:text-lg leading-[1.7] text-stone">
+      {post.intro.length > 0 && (
+        <div className="space-y-5">
+          {post.intro.map((b, i) => <BlockView key={i} block={b} id={`intro-${i}`} lead={i === 0 && b.kind === 'p'} />)}
+        </div>
+      )}
+      {afterIntro}
+      {post.sections.map((s, i) => <SectionView key={s.id} section={s} number={i + 1} panel={hasPanel && s === last} />)}
     </div>
+  );
+}
+
+// Deliberately quiet: a reference list at the foot of the post, not part of the reading flow.
+export function PostSources({ sources }: { sources: Source[] }) {
+  if (sources.length === 0) return null;
+  return (
+    <section aria-labelledby="post-sources" className="border-t border-line pt-6">
+      <h2 id="post-sources" className="text-sm font-bold leading-normal text-ink">Nguồn tham khảo <span className="font-medium text-muted-foreground">({sources.length})</span></h2>
+      <ul role="list" className="mt-3 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
+        {sources.map((s, i) => (
+          <li key={i} className="min-w-0 text-sm leading-snug">
+            {s.url ? (
+              <a href={s.url} target="_blank" rel="noopener noreferrer" className="group block">
+                <span className="text-stone underline-offset-2 group-hover:text-gold group-hover:underline">{s.title}</span>
+                <span className="block truncate text-xs leading-normal text-muted-foreground">{sourceHost(s.url)}</span>
+              </a>
+            ) : (
+              <span className="text-stone">{s.title}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -5,8 +5,10 @@ import { notFound } from 'next/navigation';
 import { ArrowRight, ChevronLeft } from 'lucide-react';
 import JsonLd from '@/components/JsonLd';
 import PostCard from '@/components/blog/PostCard';
-import PostContent from '@/components/blog/PostContent';
+import PostContent, { PostSources } from '@/components/blog/PostContent';
+import { PostTocInline, PostTocSide } from '@/components/blog/PostToc';
 import { getPost, getPublishedPosts } from '@/lib/blog';
+import { parsePost } from '@/lib/blog-content';
 import { formatPostDate, readingMinutes } from '@/lib/blog-format';
 import { SITE_URL } from '@/lib/site-url';
 
@@ -15,6 +17,16 @@ import { SITE_URL } from '@/lib/site-url';
 export const dynamic = 'force-dynamic';
 
 type Props = { params: Promise<{ slug: string }> };
+
+function CourseCta({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={`surface-dark rounded-[var(--radius-card)] ${compact ? 'p-5' : 'p-6'}`}>
+      <p className={`font-bold text-ivory ${compact ? 'text-lg leading-snug' : 'text-2xl'}`}>Muốn học bài bản hơn?</p>
+      <p className={`mt-2 text-stone-300 ${compact ? 'text-sm leading-snug' : ''}`}>Xem các khóa học làm video bằng điện thoại cùng Minh Tấn, có bài học thử miễn phí.</p>
+      <Link href="/courses" className={`btn btn-gold mt-4 ${compact ? 'w-full' : ''}`}>Xem khóa học <ArrowRight size={18} aria-hidden="true" /></Link>
+    </div>
+  );
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -45,6 +57,8 @@ export default async function BlogPostPage({ params }: Props) {
   if (!post) notFound();
   const related = recent.filter((p) => p.id !== post.id).slice(0, 3);
   const url = `${SITE_URL}/blog/${post.slug}`;
+  const parsed = parsePost(post.content);
+  const toc = parsed.sections.map(({ id, title }) => ({ id, title }));
 
   return (
     <main className="pt-10 pb-20 md:pt-16">
@@ -75,28 +89,51 @@ export default async function BlogPostPage({ params }: Props) {
         ],
       }} />
 
-      <article className="container-lux max-w-3xl">
-        <Link href="/blog" className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-ink min-h-[44px]">
-          <ChevronLeft size={16} aria-hidden="true" /> Tất cả bài viết
-        </Link>
-        <h1 className="mt-3 text-ink">{post.title}</h1>
-        <p className="mt-4 text-sm text-muted-foreground">
-          <Link href="/about" className="hover:underline underline-offset-4">Minh Tấn</Link>
-          {' · '}<time dateTime={post.published_at}>{formatPostDate(post.published_at)}</time>
-          {' · '}{readingMinutes(post.content)} phút đọc
-        </p>
-        {post.cover_url && (
-          <div className="relative mt-8 aspect-video overflow-hidden rounded-[var(--radius-card)] bg-muted">
-            <Image src={post.cover_url} alt="" fill priority sizes="(min-width: 768px) 768px, 100vw" className="object-cover" unoptimized={post.cover_url.startsWith('http')} />
+      <article className="container-lux">
+        <header className="max-w-4xl">
+          <Link href="/blog" className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-ink min-h-[44px]">
+            <ChevronLeft size={16} aria-hidden="true" /> Tất cả bài viết
+          </Link>
+          <h1 className="mt-2 text-[2rem] md:text-5xl leading-[1.15] text-ink">{post.title}</h1>
+          <div className="mt-6 flex items-center gap-3">
+            <Image src="/asset/avatar/hero_expert.jpg" alt="" width={44} height={44} className="h-11 w-11 rounded-full object-cover" />
+            <p className="text-sm leading-snug text-muted-foreground">
+              <Link href="/about" className="block font-semibold text-ink hover:underline underline-offset-4">Minh Tấn</Link>
+              <time dateTime={post.published_at}>{formatPostDate(post.published_at)}</time>
+              {' · '}{readingMinutes(post.content)} phút đọc
+            </p>
           </div>
-        )}
-        <div className="mt-8"><PostContent content={post.content} /></div>
+        </header>
 
-        <aside className="mt-14 card p-6 md:p-8">
-          <p className="text-2xl font-bold text-ink">Muốn học bài bản hơn?</p>
-          <p className="mt-2 text-muted-foreground">Xem các khóa học làm video bằng điện thoại cùng Minh Tấn, có bài học thử miễn phí.</p>
-          <Link href="/courses" className="btn btn-gold mt-5">Xem khóa học <ArrowRight size={18} aria-hidden="true" /></Link>
-        </aside>
+        <div className="mt-8 md:mt-10 lg:grid lg:grid-cols-[minmax(0,44rem)_15.5rem] lg:justify-between lg:gap-12">
+          <div className="min-w-0">
+            {post.cover_url && (
+              <div className="relative mb-8 aspect-video overflow-hidden rounded-[var(--radius-card)] bg-muted">
+                <Image src={post.cover_url} alt="" fill priority sizes="(min-width: 1024px) 704px, 100vw" className="object-cover" unoptimized={post.cover_url.startsWith('http')} />
+              </div>
+            )}
+            <PostContent post={parsed} afterIntro={toc.length > 1 ? <div className="lg:hidden"><PostTocInline items={toc} /></div> : null} />
+
+            <div className="mt-10 lg:hidden"><CourseCta /></div>
+
+            <section aria-label="Tác giả" className="mt-10 flex items-center gap-4 rounded-[var(--radius-card)] border border-line bg-card p-5">
+              <Image src="/asset/avatar/hero_expert.jpg" alt="" width={64} height={64} className="h-16 w-16 shrink-0 rounded-full object-cover" />
+              <div className="min-w-0">
+                <p className="font-bold text-ink"><Link href="/about" className="hover:underline underline-offset-4">Minh Tấn</Link></p>
+                <p className="mt-0.5 text-sm leading-snug text-muted-foreground">Giảng viên, cố vấn video. Chia sẻ cách quay và dựng video bằng điện thoại, ứng dụng AI.</p>
+              </div>
+            </section>
+
+            <div className="mt-10"><PostSources sources={parsed.sources} /></div>
+          </div>
+
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 space-y-8">
+              {toc.length > 1 && <PostTocSide items={toc} />}
+              <CourseCta compact />
+            </div>
+          </aside>
+        </div>
       </article>
 
       {related.length > 0 && (
