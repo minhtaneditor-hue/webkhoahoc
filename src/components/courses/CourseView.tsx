@@ -67,6 +67,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
   const [user, setUser] = useState<any>(null);
   const [enrolled, setEnrolled] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const [signInFor, setSignInFor] = useState<any>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -97,11 +98,11 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
   }, [id, initialCourse]);
 
   useEffect(() => {
-    if (!selectedLesson) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSelectedLesson(null);
+    if (!selectedLesson && !signInFor) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSelectedLesson(null); setSignInFor(null); } };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [selectedLesson]);
+  }, [selectedLesson, signInFor]);
 
   const handleApplyPromo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,7 +165,11 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
   const freeLesson = lessons.find((l) => l.is_free);
 
   const openLesson = (lesson: any) => {
-    if (lesson.video_url?.startsWith('drm:') || !lesson.video_url) router.push(`/learn/${course.id}/${lesson.id}`);
+    if (lesson.video_url?.startsWith('drm:') || !lesson.video_url) {
+      // Protected videos need an account: guests get a notice first instead of landing on the login page
+      if (authChecked && !user) setSignInFor(lesson);
+      else router.push(`/learn/${course.id}/${lesson.id}`);
+    }
     else setSelectedLesson(lesson);
   };
 
@@ -362,6 +367,25 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
       )}
 
       {/* Free preview modal */}
+      {signInFor && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="sign-in-title">
+          <div className="absolute inset-0 bg-onyx/70" onClick={() => setSignInFor(null)} aria-hidden="true" />
+          <div className="relative w-full max-w-md card p-6 shadow-[var(--shadow-lift)] animate-fade-up text-ink">
+            <div className="flex items-start justify-between gap-4">
+              <h2 id="sign-in-title" className="text-2xl leading-snug">Đăng nhập để xem thêm nhiều video miễn phí khác</h2>
+              <button onClick={() => setSignInFor(null)} autoFocus className="w-11 h-11 -mr-2 -mt-2 shrink-0 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-ink" aria-label="Đóng">
+                <X size={20} aria-hidden="true" />
+              </button>
+            </div>
+            <p className="mt-2 text-muted-foreground">{signInFor.title}</p>
+            <div className="mt-6 grid gap-3">
+              <Link href={`/auth?redirect=${encodeURIComponent(`/learn/${course.id}/${signInFor.id}`)}`} className="btn btn-gold w-full">Đăng nhập</Link>
+              <Link href={`/auth?mode=signup&redirect=${encodeURIComponent(`/learn/${course.id}/${signInFor.id}`)}`} className="btn btn-outline w-full">Tạo tài khoản miễn phí</Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedLesson && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={selectedLesson.title}>
           <div className="absolute inset-0 bg-onyx/90" onClick={() => setSelectedLesson(null)} aria-hidden="true" />
