@@ -35,7 +35,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return { title: 'Blog' };
   const description = post.seo_description || post.excerpt || undefined;
   return {
-    title: `Blog / ${post.title}`,
+    // Posts live or die in search results, so they skip the "TẤN VA / Tab" path and lead with the keyword
+    title: { absolute: `${post.seo_title || post.title} | TẤN VA` },
     description,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
