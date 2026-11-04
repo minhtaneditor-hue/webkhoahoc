@@ -20,13 +20,18 @@ export default function AdminShopPage() {
       description="Sản phẩm số bán trên trang Shop. Link tải chỉ được gửi cho người đã thanh toán."
       icon={ShoppingBag}
       itemLabel="sản phẩm"
-      emptyRecord={{ title: '', description: '', price: 0, thumbnail_url: '', download_url: '', category: 'ebook' }}
+      emptyRecord={{ title: '', description: '', price: 0, thumbnail_url: '', download_url: '', category: 'ebook', preview_url: '', highlights: '', requirements: '', samples: '', faq: '' }}
       fields={[
         { key: 'title', label: 'Tên sản phẩm', required: true },
         { key: 'category', label: 'Loại', type: 'select', options: categories },
-        { key: 'description', label: 'Mô tả', type: 'textarea' },
+        { key: 'description', label: 'Mô tả', type: 'textarea', hint: 'Đoạn đầu tiên hiện ở đầu trang sản phẩm. Các đoạn sau (cách một dòng trống) hiện ở mục Thông tin chi tiết. Muốn chèn ảnh, viết riêng một đoạn: ![mô tả ảnh](link ảnh).' },
         { key: 'price', label: 'Giá (VNĐ)', type: 'number', hint: 'Để 0 nếu muốn tặng miễn phí.' },
         { key: 'thumbnail_url', label: 'Ảnh bìa', type: 'image', hint: 'Ảnh tỉ lệ 4:3, tối đa 5 MB.' },
+        { key: 'preview_url', label: 'Video giới thiệu', type: 'url', hint: 'Link YouTube, hoặc link file video (mp4, webm) sẽ tự chạy không tiếng. Để trống thì trang sản phẩm dùng ảnh bìa.' },
+        { key: 'highlights', label: 'Bạn nhận được gì', type: 'textarea', hint: 'Mỗi ý một dòng.' },
+        { key: 'requirements', label: 'Bạn cần có gì', type: 'textarea', hint: 'Mỗi ý một dòng. Ví dụ phần mềm, thiết bị cần có để dùng được sản phẩm.' },
+        { key: 'samples', label: 'Chép và dùng ngay', type: 'textarea', hint: 'Mỗi câu một dòng, mỗi câu có nút Chép. Hợp với Skill AI: câu lệnh cài, câu mẫu để nói với Claude. Ai vào trang cũng thấy, đừng ghi nội dung chỉ dành cho người mua.' },
+        { key: 'faq', label: 'Câu hỏi thường gặp', type: 'textarea', hint: 'Dòng đầu là câu hỏi, dòng sau là trả lời. Các câu cách nhau một dòng trống.' },
         { key: 'download_url', label: 'Link tải file', type: 'url', hint: 'Google Drive, Dropbox… Chỉ người mua mới nhận được link này. Ebook PDF đóng tên người mua: tải file lên kho shop-files trên Supabase rồi ghi storage:shop-files/ten-file.pdf (hoặc file trên R2: r2:shop/ebooks/ten-file.pdf)' },
       ]}
       renderMeta={(row) => <>{categories.find((c) => c.value === row.category)?.label || row.category} · {Number(row.price) > 0 ? formatVND(row.price) : 'Miễn phí'}</>}
