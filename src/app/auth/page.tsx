@@ -90,7 +90,7 @@ function AuthForm() {
 
   const titles: Record<Mode, { title: string; sub: string; cta: string }> = {
     login: { title: 'Chào mừng trở lại', sub: 'Đăng nhập để tiếp tục khóa học của bạn.', cta: 'Đăng nhập' },
-    signup: { title: 'Tạo tài khoản', sub: 'Miễn phí — học thử ngay bài đầu tiên.', cta: 'Tạo tài khoản' },
+    signup: { title: 'Tạo tài khoản', sub: 'Miễn phí, học thử ngay.', cta: 'Tạo tài khoản' },
     reset: { title: 'Quên mật khẩu', sub: 'Nhập email, chúng tôi sẽ gửi link đặt lại mật khẩu.', cta: 'Gửi link đặt lại' },
   };
 

@@ -245,7 +245,7 @@ export default async function Home() {
               Xem lộ trình và đăng ký <ArrowRight size={18} aria-hidden="true" />
             </Link>
             <Link href={courseHref} className="mt-3 flex items-center justify-center gap-2 text-gold-light hover:underline min-h-[44px]">
-              <PlayCircle size={18} aria-hidden="true" /> Học thử miễn phí bài đầu tiên
+              <PlayCircle size={18} aria-hidden="true" /> Học thử miễn phí
             </Link>
             <div className="mt-6 pt-6 border-t border-white/10">
               <p className="text-sm text-stone-400 mb-3 text-center">Còn băn khoăn? Để lại số Zalo, Minh Tấn tư vấn cho bạn.</p>
@@ -300,7 +300,7 @@ export default async function Home() {
 
       <section className="surface-dark">
         <div className="container-lux py-20 md:py-28 grid gap-10 lg:grid-cols-[1.3fr_0.7fr] items-end">
-          <h2 className="text-white text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1.15]">Học thử bài đầu tiên, miễn phí.</h2>
+          <h2 className="text-white text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1.15]">Học thử miễn phí.</h2>
           <div className="flex flex-col gap-3">
             <Link href={courseHref} className="btn btn-gold">Vào học thử <ArrowRight size={18} aria-hidden="true" /></Link>
             <Link href="/courses" className="btn btn-outline-light">Xem tất cả khóa học</Link>
