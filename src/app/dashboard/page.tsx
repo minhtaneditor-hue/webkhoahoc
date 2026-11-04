@@ -6,8 +6,14 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
 import { isAdmin } from '@/lib/admin';
-import { Loader2, ArrowRight, BookOpen, ShoppingBag, Receipt, LogOut } from 'lucide-react';
+import { lessonsInOrder } from '@/lib/curriculum';
+import { contactFrom } from '@/lib/site-settings';
+import { useSiteSettings } from '@/components/SiteContext';
+import ConsultBox from '@/components/ConsultBox';
+import ProfileForm, { type Profile } from '@/components/dashboard/ProfileForm';
+import { Loader2, ArrowRight, Award, BookOpen, Download, Gift, MessageCircle, ShoppingBag, LogOut, UserRound, Users } from 'lucide-react';
 
+type CourseStat = { total: number; done: number; next: { id: string; title: string } | null; first: string | null };
 
 const STATUS_LABEL: Record<string, string> = { success: 'Thành công', pending: 'Đang chờ', failed: 'Thất bại' };
 
@@ -18,6 +24,12 @@ export default function StudentDashboard() {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [adminCourses, setAdminCourses] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [stats, setStats] = useState<Record<string, CourseStat>>({});
+  const [assets, setAssets] = useState<any[]>([]);
+  const [downloading, setDownloading] = useState('');
+  const [downloadError, setDownloadError] = useState('');
+  const contact = contactFrom(useSiteSettings());
 
   useEffect(() => {
     async function load() {
@@ -28,10 +40,42 @@ export default function StudentDashboard() {
       }
       setUser(user);
 
-      const [{ data: enrollmentData }, { data: paymentData }] = await Promise.all([
+      const [{ data: enrollmentData }, { data: paymentData }, { data: profileData }, { data: paidAssets }] = await Promise.all([
         supabase.from('enrollments').select('course_id, status, enrolled_at, courses ( id, title, description )').eq('user_id', user.id),
         supabase.from('payments').select('id, order_id, amount, status, created_at, courses ( title )').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+        supabase.from('users').select('*').eq('id', user.id).maybeSingle(),
+        supabase.from('payments').select('asset_id').eq('user_id', user.id).eq('status', 'success').not('asset_id', 'is', null),
       ]);
+      setProfile(profileData || {});
+
+      // Progress per enrolled course, in study order (same count the certificate checks)
+      const courseIds = (enrollmentData || []).map((e) => e.course_id);
+      if (courseIds.length) {
+        const [{ data: outline }, { data: chapters }] = await Promise.all([
+          supabase.from('lesson_outline').select('id, course_id, title, order_index, chapter_id').in('course_id', courseIds).order('order_index'),
+          supabase.from('chapters').select('id, course_id, title, order_index').in('course_id', courseIds).order('order_index'),
+        ]);
+        const ids = (outline || []).map((l) => l.id);
+        const { data: progress } = ids.length
+          ? await supabase.from('student_progress').select('lesson_id').eq('user_id', user.id).eq('is_completed', true).in('lesson_id', ids)
+          : { data: [] };
+        const finished = new Set((progress || []).map((p) => p.lesson_id));
+        setStats(Object.fromEntries(courseIds.map((id) => {
+          const list = lessonsInOrder((chapters || []).filter((c) => c.course_id === id), (outline || []).filter((l) => l.course_id === id));
+          return [id, {
+            total: list.length,
+            done: list.filter((l) => finished.has(l.id)).length,
+            next: list.find((l) => !finished.has(l.id)) ?? null,
+            first: list[0]?.id ?? null,
+          }];
+        })));
+      }
+
+      const assetIds = [...new Set((paidAssets || []).map((p) => p.asset_id))];
+      if (assetIds.length) {
+        const { data: owned } = await supabase.from('digital_assets_public').select('id, title, thumbnail_url').in('id', assetIds);
+        setAssets(owned || []);
+      }
 
       setEnrollments(enrollmentData || []);
       // Admins can open every course, but that is not an enrolment: listed apart so this page never reads as "granted"
@@ -48,6 +92,21 @@ export default function StudentDashboard() {
     load();
   }, [router]);
 
+  async function download(id: string) {
+    setDownloading(id);
+    setDownloadError('');
+    try {
+      const res = await fetch(`/api/shop/download?assetId=${id}`);
+      const data = await res.json();
+      if (data.url) window.open(data.url, '_blank', 'noopener');
+      else setDownloadError(data.error || 'Không lấy được link tải.');
+    } catch {
+      setDownloadError('Không kết nối được máy chủ. Kiểm tra mạng và thử lại.');
+    } finally {
+      setDownloading('');
+    }
+  }
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push('/');
@@ -62,18 +121,35 @@ export default function StudentDashboard() {
     );
   }
 
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0];
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0];
+  const studying = enrollments.some((en) => en.status === 'active');
 
   return (
     <main className="container-lux py-10 md:py-14">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-line">
-        <div>
-          <h1 className="text-4xl md:text-5xl">Xin chào, {displayName}</h1>
-          <p className="mt-2 text-muted-foreground">{user?.email}</p>
+        <div className="flex items-center gap-4 min-w-0">
+          <span className="w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+            {profile?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element -- the student's own uploaded photo
+              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover !rounded-none" />
+            ) : <UserRound size={28} className="text-muted-foreground" aria-hidden="true" />}
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-4xl md:text-5xl break-words">Xin chào, {displayName}</h1>
+            <p className="mt-2 text-muted-foreground break-all">{user?.email}</p>
+          </div>
         </div>
-        <button onClick={handleSignOut} className="btn btn-outline self-start md:self-auto"><LogOut size={16} aria-hidden="true" /> Đăng xuất</button>
+        <div className="flex gap-2 self-start md:self-auto">
+          <a href="#ho-so" className="btn btn-outline whitespace-nowrap"><UserRound size={16} aria-hidden="true" /> Hồ sơ</a>
+          <button onClick={handleSignOut} className="btn btn-outline whitespace-nowrap"><LogOut size={16} aria-hidden="true" /> Đăng xuất</button>
+        </div>
       </header>
 
+      {!profile?.full_name && (
+        <p className="mt-6 rounded-md bg-gold-soft p-4 text-sm">
+          Bạn chưa có họ tên trong hồ sơ. <a href="#ho-so" className="font-semibold text-gold hover:text-gold-hover">Bổ sung ngay</a> để chứng chỉ in đúng tên của bạn.
+        </p>
+      )}
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_340px]">
         <div className="space-y-12 min-w-0">
@@ -91,14 +167,48 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <ul className="mt-6 grid gap-4 sm:grid-cols-2">
-                {enrollments.map((en) => (
-                  <li key={en.course_id} className="card card-hover p-6 flex flex-col">
-                    <span className={`badge self-start ${en.status !== 'active' ? '!bg-muted !text-muted-foreground' : ''}`}>{en.status === 'active' ? 'Đang học' : 'Hết hạn'}</span>
-                    <h3 className="mt-4 text-2xl">{en.courses?.title}</h3>
-                    {en.courses?.description && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{en.courses.description}</p>}
-                    <Link href={`/courses/${en.course_id}`} className="btn btn-dark mt-6 self-start !min-h-[44px] text-sm">Vào học <ArrowRight size={16} aria-hidden="true" /></Link>
-                  </li>
-                ))}
+                {enrollments.map((en) => {
+                  const stat = stats[en.course_id];
+                  const active = en.status === 'active';
+                  const percent = stat?.total ? Math.round((stat.done / stat.total) * 100) : 0;
+                  const finished = !!stat?.total && stat.done === stat.total;
+                  return (
+                    <li key={en.course_id} className="card p-6 flex flex-col">
+                      <span className={`badge self-start ${!active ? '!bg-muted !text-muted-foreground' : ''}`}>{!active ? 'Hết hạn' : finished ? 'Đã hoàn thành' : 'Đang học'}</span>
+                      <h3 className="mt-4 text-2xl">{en.courses?.title}</h3>
+
+                      {active && !!stat?.total && (
+                        <div className="mt-4">
+                          <div className="flex justify-between text-sm text-muted-foreground"><span>{stat.done}/{stat.total} bài</span><span className="font-semibold text-ink">{percent}%</span></div>
+                          <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label={`Tiến độ ${en.courses?.title}`}>
+                            <div className="h-full rounded-full bg-gold" style={{ width: `${percent}%` }} />
+                          </div>
+                          {stat.next && <p className="mt-3 text-sm text-muted-foreground line-clamp-2">Bài tiếp theo: <span className="text-ink font-semibold">{stat.next.title}</span></p>}
+                        </div>
+                      )}
+
+                      <div className="mt-auto pt-6 flex flex-wrap gap-2">
+                        {!active || !stat?.first ? (
+                          <Link href={`/courses/${en.course_id}`} className="btn btn-dark !min-h-[44px] text-sm">Xem khóa học <ArrowRight size={16} aria-hidden="true" /></Link>
+                        ) : (
+                          <Link href={`/learn/${en.course_id}/${stat.next?.id ?? stat.first}`} className={`btn !min-h-[44px] text-sm ${finished ? 'btn-outline' : 'btn-dark'}`}>
+                            {finished ? 'Xem lại' : stat.done ? 'Học tiếp' : 'Bắt đầu học'} <ArrowRight size={16} aria-hidden="true" />
+                          </Link>
+                        )}
+                        {active && finished && <Link href={`/certificate/${en.course_id}`} className="btn btn-gold !min-h-[44px] text-sm"><Award size={16} aria-hidden="true" /> Nhận chứng chỉ</Link>}
+                      </div>
+
+                      {active && finished && (
+                        <div className="mt-5 rounded-md bg-gold-soft p-4">
+                          <p className="font-semibold flex items-center gap-2"><Gift size={16} className="text-gold shrink-0" aria-hidden="true" /> Quà hoàn thành: Audit 1 tiếng 1-1</p>
+                          <p className="mt-1 mb-3 text-sm text-muted-foreground">Minh Tấn xem lại các video bạn làm trong khóa và định hướng bước tiếp theo.</p>
+                          <ConsultBox kind="audit" product={`Audit 1 tiếng · ${en.courses?.title}`} label="Đặt lịch Audit 1 tiếng" variant="dark"
+                            defaults={{ name: profile?.full_name || '', email: user?.email || '', phone: profile?.phone || '' }} />
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>
@@ -114,6 +224,27 @@ export default function StudentDashboard() {
                     <h3 className="mt-4 text-2xl">{c.title}</h3>
                     {c.description && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{c.description}</p>}
                     <Link href={`/courses/${c.id}`} className="btn btn-outline mt-6 self-start !min-h-[44px] text-sm">Mở khóa học <ArrowRight size={16} aria-hidden="true" /></Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {assets.length > 0 && (
+            <section aria-labelledby="my-products">
+              <h2 id="my-products" className="text-3xl">Sản phẩm đã mua</h2>
+              {downloadError && <p role="alert" className="mt-3 text-sm text-danger">{downloadError}</p>}
+              <ul className="mt-6 space-y-3">
+                {assets.map((a) => (
+                  <li key={a.id} className="card p-4 flex items-center gap-4">
+                    {a.thumbnail_url && (
+                      // eslint-disable-next-line @next/next/no-img-element -- small cover of a purchased product
+                      <img src={a.thumbnail_url} alt="" className="w-20 h-16 shrink-0 object-cover" />
+                    )}
+                    <p className="flex-1 min-w-0 font-semibold">{a.title}</p>
+                    <button type="button" onClick={() => download(a.id)} disabled={downloading === a.id} className="btn btn-dark !min-h-[44px] text-sm shrink-0">
+                      {downloading === a.id ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Download size={16} aria-hidden="true" />} Tải về
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -145,18 +276,32 @@ export default function StudentDashboard() {
               </div>
             )}
           </section>
+
+          {/* Profile */}
+          <section id="ho-so" aria-labelledby="profile-title" className="scroll-mt-28">
+            <h2 id="profile-title" className="text-3xl">Hồ sơ</h2>
+            {profile && user && (
+              <ProfileForm userId={user.id} email={user.email} profile={profile} onSaved={(patch) => setProfile((cur) => ({ ...cur, ...patch }))} />
+            )}
+          </section>
         </div>
 
         <aside className="space-y-6">
+          {studying && (
+            <a href={contact.zaloGroupHref} target="_blank" rel="noopener noreferrer" className="card card-hover p-6 flex items-center gap-4">
+              <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center shrink-0"><Users size={20} aria-hidden="true" /></span>
+              <span><span className="block font-semibold">Nhóm Zalo học viên</span><span className="block text-sm text-muted-foreground">Nộp bài tập, hỏi đáp cùng Minh Tấn</span></span>
+            </a>
+          )}
+          <a href={contact.zaloHref} target="_blank" rel="noopener noreferrer" className="card card-hover p-6 flex items-center gap-4">
+            <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center shrink-0"><MessageCircle size={20} aria-hidden="true" /></span>
+            <span><span className="block font-semibold">Nhắn Zalo hỗ trợ</span><span className="block text-sm text-muted-foreground">Cần hóa đơn hoặc gặp vấn đề khi học</span></span>
+          </a>
           <Link href="/shop" className="card card-hover p-6 flex items-center gap-4">
             <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center shrink-0"><ShoppingBag size={20} aria-hidden="true" /></span>
             <span><span className="block font-semibold">Sản phẩm khác</span><span className="block text-sm text-muted-foreground">Tải lại sản phẩm đã mua</span></span>
           </Link>
 
-          <div className="card p-6 flex items-center gap-4">
-            <Receipt size={20} className="text-gold shrink-0" aria-hidden="true" />
-            <p className="text-sm text-muted-foreground">Cần hoá đơn hoặc cần hỗ trợ? Bấm nút <strong className="text-ink">Hỗ trợ</strong> ở góc phải.</p>
-          </div>
         </aside>
       </div>
     </main>
