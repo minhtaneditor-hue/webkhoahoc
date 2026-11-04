@@ -50,10 +50,12 @@ function ConsultModal({ kind, product, zaloHref, title, onClose }: { kind: Kind;
     e.preventDefault();
     setError('');
     setState('sending');
-    const res = await fetch('/api/consult', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, kind, product }) })
+    // The same id goes to the Pixel and to the server's Conversions API copy, so Meta counts one event.
+    const eventId = `consult_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const res = await fetch('/api/consult', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, kind, product, eventId }) })
       .then(async (r) => ({ ok: r.ok, data: await r.json().catch(() => ({})) })).catch(() => ({ ok: false, data: {} as any }));
     if (!res.ok) { setState('idle'); setError(res.data.error || 'Chưa gửi được, vui lòng thử lại.'); return; }
-    (window as any).fbq?.('track', kind === 'audit' ? 'Schedule' : 'Lead', { content_name: product || kind });
+    (window as any).fbq?.('track', kind === 'audit' ? 'Schedule' : 'Lead', { content_name: product || kind }, { eventID: eventId });
     setState('done');
   };
 

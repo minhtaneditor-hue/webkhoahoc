@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { CHECKLIST, CHECKLIST_TITLE } from '@/lib/checklist';
 import { FROM, checklistEmail, unsubscribeHeaders, getFeaturedCourse } from '@/lib/emails';
+import { cleanEventId, metaContext, sendMetaEvent, siteUrl } from '@/lib/meta-capi';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,17 @@ export async function POST(req: Request) {
     { onConflict: 'email' }
   );
   if (error) return NextResponse.json({ error: 'Chưa lưu được, vui lòng thử lại.' }, { status: 500 });
+
+  const eventId = cleanEventId(body.eventId);
+  if (eventId) {
+    sendMetaEvent({
+      name: 'Lead',
+      eventId,
+      url: siteUrl('/'),
+      context: metaContext(req),
+      customer: { email, phone, name },
+    });
+  }
 
   if (process.env.RESEND_API_KEY) {
     await new Resend(process.env.RESEND_API_KEY).emails.send({

@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
 import { FROM, consultReceived, consultNotify, type ConsultRequest } from '@/lib/emails';
+import { cleanEventId, metaContext, sendMetaEvent, siteUrl } from '@/lib/meta-capi';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,18 @@ export async function POST(req: Request) {
   if (!db) return NextResponse.json({ error: 'Máy chủ chưa sẵn sàng.' }, { status: 500 });
   const { error } = await db.from('consult_requests').insert(r);
   if (error) return NextResponse.json({ error: 'Chưa gửi được, vui lòng thử lại hoặc nhắn Zalo.' }, { status: 500 });
+
+  const eventId = cleanEventId(body.eventId);
+  if (eventId) {
+    sendMetaEvent({
+      name: r.kind === 'audit' ? 'Schedule' : 'Lead',
+      eventId,
+      url: siteUrl('/'),
+      context: metaContext(req),
+      customer: { email: r.email, phone: r.phone, name: r.name },
+      data: { contentName: r.product || r.kind },
+    });
+  }
 
   if (process.env.RESEND_API_KEY) {
     const resend = new Resend(process.env.RESEND_API_KEY);

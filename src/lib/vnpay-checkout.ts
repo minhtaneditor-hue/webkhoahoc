@@ -5,7 +5,7 @@ import { createPendingPayment, type CheckoutInput } from './payments';
 /** Creates a pending order and returns the VNPay payment page URL. */
 export async function startVnpay(req: Request, userId: string, input: CheckoutInput) {
   const orderId = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-  const { amount } = await createPendingPayment(getSupabaseAdmin()!, userId, input, 'vnpay', orderId);
+  const { amount } = await createPendingPayment(getSupabaseAdmin()!, userId, input, 'vnpay', orderId, req);
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || new URL(req.url).origin;
   return createVNPPaymentUrl({

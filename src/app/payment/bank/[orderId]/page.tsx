@@ -50,8 +50,9 @@ export default function BankTransferPage() {
     if (!order) return;
     const key = `fbq-${orderId}-${order.status}`;
     try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch { /* storage blocked */ }
-    if (order.status === 'pending') window.fbq?.('track', 'InitiateCheckout', { value: order.amount, currency: 'VND' });
-    if (order.status === 'success') window.fbq?.('track', 'Purchase', { value: order.amount, currency: 'VND' });
+    // These ids match the server's Conversions API events (lib/payments.ts), so Meta counts each once.
+    if (order.status === 'pending') window.fbq?.('track', 'InitiateCheckout', { value: order.amount, currency: 'VND' }, { eventID: `checkout_${orderId}` });
+    if (order.status === 'success') window.fbq?.('track', 'Purchase', { value: order.amount, currency: 'VND' }, { eventID: `purchase_${orderId}` });
   }, [order, orderId]);
 
   const [downloading, setDownloading] = useState(false);

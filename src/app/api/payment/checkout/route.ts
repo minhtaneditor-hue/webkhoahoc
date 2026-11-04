@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     if (bankConfig()) {
-      const { orderId, accessToken } = await createPendingPayment(supabase, user?.id ?? null, input, 'bank_transfer', newBankOrderCode());
+      const { orderId, accessToken } = await createPendingPayment(supabase, user?.id ?? null, input, 'bank_transfer', newBankOrderCode(), req);
       return NextResponse.json({ url: `/payment/bank/${orderId}?t=${accessToken}` });
     }
     if (process.env.VNP_TMN_CODE && process.env.VNP_HASH_SECRET) {

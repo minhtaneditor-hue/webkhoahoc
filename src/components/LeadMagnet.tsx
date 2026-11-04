@@ -15,10 +15,12 @@ export default function LeadMagnet({ source = 'home' }: { source?: string }) {
     e.preventDefault();
     setError('');
     setState('sending');
-    const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, source }) })
+    // The same id goes to the Pixel and to the server's Conversions API copy, so Meta counts one lead.
+    const eventId = `lead_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, source, eventId }) })
       .then(async (r) => ({ ok: r.ok, data: await r.json().catch(() => ({})) })).catch(() => ({ ok: false, data: {} as any }));
     if (!res.ok) { setState('idle'); setError(res.data.error || 'Chưa gửi được, vui lòng thử lại.'); return; }
-    (window as any).fbq?.('track', 'Lead');
+    (window as any).fbq?.('track', 'Lead', {}, { eventID: eventId });
     setState('done');
   };
 

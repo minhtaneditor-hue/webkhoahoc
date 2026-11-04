@@ -18,6 +18,14 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
     if (id && !/^\/(admin|learn)(\/|$)/.test(pathname || '')) window.fbq?.('track', 'PageView');
   }, [id, pathname]);
 
+  // The Pixel script saves the ad click id in _fbc, but an ad blocker stops that script. Saving it
+  // here lets the Conversions API still credit the sale to the ad.
+  useEffect(() => {
+    const fbclid = new URLSearchParams(window.location.search).get('fbclid');
+    if (!id || !fbclid || /(?:^|;\s*)_fbc=/.test(document.cookie)) return;
+    document.cookie = `_fbc=fb.1.${Date.now()}.${fbclid}; path=/; max-age=${90 * 86400}; SameSite=Lax; Secure`;
+  }, [id]);
+
   if (!id) return null;
   return (
     <Script id="fb-pixel" strategy="afterInteractive">

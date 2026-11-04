@@ -5,6 +5,7 @@ import { checkPromo } from './promo';
 import { getSiteSettings } from './content';
 import { contactFrom } from './site-settings';
 import { FROM, welcomeCourse, assetPurchased } from './emails';
+import { metaContext, metaEnabled, sendMetaEvent, siteUrl } from './meta-capi';
 
 // Shared checkout pieces for every payment method (VNPay, SePay bank transfer).
 
@@ -17,7 +18,8 @@ export async function createPendingPayment(
   userId: string | null,
   { courseId, assetId, promoCode, buyer }: CheckoutInput,
   method: 'vnpay' | 'bank_transfer',
-  orderId: string
+  orderId: string,
+  req: Request
 ) {
   if (!courseId && !assetId) throw new CheckoutError('Thiếu sản phẩm cần thanh toán.', 400);
 
@@ -55,6 +57,20 @@ export async function createPendingPayment(
     status: 'pending',
   });
   if (error) throw error;
+
+  if (metaEnabled()) {
+    const context = metaContext(req);
+    // A separate write, so a database without migration 024 still takes orders.
+    await supabase.from('payments').update({ meta_context: context }).eq('order_id', orderId);
+    sendMetaEvent({
+      name: 'InitiateCheckout',
+      eventId: `checkout_${orderId}`, // same id as the order page's Pixel event
+      url: siteUrl('/'),
+      context,
+      customer: { email: buyer?.email, phone: buyer?.phone, name: buyer?.name, userId },
+      data: { value: amount, contentName: product.title, contentId: product.id, orderId },
+    });
+  }
 
   return { orderId, amount, title: product.title as string, accessToken };
 }
@@ -103,6 +119,8 @@ export function vietQrUrl(cfg: { account: string; bank: string }, amount: number
 
 /** Enrols the buyer and emails them. Call once, right after the payment row turns 'success'. */
 export async function fulfillPayment(supabase: SupabaseClient, payment: any) {
+  await trackPurchase(supabase, payment);
+
   // Resend's constructor throws without a key; the email is skipped when RESEND_API_KEY is unset
   const resend = new Resend(process.env.RESEND_API_KEY || 're_missing_key');
 
@@ -133,6 +151,42 @@ export async function fulfillPayment(supabase: SupabaseClient, payment: any) {
     const { error } = await resend.emails.send({ from: FROM, to: user.email, ...mail });
     if (error) console.error(`Resend: welcome email for ${payment.order_id} failed`, error);
     else await supabase.from('email_log').upsert({ email: user.email.toLowerCase(), kind: 'onboard-0', ref: payment.course_id }, { onConflict: 'email,kind,ref', ignoreDuplicates: true });
+  }
+}
+
+/** Tells Meta about the sale from the server, whether or not the buyer's page is still open. */
+async function trackPurchase(supabase: SupabaseClient, payment: any) {
+  if (!metaEnabled()) return;
+  try {
+    const { data: user } = payment.user_id
+      ? await supabase.from('users').select('email, full_name').eq('id', payment.user_id).single()
+      : { data: null };
+    const { data: product } = payment.course_id
+      ? await supabase.from('courses').select('title').eq('id', payment.course_id).single()
+      : await supabase.from('digital_assets').select('title').eq('id', payment.asset_id).single();
+
+    sendMetaEvent({
+      name: 'Purchase',
+      eventId: `purchase_${payment.order_id}`, // same id as the order page's Pixel event
+      url: siteUrl('/'),
+      context: payment.meta_context,
+      customer: {
+        email: payment.buyer_email || user?.email,
+        phone: payment.buyer_phone,
+        name: payment.buyer_name || user?.full_name,
+        userId: payment.user_id,
+      },
+      data: {
+        value: Number(payment.amount),
+        contentName: product?.title,
+        contentId: payment.course_id || payment.asset_id,
+        orderId: payment.order_id,
+      },
+    });
+    // The event carries these now; no reason to keep the buyer's IP on the order.
+    if (payment.meta_context) await supabase.from('payments').update({ meta_context: null }).eq('id', payment.id);
+  } catch (error) {
+    console.error(`Meta CAPI: Purchase for ${payment.order_id} skipped`, error);
   }
 }
 
