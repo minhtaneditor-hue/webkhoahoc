@@ -24,6 +24,7 @@ export const metadata: Metadata = {
     siteName: "TẤN VA",
   },
   verification: {
+    google: "toUmFktYgxJn-5qf8KJNo1Qgxl0ff5Tw3X4yArRODcs",
     other: { "facebook-domain-verification": "jjij9i80mxi4f4vs3ojgb99ebod2da" },
   },
   // Share image: src/app/opengraph-image.tsx (and one per course)
