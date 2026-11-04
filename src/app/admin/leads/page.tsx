@@ -2,37 +2,62 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Download, Inbox } from 'lucide-react';
-import { PageHeader, LoadingRow, EmptyState, thClass, tdClass } from '@/components/admin/AdminUI';
+import { Download, Inbox, Users, X } from 'lucide-react';
+import { PageHeader, LoadingRow, EmptyState, StatCard, thClass, tdClass } from '@/components/admin/AdminUI';
 
 // People who left their email for the free checklist (migration 015, /api/leads)
 const SOURCES: Record<string, string> = { 'free-product': 'Tải sản phẩm miễn phí', home: 'Trang chủ', courses: 'Trang khóa học' };
 
 export default function LeadsPage() {
   const [rows, setRows] = useState<any[] | null>(null);
-  // Which products each email took (migration 026); one lead can take several
-  const [taken, setTaken] = useState<Record<string, string[]>>({});
+  // Every file link handed out (migration 026): who, which product, when
+  const [downloads, setDownloads] = useState<{ email: string | null; title: string; at: string }[]>([]);
   const [product, setProduct] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
 
   useEffect(() => {
     supabase.from('leads').select('*').order('created_at', { ascending: false }).then(({ data }) => setRows(data || []));
-    supabase.from('asset_downloads').select('email, digital_assets ( title )').limit(50000).then(({ data }) => {
-      const next: Record<string, string[]> = {};
-      for (const d of (data || []) as any[]) {
-        const title = d.digital_assets?.title;
-        if (!d.email || !title) continue;
-        const list = (next[d.email] ??= []);
-        if (!list.includes(title)) list.push(title);
-      }
-      setTaken(next);
+    supabase.from('asset_downloads').select('email, created_at, digital_assets ( title )').order('created_at', { ascending: false }).limit(50000).then(({ data }) => {
+      setDownloads(((data || []) as any[]).filter((d) => d.digital_assets?.title).map((d) => ({ email: d.email, title: d.digital_assets.title, at: d.created_at })));
     });
   }, []);
 
-  const products = useMemo(() => [...new Set(Object.values(taken).flat())].sort(), [taken]);
-  const shown = useMemo(() => (rows || []).filter((r) => !product || taken[r.email]?.includes(product)), [rows, taken, product]);
+  // Dates are whole days in the admin's own time zone, both ends included
+  const inRange = useMemo(() => {
+    const start = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
+    const end = to ? new Date(`${to}T23:59:59.999`).getTime() : Infinity;
+    return (at: string) => { const t = new Date(at).getTime(); return t >= start && t <= end; };
+  }, [from, to]);
+
+  const products = useMemo(() => [...new Set(downloads.map((d) => d.title))].sort(), [downloads]);
+  const matching = useMemo(() => downloads.filter((d) => (!product || d.title === product) && inRange(d.at)), [downloads, product, inRange]);
+  const people = useMemo(() => new Set(matching.map((d) => d.email).filter(Boolean)), [matching]);
+  const filtering = !!(product || from || to);
+
+  // "Đã tải" shows the filtered downloads, one line per product with how many times
+  const taken = useMemo(() => {
+    const next: Record<string, Record<string, number>> = {};
+    for (const d of matching) {
+      if (!d.email) continue;
+      const counts = (next[d.email] ??= {});
+      counts[d.title] = (counts[d.title] || 0) + 1;
+    }
+    return next;
+  }, [matching]);
+
+  // A product filter keeps those who took it. A date filter alone also keeps leads who signed up that day.
+  const shown = useMemo(() => (rows || []).filter((r) => {
+    if (!filtering) return true;
+    if (taken[r.email]) return true;
+    return !product && inRange(r.created_at);
+  }), [rows, taken, filtering, product, inRange]);
+
+  const takenText = (email: string) => Object.entries(taken[email] || {}).map(([t, n]) => (n > 1 ? `${t} (${n} lần)` : t));
+  const clearFilters = () => { setProduct(''); setFrom(''); setTo(''); };
 
   const exportCsv = () => {
-    const lines = [['Tên', 'Email', 'Zalo', 'Nguồn', 'Đã tải', 'Ngày'], ...shown.map((r) => [r.name || '', r.email, r.phone || '', SOURCES[r.source] || r.source || '', (taken[r.email] || []).join(' | '), new Date(r.created_at).toLocaleString('vi-VN')])];
+    const lines = [['Tên', 'Email', 'Zalo', 'Nguồn', 'Đã tải', 'Ngày'], ...shown.map((r) => [r.name || '', r.email, r.phone || '', SOURCES[r.source] || r.source || '', takenText(r.email).join(' | '), new Date(r.created_at).toLocaleString('vi-VN')])];
     const csv = '﻿' + lines.map((l) => l.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -47,16 +72,31 @@ export default function LeadsPage() {
         description="Người để lại thông tin để nhận Checklist quay video hoặc tải sản phẩm miễn phí. Nhắn Zalo hoặc gửi ưu đãi để chuyển họ thành học viên."
         actions={rows?.length ? <button onClick={exportCsv} className="btn btn-outline"><Download size={16} aria-hidden="true" /> Tải CSV</button> : undefined}
       />
-      {products.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3">
-          <label htmlFor="lead-product" className="text-sm font-semibold">Đã tải</label>
-          <select id="lead-product" className="input !w-auto max-w-full" value={product} onChange={(e) => setProduct(e.target.value)}>
-            <option value="">Tất cả khách</option>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Tổng số đã tải" value={matching.length} icon={Download} hint={filtering ? 'Theo bộ lọc đang chọn' : 'Tất cả sản phẩm, mọi thời gian'} />
+        <StatCard label="Số người đã tải" value={people.size} icon={Users} hint="Mỗi email tính 1 người" />
+        <StatCard label="Khách trong danh sách" value={shown.length} icon={Inbox} hint={filtering ? 'Theo bộ lọc đang chọn' : 'Tất cả khách tiềm năng'} />
+      </div>
+
+      <div className="card p-4 flex flex-wrap items-end gap-4">
+        <div className="min-w-[14rem] flex-1">
+          <label htmlFor="lead-product" className="field-label">Sản phẩm</label>
+          <select id="lead-product" className="input" value={product} onChange={(e) => setProduct(e.target.value)}>
+            <option value="">Tất cả sản phẩm</option>
             {products.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
-          {product && <span className="text-sm text-muted-foreground">{shown.length} người</span>}
         </div>
-      )}
+        <div>
+          <label htmlFor="lead-from" className="field-label">Từ ngày</label>
+          <input id="lead-from" type="date" className="input" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} />
+        </div>
+        <div>
+          <label htmlFor="lead-to" className="field-label">Đến ngày</label>
+          <input id="lead-to" type="date" className="input" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} />
+        </div>
+        {filtering && <button type="button" onClick={clearFilters} className="btn btn-outline"><X size={16} aria-hidden="true" /> Bỏ lọc</button>}
+      </div>
+
       {!rows ? <LoadingRow /> : rows.length === 0 ? (
         <EmptyState icon={Inbox} title="Chưa có ai đăng ký" text="Form nhận checklist nằm ở trang chủ và trang Khóa học." />
       ) : (
@@ -64,13 +104,14 @@ export default function LeadsPage() {
           <table className="w-full">
             <thead><tr><th className={thClass}>Tên</th><th className={thClass}>Email</th><th className={thClass}>Zalo</th><th className={thClass}>Nguồn</th><th className={thClass}>Đã tải</th><th className={thClass}>Ngày</th></tr></thead>
             <tbody className="divide-y divide-line">
+              {shown.length === 0 && <tr><td colSpan={6} className={`${tdClass} text-center text-muted-foreground`}>Không có khách nào khớp bộ lọc.</td></tr>}
               {shown.map((r) => (
                 <tr key={r.id}>
                   <td className={tdClass}>{r.name || '—'}</td>
                   <td className={tdClass}><a href={`mailto:${r.email}`} className="underline underline-offset-4">{r.email}</a></td>
                   <td className={tdClass}>{r.phone ? <a href={`https://zalo.me/${r.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">{r.phone}</a> : '—'}</td>
                   <td className={tdClass}>{SOURCES[r.source] || r.source || '—'}</td>
-                  <td className={tdClass}>{taken[r.email]?.length ? <ul className="space-y-1 min-w-[12rem]">{taken[r.email].map((t) => <li key={t}>{t}</li>)}</ul> : '—'}</td>
+                  <td className={tdClass}>{taken[r.email] ? <ul className="space-y-1 min-w-[12rem]">{takenText(r.email).map((t) => <li key={t}>{t}</li>)}</ul> : '—'}</td>
                   <td className={`${tdClass} whitespace-nowrap`}>{new Date(r.created_at).toLocaleString('vi-VN')}</td>
                 </tr>
               ))}
