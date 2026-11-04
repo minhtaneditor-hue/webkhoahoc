@@ -6,6 +6,7 @@ import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
 import LeadMagnet from '@/components/LeadMagnet';
+import { isComingSoon } from '@/lib/curriculum';
 
 export const revalidate = 300;
 
@@ -76,30 +77,33 @@ export default async function CoursesPage() {
             {courses.map((course: any, i: number) => {
               const lessonCount = course.lesson_outline?.[0]?.count ?? 0;
               const hasDiscount = course.old_price && Number(course.old_price) > Number(course.price);
+              const comingSoon = isComingSoon(course, lessonCount);
               return (
                 <li key={course.id}>
                   <Link href={`/courses/${course.id}`} className="card card-hover group flex flex-col h-full overflow-hidden">
                     <div className="relative aspect-[16/9] bg-muted">
                       <Image
-                        src={course.thumbnail_url || FALLBACK_THUMBS[i % FALLBACK_THUMBS.length]}
+                        src={course.thumbnail_url || (comingSoon ? FALLBACK_THUMBS[0] : FALLBACK_THUMBS[i % FALLBACK_THUMBS.length])}
                         alt=""
                         fill
                         sizes="(min-width: 768px) 50vw, 100vw"
                         className="object-cover"
                         unoptimized={!!course.thumbnail_url?.startsWith('http')}
                       />
-                      {i === 0 && <span className="badge absolute top-4 left-4 !bg-onyx !text-gold-light">Nổi bật</span>}
+                      {comingSoon
+                        ? <span className="badge absolute top-4 left-4 !bg-onyx !text-gold-light">Coming soon</span>
+                        : i === 0 && <span className="badge absolute top-4 left-4 !bg-onyx !text-gold-light">Nổi bật</span>}
                     </div>
                     <div className="p-6 md:p-8 flex flex-col flex-1">
-                      <p className="text-sm text-muted-foreground">{lessonCount > 0 ? `${lessonCount} bài học` : 'Sắp ra mắt'} · Truy cập trọn đời</p>
+                      <p className="text-sm text-muted-foreground">{comingSoon ? 'Đặt trước để nhận giá ưu đãi' : `${lessonCount > 0 ? `${lessonCount} bài học` : 'Sắp ra mắt'} · Truy cập trọn đời`}</p>
                       <h2 className="mt-2 text-3xl group-hover:text-gold transition-colors">{course.title}</h2>
                       {course.description && <p className="mt-3 text-muted-foreground leading-relaxed line-clamp-3">{course.description}</p>}
                       <div className="mt-auto pt-6 flex flex-wrap items-end justify-between gap-4">
                         <div>
                           {hasDiscount && <p className="text-sm text-muted-foreground line-through">{formatVND(course.old_price)}</p>}
-                          <p className="font-display text-3xl font-bold">{Number(course.price) > 0 ? formatVND(course.price) : 'Miễn phí'}</p>
+                          <p className="font-display text-3xl font-bold">{comingSoon ? 'Giá chưa tiết lộ' : Number(course.price) > 0 ? formatVND(course.price) : 'Miễn phí'}</p>
                         </div>
-                        <span className="btn btn-dark !min-h-[44px] text-sm whitespace-nowrap">Xem chi tiết <ArrowRight size={16} aria-hidden="true" /></span>
+                        <span className="btn btn-dark !min-h-[44px] text-sm whitespace-nowrap">{comingSoon ? 'Đặt trước' : 'Xem chi tiết'} <ArrowRight size={16} aria-hidden="true" /></span>
                       </div>
                     </div>
                   </Link>

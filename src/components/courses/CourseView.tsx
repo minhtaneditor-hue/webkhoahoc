@@ -8,7 +8,7 @@ import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import { formatVND } from '@/lib/supabase-public';
-import { groupByChapter, lessonsInOrder, type Chapter } from '@/lib/curriculum';
+import { groupByChapter, isComingSoon, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import ConsultBox from '@/components/ConsultBox';
 import CourseReviews from '@/components/CourseReviews';
 import PainPoints from '@/components/PainPoints';
@@ -35,6 +35,13 @@ const webOnly = [
   'Vào nhóm Zalo cộng đồng: nộp bài và được Minh Tấn sửa bài',
   'Tặng 1 buổi Audit 1 tiếng 1-1 cùng Minh Tấn khi học xong khóa',
   'Cập nhật bài học mới miễn phí, không tốn thêm',
+];
+
+// Coming soon: no price yet, so a pre-order is a registration and no money changes hands
+const preorderPerks = [
+  'Giá đặt trước ưu đãi hơn giá mở bán',
+  'Minh Tấn báo giá riêng cho bạn qua Zalo',
+  'Chưa cần thanh toán lúc này',
 ];
 
 // The server page passes the course in, so its content is in the first HTML for search engines.
@@ -152,6 +159,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
 
   const price = Number(course.price) || 0;
   const finalPrice = Math.max(0, price - appliedDiscount);
+  const comingSoon = isComingSoon(course, lessons.length);
   const firstLessonHref = `/learn/${course.id}/${lessons[0]?.id || ''}`;
   const freeLesson = lessons.find((l) => l.is_free);
 
@@ -170,12 +178,14 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
               <ChevronLeft size={16} aria-hidden="true" /> Tất cả khóa học
             </Link>
             <h1 className="mt-4 text-white">{course.title}</h1>
-            <p className="mt-3 text-gold-light font-semibold">Khóa học online · {lessons.length} bài học · truy cập trọn đời</p>
+            <p className="mt-3 text-gold-light font-semibold">{comingSoon ? 'Coming soon · Giá chưa tiết lộ' : `Khóa học online · ${lessons.length} bài học · truy cập trọn đời`}</p>
             <p className="mt-5 text-lg text-stone-300 leading-relaxed max-w-xl">
               {course.description || 'Hành trình thực chiến biến chiếc smartphone của bạn thành công cụ tạo ra thu nhập.'}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              {enrolled ? (
+              {comingSoon ? (
+                <a href="#dat-truoc" className="btn btn-gold">Đặt trước giá ưu đãi <ArrowRight size={18} aria-hidden="true" /></a>
+              ) : enrolled ? (
                 <Link href={firstLessonHref} className="btn btn-gold">Tiếp tục học <ArrowRight size={18} aria-hidden="true" /></Link>
               ) : (
                 <>
@@ -206,6 +216,21 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
         </div>
       </section>
 
+      {comingSoon ? (
+      <section id="dat-truoc" aria-labelledby="preorder-title" className="container-lux section scroll-mt-24">
+        <div className="card p-6 md:p-10 max-w-2xl mx-auto shadow-[var(--shadow-lift)]">
+          <p className="eyebrow">Coming soon</p>
+          <h2 id="preorder-title" className="mt-3 text-4xl">Đặt trước để nhận giá ưu đãi</h2>
+          <p className="mt-3 text-muted-foreground">Khóa học đang được chuẩn bị, giá chưa tiết lộ. Đăng ký đặt trước ngay hôm nay để được giá tốt hơn khi mở bán.</p>
+          <ul className="mt-6 space-y-3">
+            {preorderPerks.map((t) => <li key={t} className="flex gap-3"><Check size={18} className="text-gold shrink-0 mt-0.5" aria-hidden="true" /> {t}</li>)}
+          </ul>
+          <div className="mt-8">
+            <ConsultBox kind="course" preorder variant="gold" product={`Đặt trước: ${course.title}`} label="Đặt trước giá ưu đãi" />
+          </div>
+        </div>
+      </section>
+      ) : (
       <div className="container-lux section grid gap-12 lg:grid-cols-[1fr_380px] items-start">
         <div className="space-y-16 min-w-0">
           {/* Pain points are written for the 21 Ngày course */}
@@ -334,6 +359,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
           </div>
         </aside>
       </div>
+      )}
 
       {/* Free preview modal */}
       {selectedLesson && (
