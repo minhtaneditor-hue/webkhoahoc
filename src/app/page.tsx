@@ -24,6 +24,8 @@ import { SITE_URL } from '@/lib/site-url';
 export const revalidate = 60;
 
 const HOME_TITLE = 'Khóa học làm video bằng điện thoại cùng Minh Tấn | TẤN VA';
+// Other names people search for; /about shows them too, so they match visible text.
+const BRAND_ALIASES = ['Tấn VA', 'Minh Tấn Video Advisor', 'Minh Tấn Academy', 'Tấn Academy'];
 const HOME_DESCRIPTION = 'Học quay, dựng và làm video bán hàng bằng điện thoại cùng Minh Tấn. Khóa học online, coaching 1:1, ebook và preset cho người kinh doanh.';
 
 export const metadata: Metadata = {
@@ -97,12 +99,13 @@ export default async function Home() {
           {
             '@type': 'Organization',
             name: 'TẤN VA',
+            alternateName: BRAND_ALIASES,
             url: SITE_URL,
             logo: `${SITE_URL}/brand/tan-va-mark.png`,
             founder: { '@type': 'Person', name: 'Minh Tấn' },
             sameAs: ['https://www.facebook.com/profile.php?id=61583837884143', 'https://www.youtube.com/@minhtanvideoadvisor', 'https://www.tiktok.com/@minhtanvideoadvisor'],
           },
-          { '@type': 'WebSite', name: 'TẤN VA', url: SITE_URL, inLanguage: 'vi' },
+          { '@type': 'WebSite', name: 'TẤN VA', alternateName: BRAND_ALIASES, url: SITE_URL, inLanguage: 'vi' },
           {
             '@type': 'FAQPage',
             mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),

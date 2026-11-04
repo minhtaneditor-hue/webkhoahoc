@@ -6,7 +6,7 @@ import SectionHeading from '@/components/SectionHeading';
 
 export const metadata: Metadata = {
   title: 'Về Minh Tấn',
-  description: 'Sứ mệnh của TẤN VA: giúp người kinh doanh tự làm video bằng điện thoại để bán hàng và xây thương hiệu.',
+  description: 'TẤN VA (Minh Tấn Video Advisor, Minh Tấn Academy) giúp người kinh doanh tự làm video bằng điện thoại để bán hàng và xây thương hiệu.',
   alternates: { canonical: '/about' },
 };
 
@@ -64,7 +64,7 @@ export default function AboutPage() {
             as="h1"
 
             title="Về TẤN VA"
-            description="Sứ mệnh của chúng tôi là giúp một triệu doanh nhân và nhà sáng tạo làm chủ kỹ năng video bằng chính chiếc điện thoại, rồi dùng video để bán hàng và xây thương hiệu."
+            description="TẤN VA là thương hiệu của Minh Tấn, còn được biết đến là Minh Tấn Video Advisor và Minh Tấn Academy. Sứ mệnh của chúng tôi là giúp một triệu doanh nhân và nhà sáng tạo làm chủ kỹ năng video bằng chính chiếc điện thoại, rồi dùng video để bán hàng và xây thương hiệu."
           />
           <Link href="/courses" className="btn btn-gold mt-8">Khám phá khóa học <ArrowRight size={18} aria-hidden="true" /></Link>
         </div>
