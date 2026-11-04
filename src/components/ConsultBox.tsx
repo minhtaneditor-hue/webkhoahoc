@@ -17,8 +17,8 @@ type Kind = 'audit' | 'coaching' | 'course';
  * Admin > Đặt lịch & tư vấn via /api/consult.
  */
 export default function ConsultBox({
-  kind, product, zaloHref, label, variant, dark = false, block = true,
-}: { kind: Kind; product?: string; zaloHref?: string; label?: string; variant?: 'gold' | 'dark' | 'outline' | 'outline-light'; dark?: boolean; block?: boolean }) {
+  kind, product, zaloHref, label, variant, dark = false, block = true, defaults,
+}: { kind: Kind; product?: string; zaloHref?: string; label?: string; variant?: 'gold' | 'dark' | 'outline' | 'outline-light'; dark?: boolean; block?: boolean; defaults?: { name?: string; email?: string; phone?: string } }) {
   const [open, setOpen] = useState(false);
   const text = label || (kind === 'audit' ? 'Đặt lịch Audit miễn phí' : 'Nhận tư vấn');
   return (
@@ -28,13 +28,13 @@ export default function ConsultBox({
         <MessageCircle size={18} aria-hidden="true" /> {text}
       </button>
       {/* Portal: animated parents (Reveal) use transforms, which would trap a fixed overlay */}
-      {open && createPortal(<ConsultModal kind={kind} product={product} zaloHref={zaloHref || DEFAULT_ZALO} title={text} onClose={() => setOpen(false)} />, document.body)}
+      {open && createPortal(<ConsultModal kind={kind} product={product} zaloHref={zaloHref || DEFAULT_ZALO} title={text} defaults={defaults} onClose={() => setOpen(false)} />, document.body)}
     </>
   );
 }
 
-function ConsultModal({ kind, product, zaloHref, title, onClose }: { kind: Kind; product?: string; zaloHref: string; title: string; onClose: () => void }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', format: kind === 'course' ? '' : 'Online', message: '', website: '' });
+function ConsultModal({ kind, product, zaloHref, title, defaults, onClose }: { kind: Kind; product?: string; zaloHref: string; title: string; defaults?: { name?: string; email?: string; phone?: string }; onClose: () => void }) {
+  const [form, setForm] = useState({ name: defaults?.name || '', email: defaults?.email || '', phone: defaults?.phone || '', format: kind === 'course' ? '' : 'Online', message: '', website: '' });
   const [state, setState] = useState<'idle' | 'sending' | 'done'>('idle');
   const [error, setError] = useState('');
   const id = (k: string) => `consult-${k}`;
