@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ArrowRight, ChevronLeft } from 'lucide-react';
 import JsonLd from '@/components/JsonLd';
+import AdContactBanner from '@/components/blog/AdContactBanner';
 import PostCard from '@/components/blog/PostCard';
 import PostContent, { PostSources } from '@/components/blog/PostContent';
 import { PostTocInline, PostTocSide } from '@/components/blog/PostToc';
@@ -112,7 +113,7 @@ export default async function BlogPostPage({ params }: Props) {
                 <Image src={post.cover_url} alt="" fill priority sizes="(min-width: 1024px) 704px, 100vw" className="object-cover" unoptimized={post.cover_url.startsWith('http')} />
               </div>
             )}
-            <PostContent post={parsed} afterIntro={toc.length > 1 ? <div className="lg:hidden"><PostTocInline items={toc} /></div> : null} />
+            <PostContent post={parsed} afterIntro={toc.length > 1 ? <div className="lg:hidden"><PostTocInline items={toc} /></div> : null} midSlot={<AdContactBanner />} />
 
             <div className="mt-10 lg:hidden"><CourseCta /></div>
 

@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import Link from 'next/link';
 import { captionFromAlt, isClosingPanel, sourceHost, type Block, type ParsedPost, type Section, type Source } from '@/lib/blog-content';
 
@@ -112,9 +112,11 @@ function SectionView({ section, number, panel }: { section: Section; number: num
   );
 }
 
-export default function PostContent({ post, afterIntro }: { post: ParsedPost; afterIntro?: ReactNode }) {
+export default function PostContent({ post, afterIntro, midSlot }: { post: ParsedPost; afterIntro?: ReactNode; midSlot?: ReactNode }) {
   const last = post.sections[post.sections.length - 1];
   const hasPanel = post.sections.length >= 3 && !!last && isClosingPanel(last);
+  // Roughly a third of the way down, once the reader has settled in
+  const midAfter = Math.max(0, Math.ceil(post.sections.length / 3) - 1);
   return (
     <div className="space-y-10 text-[1.0625rem] md:text-lg leading-[1.7] text-stone">
       {post.intro.length > 0 && (
@@ -123,7 +125,12 @@ export default function PostContent({ post, afterIntro }: { post: ParsedPost; af
         </div>
       )}
       {afterIntro}
-      {post.sections.map((s, i) => <SectionView key={s.id} section={s} number={i + 1} panel={hasPanel && s === last} />)}
+      {post.sections.map((s, i) => (
+        <Fragment key={s.id}>
+          <SectionView section={s} number={i + 1} panel={hasPanel && s === last} />
+          {i === midAfter && midSlot}
+        </Fragment>
+      ))}
     </div>
   );
 }

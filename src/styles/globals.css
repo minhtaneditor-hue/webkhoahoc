@@ -397,6 +397,19 @@
 .more-note-dot { width: 8px; height: 8px; border-radius: 9999px; background: var(--color-gold-light); flex-shrink: 0; animation: more-note-ping 1.8s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) { .more-note, .more-note-dot { animation: none; } }
 
+/* Advertising banner on the blog: ember light sweeping across, editing clips glowing in turn, a playhead crossing them */
+@keyframes ad-clip-glow { 0%, 100% { background-color: rgba(90, 31, 37, 0.8); } 50% { background-color: var(--color-gold); } }
+@keyframes ad-playhead { from { left: 0; } to { left: 100%; } }
+.ad-banner {
+  background-color: var(--color-onyx);
+  background-image: linear-gradient(110deg, #242321 0%, #3A1A1E 35%, #7A3029 50%, #3A1A1E 65%, #242321 100%);
+  background-size: 250% 100%;
+  animation: more-note-sweep 8s linear infinite;
+}
+.ad-clip { animation: ad-clip-glow 3s ease-in-out infinite; }
+.ad-playhead { animation: ad-playhead 4s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .ad-banner, .ad-clip, .ad-playhead { animation: none; } }
+
 /* Lesson watermark: two independent back-and-forth paths so it never stops or repeats a line */
 @keyframes wm-x { from { left: 2%; } to { left: calc(98% - 16rem); } }
 @keyframes wm-y { from { top: 4%; } to { top: 86%; } }
