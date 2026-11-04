@@ -60,6 +60,8 @@ export default function Navbar() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    // The navbar stays mounted across pages: signing in or out must update it without a reload
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
     let lastY = window.scrollY;
     let frame = 0;
     const handleScroll = () => {
@@ -77,7 +79,7 @@ export default function Navbar() {
     };
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', handleScroll); cancelAnimationFrame(frame); };
+    return () => { subscription.unsubscribe(); window.removeEventListener('scroll', handleScroll); cancelAnimationFrame(frame); };
   }, []);
 
   // Close menus on navigation (adjusting state during render, as React recommends), outside click and Escape
