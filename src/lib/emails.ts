@@ -386,7 +386,7 @@ export function leadDay2(d: { name?: string | null; email: string }, c: Featured
           ['Đặt điện thoại thấp hơn mắt', 'Góc từ dưới lên làm mặt to và mất thiện cảm. Để camera ngang tầm mắt.'],
           ['Đứng xa điện thoại để nói', 'Tiếng bị vang, xa. Lại gần hơn hoặc dùng mic cài áo.'],
         ])}
-        ${p(`Sửa 3 điều này thôi là video đã khác hẳn. Muốn học bài bản từ đầu, bạn xem thử miễn phí ${c.freeLessons.length} bài đầu của khóa <strong>${esc(c.title)}</strong>:`)}
+        ${p(`Sửa 3 điều này thôi là video đã khác hẳn. Muốn học bài bản từ đầu, bạn xem thử miễn phí ${c.freeLessons.length} bài của khóa <strong>${esc(c.title)}</strong>:`)}
         ${button(courseUrl(c), 'Học thử miễn phí')}
         ${signature}`,
     }),
