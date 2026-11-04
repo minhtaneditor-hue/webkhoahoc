@@ -275,7 +275,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
           <div className="card p-6 md:p-8 shadow-[var(--shadow-lift)]">
             {enrolled ? (
               <>
-                <p className="eyebrow">Bạn đã sở hữu khóa học</p>
+                <p className="eyebrow">{isAdmin(user?.email) ? 'Bạn đang xem bằng quyền admin' : 'Bạn đã sở hữu khóa học'}</p>
                 <p className="mt-3 text-muted-foreground">Tiếp tục từ bài học đầu tiên hoặc chọn bài trong lộ trình.</p>
                 <Link href={firstLessonHref} className="btn btn-gold w-full mt-6">Vào học <ArrowRight size={18} aria-hidden="true" /></Link>
               </>

@@ -16,6 +16,7 @@ export default function StudentDashboard() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [adminCourses, setAdminCourses] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
 
   useEffect(() => {
@@ -32,16 +33,12 @@ export default function StudentDashboard() {
         supabase.from('payments').select('id, order_id, amount, status, created_at, courses ( title )').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
       ]);
 
-      // Admin accounts own every course: list all of them as active enrolments
+      setEnrollments(enrollmentData || []);
+      // Admins can open every course, but that is not an enrolment: listed apart so this page never reads as "granted"
       if (isAdmin(user.email)) {
         const { data: courses } = await supabase.from('courses').select('id, title, description, created_at').order('created_at');
         const own = new Set((enrollmentData || []).map((e) => e.course_id));
-        setEnrollments([
-          ...(enrollmentData || []),
-          ...(courses || []).filter((c) => !own.has(c.id)).map((c) => ({ course_id: c.id, status: 'active', enrolled_at: c.created_at, courses: c })),
-        ]);
-      } else {
-        setEnrollments(enrollmentData || []);
+        setAdminCourses((courses || []).filter((c) => !own.has(c.id)));
       }
       setPayments(paymentData || []);
 
@@ -83,7 +80,9 @@ export default function StudentDashboard() {
           {/* Courses */}
           <section aria-labelledby="my-courses">
             <h2 id="my-courses" className="text-3xl">Khóa học của tôi</h2>
-            {enrollments.length === 0 ? (
+            {enrollments.length === 0 && adminCourses.length > 0 ? (
+              <p className="mt-4 text-muted-foreground">Tài khoản này chưa được ghi danh khóa nào.</p>
+            ) : enrollments.length === 0 ? (
               <div className="mt-6 card p-8 text-center">
                 <BookOpen size={28} className="mx-auto text-gold" aria-hidden="true" />
                 <p className="mt-4 font-display text-2xl">Bạn chưa đăng ký khóa học nào</p>
@@ -103,6 +102,23 @@ export default function StudentDashboard() {
               </ul>
             )}
           </section>
+
+          {adminCourses.length > 0 && (
+            <section aria-labelledby="admin-courses">
+              <h2 id="admin-courses" className="text-3xl">Mở bằng quyền admin</h2>
+              <p className="mt-2 text-muted-foreground">Chỉ tài khoản admin mới thấy mục này. Học viên chỉ thấy đúng khóa được cấp hoặc đã mua. Xem khóa của từng học viên ở <Link href="/admin/students" className="text-gold font-semibold hover:text-gold-hover">Admin → Học viên</Link>.</p>
+              <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+                {adminCourses.map((c) => (
+                  <li key={c.id} className="card card-hover p-6 flex flex-col">
+                    <span className="badge self-start !bg-muted !text-muted-foreground">Quyền admin</span>
+                    <h3 className="mt-4 text-2xl">{c.title}</h3>
+                    {c.description && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{c.description}</p>}
+                    <Link href={`/courses/${c.id}`} className="btn btn-outline mt-6 self-start !min-h-[44px] text-sm">Mở khóa học <ArrowRight size={16} aria-hidden="true" /></Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* Payments */}
           <section aria-labelledby="payments-title">
