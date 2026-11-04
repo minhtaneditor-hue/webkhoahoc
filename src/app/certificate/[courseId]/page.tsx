@@ -7,7 +7,7 @@ import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import { studentCode } from '@/lib/content-agreement';
 import { Award, Loader2, Printer, ArrowLeft } from 'lucide-react';
-import BrandMark from '@/components/BrandMark';
+import CertificateCard from '@/components/certificate/CertificateCard';
 import ConsultBox from '@/components/ConsultBox';
 
 // Completion certificate: available once every lesson of the course is marked done.
@@ -65,33 +65,7 @@ export default function CertificatePage() {
         </div>
       </div>
 
-      <article className="certificate mx-auto max-w-4xl aspect-[1.414/1] rounded-[var(--radius-card)] bg-card border-[10px] border-double border-gold/60 p-8 md:p-14 flex flex-col items-center justify-between text-center">
-        <div className="flex items-center gap-3">
-          <BrandMark size={44} />
-          <span className="text-2xl font-extrabold tracking-tight"><span className="text-ink">TẤN</span> <span className="text-gold">VA</span></span>
-        </div>
-        <div>
-          <p className="text-sm md:text-base font-bold uppercase tracking-[0.3em] text-gold">Chứng nhận hoàn thành</p>
-          <p className="mt-4 text-muted-foreground">Trao cho</p>
-          <p className="mt-2 text-3xl md:text-5xl font-extrabold text-ink">{data.name}</p>
-          <p className="mt-5 text-muted-foreground">đã hoàn thành toàn bộ khóa học</p>
-          <p className="mt-2 text-xl md:text-3xl font-bold text-ink">{data.course}</p>
-        </div>
-        <div className="w-full flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 text-sm">
-          <div className="text-left">
-            <p className="text-muted-foreground">Ngày hoàn thành</p>
-            <p className="font-semibold text-ink">{data.date}</p>
-          </div>
-          <div className="text-center">
-            <p className="font-bold text-ink text-lg">Minh Tấn</p>
-            <p className="text-muted-foreground">Giảng viên · TẤN VA</p>
-          </div>
-          <div className="text-right">
-            <p className="text-muted-foreground">Mã chứng chỉ</p>
-            <p className="font-mono font-semibold text-ink">{data.code}</p>
-          </div>
-        </div>
-      </article>
+      <CertificateCard data={data} />
     </main>
   );
 }
