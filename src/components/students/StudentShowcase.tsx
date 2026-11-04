@@ -150,7 +150,7 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
       </div>
 
       {profiles.length > 0 && (
-        <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {profiles.map((p) => {
             const cover = sidesOf(pairsOf(p.works[0])[0] ?? {});
             const label = WORK_CATEGORIES.find((c) => c.value === p.category)?.label;
@@ -184,14 +184,14 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
                       )}
                       <div className="min-w-0">
                         <h3 className="text-xl leading-snug truncate">{p.name}</h3>
-                        {p.title && <p className="text-sm text-muted-foreground truncate">{p.title}</p>}
+                        {p.title && <p className="text-sm text-muted-foreground line-clamp-2">{p.title}</p>}
                       </div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <CountryTag code={p.country} city={p.city} />
                       {label && <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-gold-soft text-ink">{label}</span>}
                     </div>
-                    <div className="mt-auto pt-5 flex items-center justify-between gap-3">
+                    <div className="mt-auto pt-5 flex flex-wrap items-center justify-between gap-3">
                       <SocialLinks links={p.links} name={p.name} />
                       <button type="button" onClick={() => show(p)} className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold text-gold hover:text-gold-hover">
                         Xem sản phẩm <ArrowRight size={16} aria-hidden="true" />

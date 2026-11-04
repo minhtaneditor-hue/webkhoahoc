@@ -163,13 +163,13 @@ export default async function Home() {
               <p className="mt-5 text-lg text-stone-300 max-w-xl">{settings.students_subtitle}</p>
             </Reveal>
             <dl className="grid grid-cols-2 gap-3 sm:gap-6">
-              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-6 flex flex-col-reverse">
-                <dt className="mt-2 text-stone-300">học viên đã theo học</dt>
-                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(2.25rem,3.6vw,3.25rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_students) || 0} suffix="+" /></dd>
+              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-5 flex flex-col-reverse justify-end">
+                <dt className="mt-2 text-sm sm:text-base text-stone-300">học viên đã theo học</dt>
+                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(1.875rem,2.9vw,2.75rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_students) || 0} suffix="+" /></dd>
               </div>
-              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-6 flex flex-col-reverse">
-                <dt className="mt-2 text-stone-300">năm làm truyền hình</dt>
-                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(2.25rem,3.6vw,3.25rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_years) || 0} suffix="+" /></dd>
+              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-5 flex flex-col-reverse justify-end">
+                <dt className="mt-2 text-sm sm:text-base text-stone-300">năm làm truyền hình</dt>
+                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(1.875rem,2.9vw,2.75rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_years) || 0} suffix="+" /></dd>
               </div>
             </dl>
           </div>

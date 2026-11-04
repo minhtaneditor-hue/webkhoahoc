@@ -71,7 +71,7 @@ export default async function CoursesPage() {
             <p className="mt-2 text-muted-foreground">Bấm nút Hỗ trợ để nhận thông báo khi mở đăng ký.</p>
           </div>
         ) : (
-          <Reveal as="ul" className="grid gap-8 md:grid-cols-2">
+          <Reveal as="ul" className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {courses.map((course: any, i: number) => {
               const lessonCount = course.lesson_outline?.[0]?.count ?? 0;
               const hasDiscount = course.old_price && Number(course.old_price) > Number(course.price);
@@ -93,12 +93,12 @@ export default async function CoursesPage() {
                       <p className="text-sm text-muted-foreground">{lessonCount > 0 ? `${lessonCount} bài học` : 'Sắp ra mắt'} · Truy cập trọn đời</p>
                       <h2 className="mt-2 text-3xl group-hover:text-gold transition-colors">{course.title}</h2>
                       {course.description && <p className="mt-3 text-muted-foreground leading-relaxed line-clamp-3">{course.description}</p>}
-                      <div className="mt-auto pt-6 flex items-end justify-between gap-4">
+                      <div className="mt-auto pt-6 flex flex-wrap items-end justify-between gap-4">
                         <div>
                           {hasDiscount && <p className="text-sm text-muted-foreground line-through">{formatVND(course.old_price)}</p>}
                           <p className="font-display text-3xl font-bold">{Number(course.price) > 0 ? formatVND(course.price) : 'Miễn phí'}</p>
                         </div>
-                        <span className="btn btn-dark !min-h-[44px] text-sm">Xem chi tiết <ArrowRight size={16} aria-hidden="true" /></span>
+                        <span className="btn btn-dark !min-h-[44px] text-sm whitespace-nowrap">Xem chi tiết <ArrowRight size={16} aria-hidden="true" /></span>
                       </div>
                     </div>
                   </Link>
