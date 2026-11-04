@@ -63,7 +63,7 @@ export default function AboutPage() {
           <SectionHeading
             as="h1"
 
-            title="Về TẤN VA (Video Advisor)"
+            title={<>Về TẤN VA <span className="text-[0.5em] font-semibold whitespace-nowrap">(Video Advisor)</span></>}
             description="TẤN VA là thương hiệu của Minh Tấn, còn được biết đến là Minh Tấn Video Advisor và Minh Tấn Academy. Sứ mệnh của chúng tôi là giúp một triệu doanh nhân và nhà sáng tạo làm chủ kỹ năng video bằng chính chiếc điện thoại, rồi dùng video để bán hàng và xây thương hiệu."
           />
           <Link href="/courses" className="btn btn-gold mt-8">Khám phá khóa học <ArrowRight size={18} aria-hidden="true" /></Link>
