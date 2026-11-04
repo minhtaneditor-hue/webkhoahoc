@@ -19,6 +19,17 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'inactive', label: `Không hoạt động ${INACTIVE_DAYS} ngày` },
 ];
 
+/** Letters to change to turn a into b: finds an existing student behind a mistyped email. */
+function editDistance(a: string, b: string) {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = row;
+  }
+  return prev[b.length];
+}
+
 function ProgressBar({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-2 min-w-[140px]">
@@ -42,6 +53,7 @@ export default function StudentsManagement() {
   const [grantFor, setGrantFor] = useState<any>(null);
   const [grantCourse, setGrantCourse] = useState('');
   const [grantForm, setGrantForm] = useState({ email: '', name: '', sendEmail: true });
+  const [grantConfirmed, setGrantConfirmed] = useState(false);
   const [detail, setDetail] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [now] = useState(() => Date.now());
@@ -106,11 +118,18 @@ export default function StudentsManagement() {
     setGrantFor(u || { isNew: true });
     setGrantCourse(courses[0]?.id || '');
     setGrantForm({ email: u?.email || '', name: u?.full_name || '', sendEmail: true });
+    setGrantConfirmed(false);
   };
+
+  // A typed email with no account would silently create a new one: a typo must not get that far
+  const grantEmail = grantForm.email.trim().toLowerCase();
+  const grantEmailIsNew = !!grantEmail && !users.some((u) => u.email?.toLowerCase() === grantEmail);
+  const grantSimilar = grantEmailIsNew ? users.filter((u) => u.email && editDistance(u.email.toLowerCase(), grantEmail) <= 2).map((u) => u.email).slice(0, 3) : [];
 
   async function grant(e: React.FormEvent) {
     e.preventDefault();
     if (!grantFor || !grantCourse || !grantForm.email.trim()) return;
+    if (grantEmailIsNew && !grantConfirmed) return;
     setBusy(true);
     const res = await fetch('/api/admin/grant', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...grantForm, courseId: grantCourse }) });
     const data = await res.json().catch(() => ({}));
@@ -308,8 +327,27 @@ export default function StudentsManagement() {
           <p className="text-muted-foreground">Mở khóa học miễn phí, không cần thanh toán: tặng học viên, học viên chuyển khoản trực tiếp, đối tác… Email chưa có tài khoản thì hệ thống tự tạo và gửi link đặt mật khẩu.</p>
           <Field id="grant-email" label="Email học viên">
             <input id="grant-email" type="email" className="input" required value={grantForm.email} disabled={!grantFor?.isNew}
-                   onChange={(e) => setGrantForm({ ...grantForm, email: e.target.value })} placeholder="hocvien@gmail.com" autoComplete="off" />
+                   onChange={(e) => { setGrantForm({ ...grantForm, email: e.target.value }); setGrantConfirmed(false); }} placeholder="hocvien@gmail.com" autoComplete="off" />
           </Field>
+          {grantEmailIsNew && (
+            <div role="alert" className="rounded-md bg-red-50 p-4 text-sm space-y-3">
+              <p className="font-semibold text-danger">Email này chưa có tài khoản. Cấp quyền sẽ tạo tài khoản mới.</p>
+              {grantSimilar.length > 0 && (
+                <div>
+                  <p>Có phải bạn định nhập:</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {grantSimilar.map((m) => (
+                      <button key={m} type="button" onClick={() => { setGrantForm({ ...grantForm, email: m }); setGrantConfirmed(false); }} className="btn btn-outline !min-h-[36px] !px-3 text-sm">{m}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" className="w-5 h-5 shrink-0 accent-[var(--color-gold)]" checked={grantConfirmed} onChange={(e) => setGrantConfirmed(e.target.checked)} />
+                <span>Tôi đã kiểm tra, email <strong>{grantEmail}</strong> viết đúng.</span>
+              </label>
+            </div>
+          )}
           {grantFor?.isNew && (
             <Field id="grant-name" label="Họ tên (không bắt buộc)">
               <input id="grant-name" className="input" value={grantForm.name} onChange={(e) => setGrantForm({ ...grantForm, name: e.target.value })} autoComplete="off" />
@@ -326,7 +364,7 @@ export default function StudentsManagement() {
           </label>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setGrantFor(null)} className="btn btn-outline">Hủy</button>
-            <button type="submit" disabled={busy || !grantCourse || !grantForm.email.trim()} className="btn btn-gold">{busy && <Loader2 size={16} className="animate-spin" aria-hidden="true" />} Cấp quyền</button>
+            <button type="submit" disabled={busy || !grantCourse || !grantForm.email.trim() || (grantEmailIsNew && !grantConfirmed)} className="btn btn-gold">{busy && <Loader2 size={16} className="animate-spin" aria-hidden="true" />} Cấp quyền</button>
           </div>
         </form>
       </Modal>
