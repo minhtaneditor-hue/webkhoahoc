@@ -49,7 +49,11 @@ export async function POST(req: Request) {
   }
   if (!link) return NextResponse.json({ error: 'Không tìm thấy sản phẩm miễn phí này.' }, { status: 404 });
 
-  const { error } = await db.from('leads').upsert({ email, name, phone, source: 'free-product' }, { onConflict: 'email' });
+  // Someone already on the list keeps their original source; what they took is in asset_downloads
+  const { data: known } = await db.from('leads').select('id').eq('email', email).maybeSingle();
+  const { error } = known
+    ? await db.from('leads').update({ name, phone }).eq('id', known.id)
+    : await db.from('leads').insert({ email, name, phone, source: 'free-product' });
   if (error) return NextResponse.json({ error: 'Chưa lưu được, vui lòng thử lại.' }, { status: 500 });
 
   await logDownload(db, link.asset.id, email, 'free');
