@@ -90,7 +90,7 @@ export default function ShopPage() {
           as="h1"
 
           title="Sản phẩm khác"
-          description="Tài nguyên để làm video nhanh và đẹp hơn: ebook, preset màu, LUT và template studio của Minh Tấn dùng hằng ngày. Mua một lần, tải về dùng mãi."
+          description="Tài nguyên để làm video nhanh và đẹp hơn: ebook và skill AI của Minh Tấn. Mua một lần, tải về dùng mãi."
         />
 
         {categories.length > 2 && (
@@ -142,7 +142,7 @@ export default function ShopPage() {
                       ) : (
                         <div className="absolute inset-0 surface-dark flex items-center justify-center"><Icon size={48} className="text-gold-light" aria-hidden="true" /></div>
                       )}
-                      {asset.category && <span className="badge absolute top-3 left-3">{CATEGORY_LABELS[asset.category] || asset.category}</span>}
+                      {asset.category && <span className="badge absolute top-3 right-3">{CATEGORY_LABELS[asset.category] || asset.category}</span>}
                     </div>
                     <h2 className="p-6 md:p-7 text-2xl md:text-3xl leading-snug">{asset.title}</h2>
                   </div>

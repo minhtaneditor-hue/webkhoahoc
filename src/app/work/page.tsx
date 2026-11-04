@@ -24,7 +24,7 @@ const SHOWCASE = [
   { id: 'p1', title: '2 Ngày 1 Đêm', category: 'TV', thumbnail_url: '/asset/du_an_tieu_bieu/project_2n1d.webp' },
   { id: 'p2', title: 'Anh Trai Say Hi — Movie', category: 'cinematic', thumbnail_url: '/asset/du_an_tieu_bieu/project_atsh_movie.jpg' },
   { id: 'p3', title: 'Anh Trai Say Hi — Las Vegas', category: 'cinematic', thumbnail_url: '/asset/du_an_tieu_bieu/project_atsh_vegas.webp' },
-  { id: 'p4', title: 'Nghệ Thuật Truyền Hình', category: 'TV', thumbnail_url: '/asset/du_an_tieu_bieu/project_nhth.jpg' },
+  { id: 'p4', title: 'Người Hùng Tí Hon', category: 'TV', thumbnail_url: '/asset/du_an_tieu_bieu/project_nhth.jpg' },
   { id: 'p5', title: 'Mái Ấm Tình Thương', category: 'TV', thumbnail_url: '/asset/du_an_tieu_bieu/project_matn.webp' },
   { id: 'p6', title: 'Ký Ức Vui Vẻ', category: 'TV', thumbnail_url: '/asset/du_an_tieu_bieu/project_kuvv.png' },
 ];
@@ -99,11 +99,11 @@ export default function WorkPage() {
         {!loading && filter === 'all' && (
           <div className="mt-12 flex justify-center">
             <div className="more-note rounded-2xl sm:rounded-full px-6 py-4 md:px-8 text-center text-white">
-              <p className="inline-flex items-center justify-center gap-3 text-base md:text-xl font-bold">
+              <p className="flex items-center justify-center gap-3 text-base md:text-xl font-bold">
                 <span className="more-note-dot" aria-hidden="true" />
                 Và còn nhiều sản phẩm của <span className="text-gold-light">doanh nghiệp và cá nhân</span> khác nữa
               </p>
-              <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-stone-300"><Lock size={14} aria-hidden="true" /> Vì lý do bảo mật nên không được đăng tải.</p>
+              <p className="mt-1 flex items-center justify-center gap-1.5 text-sm text-stone-300"><Lock size={14} aria-hidden="true" /> Vì lý do bảo mật nên không được đăng tải.</p>
             </div>
           </div>
         )}

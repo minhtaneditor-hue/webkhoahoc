@@ -4,8 +4,8 @@ import type { Metadata } from 'next';
 // Product pages (./[id]) set their own.
 export const metadata: Metadata = {
   title: 'Sản phẩm khác',
-  openGraph: { title: 'Ebook, preset và LUT màu làm video | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
-  description: 'Ebook, preset, LUT màu và template giúp bạn làm video nhanh và đẹp hơn, từ Minh Tấn. Xem chi tiết từng sản phẩm và mua online.',
+  openGraph: { title: 'Ebook và skill AI làm video | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
+  description: 'Ebook và skill AI giúp bạn làm video nhanh và đẹp hơn, từ Minh Tấn. Xem chi tiết từng sản phẩm và mua online.',
   alternates: { canonical: '/shop' },
 };
 
