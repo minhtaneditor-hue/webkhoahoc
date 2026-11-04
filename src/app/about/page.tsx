@@ -7,6 +7,7 @@ import SectionHeading from '@/components/SectionHeading';
 export const metadata: Metadata = {
   title: 'Về Minh Tấn',
   description: 'Sứ mệnh của TẤN VA: giúp người kinh doanh tự làm video bằng điện thoại để bán hàng và xây thương hiệu.',
+  alternates: { canonical: '/about' },
 };
 
 // Minh Tấn's own story, in his words (edited). Shown right under the hero.

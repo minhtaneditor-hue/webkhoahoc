@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import LegalPage from '@/components/LegalPage';
 
-export const metadata: Metadata = { title: 'Chính sách hoàn tiền' };
+export const metadata: Metadata = { title: 'Chính sách hoàn tiền', alternates: { canonical: '/refund' } };
 
 export default function RefundPage() {
   return (
