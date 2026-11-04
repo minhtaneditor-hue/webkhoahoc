@@ -416,6 +416,22 @@ export function leadDay6(d: { name?: string | null; email: string }, c: Featured
   };
 }
 
+// ---------------------------------------------------------------- free products (/api/shop/free)
+export function freeDownloadEmail(d: { name?: string | null; email: string; title: string; url: string }): Mail {
+  return {
+    subject: `Link tải ${d.title} của bạn`,
+    html: layout({
+      preheader: 'Bấm nút trong email để tải bất cứ lúc nào.',
+      unsubscribeFor: d.email,
+      body: `
+        ${h1(`Của bạn đây, ${esc(firstName(d.name))}!`)}
+        ${p(`Cảm ơn bạn đã quan tâm. Bấm nút bên dưới để tải <strong>${esc(d.title)}</strong>. Lưu email này lại để tải lại khi cần.`)}
+        ${button(d.url, 'Tải về')}
+        ${signature}`,
+    }),
+  };
+}
+
 // ---------------------------------------------------------------- consult / free Audit booking (/api/consult)
 
 export type ConsultRequest = { kind: 'audit' | 'coaching' | 'course'; product?: string | null; format?: string | null; name: string; email: string; phone: string; message?: string | null };

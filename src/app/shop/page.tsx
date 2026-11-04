@@ -7,6 +7,7 @@ import { formatVND } from '@/lib/supabase-public';
 import { ShoppingBag, Download, Loader2, BookOpen, Palette, Package } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import BuyDialog from '@/components/shop/BuyDialog';
+import FreeDownloadDialog from '@/components/shop/FreeDownloadDialog';
 import { isAdmin } from '@/lib/admin';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -31,6 +32,7 @@ export default function ShopPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [buying, setBuying] = useState<any>(null);
+  const [gettingFree, setGettingFree] = useState<any>(null);
   const [email, setEmail] = useState('');
 
   useEffect(() => {
@@ -128,7 +130,8 @@ export default function ShopPage() {
           // One product per row: picture and name on the left, price, details and the buy button on the right
           <ul className="space-y-6">
             {filteredAssets.map((asset) => {
-              const owned = purchasedIds.includes(asset.id) || Number(asset.price) === 0;
+              const free = Number(asset.price) === 0;
+              const owned = purchasedIds.includes(asset.id) && !free;
               const Icon = categoryIcon(asset.category);
               return (
                 <li key={asset.id} className="card overflow-hidden grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
@@ -157,14 +160,16 @@ export default function ShopPage() {
                     )}
                     <div className="mt-auto pt-8">
                       <button
-                        onClick={() => (owned ? handleDownload(asset) : handlePurchase(asset))}
+                        onClick={() => (free ? setGettingFree(asset) : owned ? handleDownload(asset) : handlePurchase(asset))}
                         disabled={busyId === asset.id}
                         className={`btn w-full ${owned ? 'btn-dark' : 'btn-gold'}`}
                       >
-                        {busyId === asset.id ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : owned ? <Download size={16} aria-hidden="true" /> : <ShoppingBag size={16} aria-hidden="true" />}
-                        {owned ? 'Tải về' : 'Mua ngay'}
+                        {busyId === asset.id ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : owned || free ? <Download size={16} aria-hidden="true" /> : <ShoppingBag size={16} aria-hidden="true" />}
+                        {free ? 'Tải miễn phí' : owned ? 'Tải về' : 'Mua ngay'}
                       </button>
-                      {!owned && <p className="mt-3 text-center text-xs text-muted-foreground">Thanh toán xong nhận link tải ngay qua email.</p>}
+                      {free
+                        ? <p className="mt-3 text-center text-xs text-muted-foreground">Để lại tên, email và Zalo để nhận link tải ngay.</p>
+                        : !owned && <p className="mt-3 text-center text-xs text-muted-foreground">Thanh toán xong nhận link tải ngay qua email.</p>}
                       {errors[asset.id] && <p role="alert" className="mt-3 text-sm text-danger">{errors[asset.id]}</p>}
                     </div>
                   </div>
@@ -174,6 +179,7 @@ export default function ShopPage() {
           </ul>
         )}
       </section>
+      <FreeDownloadDialog asset={gettingFree} defaultEmail={email} onClose={() => setGettingFree(null)} />
       <BuyDialog asset={buying} defaultEmail={email} onClose={() => setBuying(null)} />
     </main>
   );

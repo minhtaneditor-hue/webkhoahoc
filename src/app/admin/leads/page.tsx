@@ -6,7 +6,7 @@ import { Download, Inbox } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, thClass, tdClass } from '@/components/admin/AdminUI';
 
 // People who left their email for the free checklist (migration 015, /api/leads)
-const SOURCES: Record<string, string> = { home: 'Trang chủ', courses: 'Trang khóa học' };
+const SOURCES: Record<string, string> = { 'free-product': 'Tải sản phẩm miễn phí', home: 'Trang chủ', courses: 'Trang khóa học' };
 
 export default function LeadsPage() {
   const [rows, setRows] = useState<any[] | null>(null);
