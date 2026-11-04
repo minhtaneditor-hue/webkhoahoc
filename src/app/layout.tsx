@@ -15,7 +15,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
   title: {
     default: "TẤN VA",
-    template: "%s | TẤN VA",
+    // Tab titles read like a path: TẤN VA / Tab / Sub-page
+    template: "TẤN VA / %s",
   },
   description: "Học làm video, xây dựng thương hiệu cá nhân và biến nội dung thành tài sản cùng Minh Tấn. Khóa học, ebook, preset và coaching 1:1.",
   openGraph: {

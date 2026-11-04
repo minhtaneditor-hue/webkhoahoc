@@ -27,7 +27,7 @@ const HOME_TITLE = 'Khóa học làm video bằng điện thoại cùng Minh T�
 const HOME_DESCRIPTION = 'Học quay, dựng và làm video bán hàng bằng điện thoại cùng Minh Tấn. Khóa học online, coaching 1:1, ebook và preset cho người kinh doanh.';
 
 export const metadata: Metadata = {
-  title: { absolute: HOME_TITLE },
+  title: { absolute: 'TẤN VA' },
   description: HOME_DESCRIPTION,
   alternates: { canonical: '/' },
   openGraph: { title: HOME_TITLE, description: HOME_DESCRIPTION, type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },

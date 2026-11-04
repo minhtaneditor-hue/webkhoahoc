@@ -32,10 +32,10 @@ function CourseCta({ compact = false }: { compact?: boolean }) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPost(slug);
-  if (!post) return { title: 'Không tìm thấy bài viết' };
+  if (!post) return { title: 'Blog' };
   const description = post.seo_description || post.excerpt || undefined;
   return {
-    title: post.seo_title || post.title,
+    title: `Blog / ${post.title}`,
     description,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
@@ -129,9 +129,10 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
 
           <aside className="hidden lg:block">
-            <div className="sticky top-24 space-y-8">
+            <div className="sticky top-24 space-y-6 max-h-[calc(100dvh-7rem)] overflow-y-auto">
               {toc.length > 1 && <PostTocSide items={toc} />}
               <CourseCta compact />
+              <AdContactBanner compact />
             </div>
           </aside>
         </div>

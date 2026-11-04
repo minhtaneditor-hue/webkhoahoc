@@ -14,7 +14,8 @@ import WorldStudents from '@/components/students/WorldStudents';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Học viên & sản phẩm',
+  title: 'Học viên',
+  openGraph: { title: 'Học viên & sản phẩm | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
   description: 'Sản phẩm thật của học viên TẤN VA, trước và sau khóa học, cùng câu chuyện từ học viên ở Việt Nam và khắp thế giới.',
   alternates: { canonical: '/students' },
 };

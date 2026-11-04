@@ -10,7 +10,8 @@ import LeadMagnet from '@/components/LeadMagnet';
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: 'Khóa học làm video bằng điện thoại',
+  title: 'Khóa học',
+  openGraph: { title: 'Khóa học làm video bằng điện thoại | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
   description: 'Các khóa học online về quay, dựng video bằng điện thoại, làm video bán hàng và sáng tạo nội dung cùng Minh Tấn. Có bài học thử miễn phí.',
   alternates: { canonical: '/courses' },
 };

@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!course) return { title: 'Khóa học', robots: { index: false } };
   const description = course.seo_description || course.description || undefined;
   return {
-    title: course.seo_title || course.title,
+    title: `Khóa học / ${course.title}`,
     description,
     alternates: { canonical: `/courses/${id}` },
     openGraph: { title: course.title, description, type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },

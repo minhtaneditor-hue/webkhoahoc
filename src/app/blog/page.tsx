@@ -12,7 +12,8 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(): Promise<Metadata> {
   const posts = await getPublishedPosts();
   return {
-    title: 'Blog làm video bằng điện thoại',
+    title: 'Blog',
+    openGraph: { title: 'Blog làm video bằng điện thoại | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
     description: 'Hướng dẫn quay, dựng và làm video bán hàng bằng điện thoại, viết kịch bản và xây thương hiệu cá nhân, từ Minh Tấn.',
     alternates: { canonical: '/blog' },
     // An empty page should not be in search results
