@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Check, PlayCircle } from 'lucide-react';
@@ -17,8 +18,20 @@ import LeadMagnet from '@/components/LeadMagnet';
 import PainPoints from '@/components/PainPoints';
 import ConsultBox from '@/components/ConsultBox';
 import { contactFrom } from '@/lib/site-settings';
+import JsonLd from '@/components/JsonLd';
+import { SITE_URL } from '@/lib/site-url';
 
 export const revalidate = 60;
+
+const HOME_TITLE = 'Khóa học làm video bằng điện thoại cùng Minh Tấn | TẤN VA';
+const HOME_DESCRIPTION = 'Học quay, dựng và làm video bán hàng bằng điện thoại cùng Minh Tấn. Khóa học online, coaching 1:1, ebook và preset cho người kinh doanh.';
+
+export const metadata: Metadata = {
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
+  alternates: { canonical: '/' },
+  openGraph: { title: HOME_TITLE, description: HOME_DESCRIPTION, type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
+};
 
 const FEATURED_COURSE_ID = 'd290f1ee-6c54-4b01-90e6-d701748f0851';
 
@@ -78,6 +91,24 @@ export default async function Home() {
 
   return (
     <main>
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            name: 'TẤN VA',
+            url: SITE_URL,
+            logo: `${SITE_URL}/brand/tan-va-mark.png`,
+            founder: { '@type': 'Person', name: 'Minh Tấn' },
+            sameAs: ['https://www.facebook.com/profile.php?id=61583837884143', 'https://www.youtube.com/@minhtanvideoadvisor', 'https://www.tiktok.com/@minhtanvideoadvisor'],
+          },
+          { '@type': 'WebSite', name: 'TẤN VA', url: SITE_URL, inLanguage: 'vi' },
+          {
+            '@type': 'FAQPage',
+            mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+          },
+        ],
+      }} />
       {/* Video header: Minh Tấn's showreel plays behind the main title (stills on phones / reduced motion) */}
       <section aria-labelledby="hero-title" className="container-lux pt-4 md:pt-6">
         {/* A wide, short banner: about 21:9 on desktop so it doesn't take over the first screen */}

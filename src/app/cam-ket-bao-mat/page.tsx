@@ -4,6 +4,7 @@ import { AGREEMENT_SECTIONS, AGREEMENT_TITLE, AGREEMENT_VERSION } from '@/lib/co
 export const metadata: Metadata = {
   title: 'Cam kết bảo mật nội dung',
   description: 'Cam kết bảo mật và sử dụng nội dung khóa học mà học viên đồng ý trước khi học.',
+  alternates: { canonical: '/cam-ket-bao-mat' },
 };
 
 export default function AgreementPage() {
