@@ -4,22 +4,19 @@ const playfair = Playfair_Display({ subsets: ['latin', 'vietnamese'], weight: ['
 
 export type CertificateData = { name: string; course: string; date: string; code: string };
 
-/** A banknote-style rosette: three nested curves, drawn once. Vector, so it stays sharp in the PDF. */
-function rosettePath(radius: number, petals: number, depth: number) {
-  const steps = 720;
+/** Security-paper lines shaped as a sound wave: the voice track of a video, swelling across the sheet. Vector, so it stays sharp in the PDF. */
+function wavePath(offset: number) {
   const points: string[] = [];
-  for (let i = 0; i <= steps; i++) {
-    const t = (i / steps) * Math.PI * 2;
-    const r = radius * (1 - depth + depth * Math.cos(petals * t) ** 2);
-    points.push(`${(r * Math.cos(t)).toFixed(1)} ${(r * Math.sin(t)).toFixed(1)}`);
+  for (let x = 0; x <= 1000; x += 4) {
+    const t = x / 1000;
+    const swell = Math.sin(Math.PI * t) ** 1.4;
+    const voice = Math.sin(t * 19 + offset * 0.5) * 0.55 + Math.sin(t * 43 + offset * 0.9) * 0.3 + Math.sin(t * 7) * 0.15;
+    points.push(`${x} ${(350 + offset * 13 * (0.35 + swell) + voice * swell * 95 * (1 - Math.abs(offset) / 26)).toFixed(1)}`);
   }
-  return `M${points.join('L')}Z`;
+  return `M${points.join('L')}`;
 }
 
-const ROSETTE = [
-  rosettePath(500, 12, 0.34), rosettePath(500, 12, 0.22), rosettePath(440, 18, 0.3),
-  rosettePath(380, 12, 0.42), rosettePath(310, 18, 0.34), rosettePath(240, 12, 0.46),
-];
+const WAVES = Array.from({ length: 25 }, (_, i) => wavePath(i - 12));
 
 // Camera viewfinder corners instead of a diploma border: the course is about making video
 const CORNERS = [
@@ -60,25 +57,29 @@ export default function CertificateCard({ data }: { data: CertificateData }) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- plain img so the PDF always includes it */}
           <img src="/brand/tan-va-mark.png" alt="" className="absolute -left-[9cqw] -bottom-[4cqw] w-[38cqw] max-w-none opacity-[0.1] !rounded-none" />
-          <div className="relative flex items-center gap-[1cqw]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- plain img so the PDF always includes it */}
-            <img src="/brand/tan-va-mark.png" alt="" className="w-[4cqw] h-auto !rounded-none" />
-            <span className="text-[2.5cqw] font-extrabold tracking-tight leading-none">TẤN <span className="text-gold-light">VA</span></span>
+          <div className="relative">
+            <p className="text-[1.15cqw] text-sand">Đơn vị đào tạo</p>
+            <div className="mt-[0.8cqw] flex items-center gap-[1cqw]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- plain img so the PDF always includes it */}
+              <img src="/brand/tan-va-mark.png" alt="" className="w-[4cqw] h-auto !rounded-none" />
+              <span className="text-[2.5cqw] font-extrabold tracking-tight leading-none">TẤN <span className="text-gold-light">VA</span></span>
+            </div>
           </div>
           <div className="relative">
             <p className="text-[1.15cqw] text-sand">Mã chứng chỉ</p>
             <p className="mt-[0.4cqw] text-[1.45cqw] font-semibold tracking-[0.04em] tabular-nums">{data.code}</p>
+            <p className="mt-[1.3cqw] pt-[1.1cqw] border-t border-white/20 text-[1.3cqw] font-semibold">minhtanacademy.com</p>
           </div>
         </div>
 
         {/* Sheet: watermark first, the words on top of it */}
         <div className="relative flex-1 min-w-0 overflow-hidden flex flex-col px-[7.6cqw] pt-[6.4cqw] pb-[5.6cqw]">
-          <div className="absolute left-1/2 top-1/2 w-[60cqw] h-[60cqw] -translate-x-1/2 -translate-y-1/2" aria-hidden="true">
-            <svg viewBox="-510 -510 1020 1020" className="absolute inset-0 w-full h-full" fill="none" stroke="#A84E3C" strokeWidth="1" strokeOpacity="0.2">
-              {ROSETTE.map((d) => <path key={d} d={d} />)}
+          <div className="absolute inset-0" aria-hidden="true">
+            <svg viewBox="0 0 1000 700" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" fill="none" stroke="#A84E3C" strokeWidth="1" strokeOpacity="0.17" vectorEffect="non-scaling-stroke">
+              {WAVES.map((d) => <path key={d} d={d} />)}
             </svg>
             {/* eslint-disable-next-line @next/next/no-img-element -- plain img so the PDF always includes it */}
-            <img src="/brand/tan-va-mark.png" alt="" className="absolute left-1/2 top-1/2 w-[23cqw] -translate-x-1/2 -translate-y-1/2 opacity-[0.1] !rounded-none" />
+            <img src="/brand/tan-va-mark.png" alt="" className="absolute left-1/2 top-1/2 w-[23cqw] -translate-x-1/2 -translate-y-1/2 opacity-[0.08] !rounded-none" />
           </div>
           {CORNERS.map((c) => <span key={c} className={`absolute w-[3cqw] h-[3cqw] border-gold ${c}`} aria-hidden="true" />)}
 
@@ -95,9 +96,12 @@ export default function CertificateCard({ data }: { data: CertificateData }) {
               <p className="text-[1.75cqw] font-semibold tabular-nums">{data.date}</p>
               <p className="mt-[0.7cqw] pt-[0.7cqw] border-t border-line-strong text-[1.15cqw] text-muted-foreground min-w-[15cqw]">Ngày hoàn thành</p>
             </div>
-            <div>
-              <p className={`${playfair.className} text-[2.3cqw] italic font-semibold leading-none text-burgundy`}>Minh Tấn</p>
-              <p className="mt-[0.7cqw] pt-[0.7cqw] border-t border-line-strong text-[1.15cqw] text-muted-foreground min-w-[19cqw]">Giảng viên · TẤN VA</p>
+            <div className="relative min-w-[19cqw]">
+              {/* The signature's own long stroke is the signing line */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- plain img so the PDF always includes it */}
+              <img src="/brand/signature-minh-tan.png" alt="Chữ ký của Minh Tấn" className="absolute right-0 bottom-full mb-[0.3cqw] w-[19cqw] max-w-none h-auto !rounded-none" />
+              <p className="text-[1.45cqw] font-bold">Minh Tấn</p>
+              <p className="mt-[0.2cqw] text-[1.15cqw] text-muted-foreground">Giảng viên · TẤN VA</p>
             </div>
           </div>
         </div>
