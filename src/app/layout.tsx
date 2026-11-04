@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     locale: "vi_VN",
     siteName: "TẤN VA",
   },
+  verification: {
+    other: { "facebook-domain-verification": "jjij9i80mxi4f4vs3ojgb99ebod2da" },
+  },
   // Share image: src/app/opengraph-image.tsx (and one per course)
 };
 
