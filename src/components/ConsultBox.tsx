@@ -17,8 +17,8 @@ type Kind = 'audit' | 'coaching' | 'course';
  * Admin > Đặt lịch & tư vấn via /api/consult.
  */
 export default function ConsultBox({
-  kind, product, zaloHref, label, variant, dark = false, block = true, defaults,
-}: { kind: Kind; product?: string; zaloHref?: string; label?: string; variant?: 'gold' | 'dark' | 'outline' | 'outline-light'; dark?: boolean; block?: boolean; defaults?: { name?: string; email?: string; phone?: string } }) {
+  kind, product, zaloHref, label, variant, dark = false, block = true, defaults, preorder = false,
+}: { preorder?: boolean; kind: Kind; product?: string; zaloHref?: string; label?: string; variant?: 'gold' | 'dark' | 'outline' | 'outline-light'; dark?: boolean; block?: boolean; defaults?: { name?: string; email?: string; phone?: string } }) {
   const [open, setOpen] = useState(false);
   const text = label || (kind === 'audit' ? 'Đặt lịch Audit miễn phí' : 'Nhận tư vấn');
   return (
@@ -28,12 +28,12 @@ export default function ConsultBox({
         <MessageCircle size={18} aria-hidden="true" /> {text}
       </button>
       {/* Portal: animated parents (Reveal) use transforms, which would trap a fixed overlay */}
-      {open && createPortal(<ConsultModal kind={kind} product={product} zaloHref={zaloHref || DEFAULT_ZALO} title={text} defaults={defaults} onClose={() => setOpen(false)} />, document.body)}
+      {open && createPortal(<ConsultModal kind={kind} product={product} zaloHref={zaloHref || DEFAULT_ZALO} title={text} defaults={defaults} preorder={preorder} onClose={() => setOpen(false)} />, document.body)}
     </>
   );
 }
 
-function ConsultModal({ kind, product, zaloHref, title, defaults, onClose }: { kind: Kind; product?: string; zaloHref: string; title: string; defaults?: { name?: string; email?: string; phone?: string }; onClose: () => void }) {
+function ConsultModal({ kind, product, zaloHref, title, defaults, preorder, onClose }: { preorder?: boolean; kind: Kind; product?: string; zaloHref: string; title: string; defaults?: { name?: string; email?: string; phone?: string }; onClose: () => void }) {
   const [form, setForm] = useState({ name: defaults?.name || '', email: defaults?.email || '', phone: defaults?.phone || '', format: kind === 'course' ? '' : 'Online', message: '', website: '' });
   const [state, setState] = useState<'idle' | 'sending' | 'done'>('idle');
   const [error, setError] = useState('');
@@ -84,7 +84,9 @@ function ConsultModal({ kind, product, zaloHref, title, defaults, onClose }: { k
           ) : (
             <form onSubmit={submit} className="grid gap-4" noValidate>
               <p className="text-sm text-muted-foreground">
-                {kind === 'audit'
+                {preorder
+                  ? 'Chưa cần thanh toán. Để lại thông tin, Minh Tấn sẽ báo giá đặt trước ưu đãi cho bạn qua Zalo.'
+                  : kind === 'audit'
                   ? 'Để lại thông tin, Minh Tấn sẽ nhắn Zalo để chốt lịch Audit với bạn.'
                   : 'Để lại thông tin, Minh Tấn sẽ nhắn Zalo tư vấn cho bạn trong vòng 24 giờ.'}
               </p>
@@ -114,7 +116,7 @@ function ConsultModal({ kind, product, zaloHref, title, defaults, onClose }: { k
                 </fieldset>
               )}
               <div>
-                <label htmlFor={id('message')} className="field-label">{kind === 'audit' ? 'Link kênh hoặc điều bạn muốn được xem' : 'Bạn cần tư vấn điều gì?'} (không bắt buộc)</label>
+                <label htmlFor={id('message')} className="field-label">{preorder ? 'Bạn muốn học điều gì trong khóa này?' : kind === 'audit' ? 'Link kênh hoặc điều bạn muốn được xem' : 'Bạn cần tư vấn điều gì?'} (không bắt buộc)</label>
                 <textarea id={id('message')} rows={3} className="input" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
               </div>
               {/* Honeypot: hidden from people, filled by bots */}
@@ -122,7 +124,7 @@ function ConsultModal({ kind, product, zaloHref, title, defaults, onClose }: { k
               {error && <p role="alert" className="text-sm text-danger">{error}</p>}
               <button type="submit" disabled={state === 'sending' || !form.name || !form.email || !form.phone} className="btn btn-gold w-full disabled:opacity-60">
                 {state === 'sending' ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
-                {kind === 'audit' ? 'Đặt lịch miễn phí' : 'Gửi yêu cầu tư vấn'}
+                {preorder ? 'Gửi đăng ký đặt trước' : kind === 'audit' ? 'Đặt lịch miễn phí' : 'Gửi yêu cầu tư vấn'}
               </button>
               <a href={zaloHref} target="_blank" rel="noopener noreferrer" className="btn btn-outline w-full">
                 <MessageCircle size={18} aria-hidden="true" /> Hoặc nhắn Zalo ngay

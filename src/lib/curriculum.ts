@@ -22,3 +22,8 @@ export function groupByChapter<L extends Orderable>(chapters: Chapter[], lessons
 export function lessonsInOrder<L extends Orderable>(chapters: Chapter[], lessons: L[]): L[] {
   return groupByChapter(chapters, lessons).flatMap((g) => g.lessons);
 }
+
+/** No price and no lessons yet: shown as "Coming soon" with a pre-order form instead of checkout. */
+export function isComingSoon(course: { price?: unknown }, lessonCount: number): boolean {
+  return !(Number(course.price) > 0) && lessonCount === 0;
+}

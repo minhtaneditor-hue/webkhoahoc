@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { getPublicSupabase } from '@/lib/supabase-public';
-import { lessonsInOrder, type Chapter } from '@/lib/curriculum';
+import { isComingSoon, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import CourseView from '@/components/courses/CourseView';
 import JsonLd from '@/components/JsonLd';
 import { SITE_URL } from '@/lib/site-url';
@@ -63,7 +63,8 @@ export default async function CoursePage({ params }: Props) {
           inLanguage: 'vi',
           provider: { '@type': 'Organization', name: 'TẤN VA', url: SITE_URL },
           hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'online' },
-          offers: { '@type': 'Offer', category: 'Paid', price: Number(course.price) || 0, priceCurrency: 'VND', availability: 'https://schema.org/InStock', url: `${SITE_URL}/courses/${id}` },
+          // No offer while the price is undisclosed, so search engines don't list it as free
+          ...(isComingSoon(course, lessons.length) ? {} : { offers: { '@type': 'Offer', category: 'Paid', price: Number(course.price) || 0, priceCurrency: 'VND', availability: 'https://schema.org/InStock', url: `${SITE_URL}/courses/${id}` } }),
         }} />
       )}
       <CourseView id={id} initialCourse={course} initialLessons={lessons} initialChapters={chapters} />

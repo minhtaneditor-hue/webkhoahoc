@@ -201,7 +201,7 @@ export default function CourseManagement() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap"><StatusBadge status={c.is_published ? 'published' : 'draft'} /><span className="text-sm text-muted-foreground">{c.lessons?.length || 0} bài học</span></div>
                 <h2 className="mt-1 text-2xl truncate">{c.title}</h2>
-                <p className="text-sm text-muted-foreground">{formatVND(c.price)}{c.old_price ? ` · giá gốc ${formatVND(c.old_price)}` : ''}</p>
+                <p className="text-sm text-muted-foreground">{!(Number(c.price) > 0) && !c.lessons?.length ? 'Coming soon · giá chưa tiết lộ' : formatVND(c.price)}{c.old_price ? ` · giá gốc ${formatVND(c.old_price)}` : ''}</p>
               </div>
               <div className="flex flex-wrap gap-2 shrink-0">
                 <button onClick={() => openLessons(c)} className="btn btn-dark !min-h-[40px] !px-3 text-sm"><ListVideo size={16} aria-hidden="true" /> Bài học</button>
@@ -229,7 +229,7 @@ export default function CourseManagement() {
               <textarea id="c-desc" className="input min-h-[96px]" value={editing.description || ''} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field id="c-price" label="Học phí (VNĐ)">
+              <Field id="c-price" label="Học phí (VNĐ)" hint="Để 0 khi chưa có bài học: khóa hiện Coming soon kèm mục đặt trước.">
                 <input id="c-price" type="number" min={0} step={1000} className="input" value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })} />
               </Field>
               <Field id="c-old" label="Giá gốc (gạch ngang)" hint="Không bắt buộc">
