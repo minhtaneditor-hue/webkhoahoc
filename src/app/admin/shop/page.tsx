@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
+import { supabase } from '@/utils/supabase';
 import AdminCrud from '@/components/admin/AdminCrud';
 import { formatVND } from '@/lib/supabase-public';
 
@@ -13,6 +15,20 @@ const categories = [
 ];
 
 export default function AdminShopPage() {
+  // Per product: how many times a file link was handed out, and to how many different people
+  const [stats, setStats] = useState<Record<string, { times: number; people: Set<string> }>>({});
+  useEffect(() => {
+    supabase.from('asset_downloads').select('asset_id, email').limit(50000).then(({ data }) => {
+      const next: typeof stats = {};
+      for (const d of data || []) {
+        const s = (next[d.asset_id] ??= { times: 0, people: new Set() });
+        s.times += 1;
+        if (d.email) s.people.add(d.email);
+      }
+      setStats(next);
+    });
+  }, []);
+
   return (
     <AdminCrud
       table="digital_assets"
@@ -34,7 +50,7 @@ export default function AdminShopPage() {
         { key: 'faq', label: 'Câu hỏi thường gặp', type: 'textarea', hint: 'Dòng đầu là câu hỏi, dòng sau là trả lời. Các câu cách nhau một dòng trống.' },
         { key: 'download_url', label: 'Link tải file', type: 'url', hint: 'Google Drive, Dropbox… Chỉ người mua mới nhận được link này. Ebook PDF đóng tên người mua: tải file lên kho shop-files trên Supabase rồi ghi storage:shop-files/ten-file.pdf (hoặc file trên R2: r2:shop/ebooks/ten-file.pdf)' },
       ]}
-      renderMeta={(row) => <>{categories.find((c) => c.value === row.category)?.label || row.category} · {Number(row.price) > 0 ? formatVND(row.price) : 'Miễn phí'}</>}
+      renderMeta={(row) => <>{categories.find((c) => c.value === row.category)?.label || row.category} · {Number(row.price) > 0 ? formatVND(row.price) : 'Miễn phí'}<br />{stats[row.id] ? `${stats[row.id].times} lượt tải · ${stats[row.id].people.size} người` : 'Chưa có lượt tải'}</>}
     />
   );
 }

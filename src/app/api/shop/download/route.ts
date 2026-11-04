@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { isAdmin } from '@/lib/admin';
 import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
 import { buyerLink, storageFile, type Buyer } from '@/lib/pdf-stamp';
+import { logDownload } from '@/lib/downloads';
 
 export const dynamic = 'force-dynamic';
 // The first download of a stamped PDF reads, stamps and stores the whole file.
@@ -65,6 +66,8 @@ export async function GET(req: Request) {
       paidAt: payment.created_at,
     };
   }
+  // The owner checking a file is not a download
+  if (!isAdmin(user.email)) await logDownload(supabaseAdmin, assetId, buyer?.email || user.email, 'paid');
   return deliver(supabaseAdmin, asset.download_url, buyer);
 }
 
@@ -73,13 +76,14 @@ async function guestDownload(orderId: string, token: string) {
   if (!supabase) return NextResponse.json({ error: 'Server not configured' }, { status: 500 });
   const { data: p } = await supabase
     .from('payments')
-    .select('status, access_token, buyer_name, buyer_phone, buyer_email, created_at, digital_assets ( download_url )')
+    .select('status, access_token, asset_id, buyer_name, buyer_phone, buyer_email, created_at, digital_assets ( download_url )')
     .eq('order_id', orderId)
     .maybeSingle();
   const asset: any = p?.digital_assets;
   if (!p || !token || p.access_token !== token || !asset) return NextResponse.json({ error: 'Không tìm thấy đơn hàng.' }, { status: 404 });
   if (p.status !== 'success') return NextResponse.json({ error: 'Đơn hàng chưa thanh toán.' }, { status: 403 });
   if (!asset.download_url) return NextResponse.json({ error: 'File not found' }, { status: 404 });
+  if (p.asset_id) await logDownload(supabase, p.asset_id, p.buyer_email, 'paid');
   return deliver(supabase, asset.download_url, {
     name: p.buyer_name || p.buyer_email || 'Người mua',
     phone: p.buyer_phone,

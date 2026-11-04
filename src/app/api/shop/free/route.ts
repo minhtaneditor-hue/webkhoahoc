@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { buyerLink, storageFile } from '@/lib/pdf-stamp';
+import { logDownload } from '@/lib/downloads';
 import { cleanEventId, metaContext, sendMetaEvent, siteUrl } from '@/lib/meta-capi';
 import { FROM, SITE, freeDownloadEmail, unsubscribeHeaders } from '@/lib/emails';
 
@@ -51,6 +52,8 @@ export async function POST(req: Request) {
   const { error } = await db.from('leads').upsert({ email, name, phone, source: 'free-product' }, { onConflict: 'email' });
   if (error) return NextResponse.json({ error: 'Chưa lưu được, vui lòng thử lại.' }, { status: 500 });
 
+  await logDownload(db, link.asset.id, email, 'free');
+
   const eventId = cleanEventId(body.eventId);
   if (eventId) {
     sendMetaEvent({ name: 'Lead', eventId, url: siteUrl('/shop'), context: metaContext(req), customer: { email, phone, name }, data: { contentName: link.asset.title } });
@@ -74,5 +77,6 @@ export async function GET(req: Request) {
   const db = getSupabaseAdmin();
   if (!db || !asset || q.get('t') !== emailToken(asset, email)) return NextResponse.redirect(`${SITE}/shop`);
   const link = await freeFileLink(db, asset).catch(() => null);
+  if (link) await logDownload(db, link.asset.id, email, 'free-email');
   return NextResponse.redirect(link?.url || `${SITE}/shop`);
 }
