@@ -7,11 +7,12 @@ import Image from 'next/image';
 import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
-import { formatVND } from '@/lib/supabase-public';
+import { formatVND, savingPercent } from '@/lib/supabase-public';
 import { groupByChapter, isComingSoon, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import ConsultBox from '@/components/ConsultBox';
 import CourseReviews from '@/components/CourseReviews';
 import PainPoints from '@/components/PainPoints';
+import SignInPrompt from '@/components/courses/SignInPrompt';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, PlayCircle, X, ChevronLeft, Gift } from 'lucide-react';
 
 type Status = { type: 'success' | 'error'; text: string } | null;
@@ -98,11 +99,11 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
   }, [id, initialCourse]);
 
   useEffect(() => {
-    if (!selectedLesson && !signInFor) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSelectedLesson(null); setSignInFor(null); } };
+    if (!selectedLesson) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSelectedLesson(null);
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [selectedLesson, signInFor]);
+  }, [selectedLesson]);
 
   const handleApplyPromo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,11 +165,12 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
   const firstLessonHref = `/learn/${course.id}/${lessons[0]?.id || ''}`;
   const freeLesson = lessons.find((l) => l.is_free);
 
-  const openLesson = (lesson: any) => {
+  const openLesson = async (lesson: any) => {
     if (lesson.video_url?.startsWith('drm:') || !lesson.video_url) {
-      // Protected videos need an account: guests get a notice first instead of landing on the login page
-      if (authChecked && !user) setSignInFor(lesson);
-      else router.push(`/learn/${course.id}/${lesson.id}`);
+      // Protected videos need an account: guests get the popup first, however early they click
+      const viewer = authChecked ? user : (await supabase.auth.getUser()).data.user;
+      if (viewer) router.push(`/learn/${course.id}/${lesson.id}`);
+      else setSignInFor(lesson);
     }
     else setSelectedLesson(lesson);
   };
@@ -318,6 +320,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
                     <p className="text-muted-foreground line-through">{formatVND(appliedDiscount > 0 ? price : course.old_price)}</p>
                   )}
                 </div>
+                {savingPercent(finalPrice, appliedDiscount > 0 ? price : course.old_price) && <p className="mt-2 font-semibold text-gold">Tiết kiệm {savingPercent(finalPrice, appliedDiscount > 0 ? price : course.old_price)}%</p>}
 
                 <form onSubmit={handleApplyPromo} className="mt-6" noValidate>
                   <label htmlFor="promo" className="field-label">Mã giảm giá</label>
@@ -367,24 +370,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
       )}
 
       {/* Free preview modal */}
-      {signInFor && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="sign-in-title">
-          <div className="absolute inset-0 bg-onyx/70" onClick={() => setSignInFor(null)} aria-hidden="true" />
-          <div className="relative w-full max-w-md card p-6 shadow-[var(--shadow-lift)] animate-fade-up text-ink">
-            <div className="flex items-start justify-between gap-4">
-              <h2 id="sign-in-title" className="text-2xl leading-snug">Đăng nhập để xem thêm nhiều video miễn phí khác</h2>
-              <button onClick={() => setSignInFor(null)} autoFocus className="w-11 h-11 -mr-2 -mt-2 shrink-0 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-ink" aria-label="Đóng">
-                <X size={20} aria-hidden="true" />
-              </button>
-            </div>
-            <p className="mt-2 text-muted-foreground">{signInFor.title}</p>
-            <div className="mt-6 grid gap-3">
-              <Link href={`/auth?redirect=${encodeURIComponent(`/learn/${course.id}/${signInFor.id}`)}`} className="btn btn-gold w-full">Đăng nhập</Link>
-              <Link href={`/auth?mode=signup&redirect=${encodeURIComponent(`/learn/${course.id}/${signInFor.id}`)}`} className="btn btn-outline w-full">Tạo tài khoản miễn phí</Link>
-            </div>
-          </div>
-        </div>
-      )}
+      {signInFor && <SignInPrompt next={`/learn/${course.id}/${signInFor.id}`} lessonTitle={signInFor.title} onClose={() => setSignInFor(null)} />}
 
       {selectedLesson && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={selectedLesson.title}>

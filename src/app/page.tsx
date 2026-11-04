@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Check, PlayCircle } from 'lucide-react';
-import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
+import { getPublicSupabase, formatVND, savingPercent } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import FaqList from '@/components/FaqList';
 import { ShutterImage, Reveal } from '@/components/motion/Motion';
@@ -236,6 +236,7 @@ export default async function Home() {
                 <p className="text-lg text-stone-400 line-through">{formatVND(course.old_price)}</p>
               )}
             </div>
+            {savingPercent(course?.price, course?.old_price) && <p className="mt-2 font-semibold text-gold-light">Tiết kiệm {savingPercent(course?.price, course?.old_price)}%</p>}
             <ul className="mt-8 space-y-3 text-stone-300 text-lg">
               {['Truy cập trọn đời', 'Hỗ trợ 1:1 qua Zalo', 'Học thử miễn phí trước khi mua', 'Quét QR, kích hoạt tự động'].map((x) => (
                 <li key={x} className="flex gap-3"><Check size={20} className="text-gold-light shrink-0 mt-1" aria-hidden="true" /> {x}</li>

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, BookOpen, Check, Compass, Crown } from 'lucide-react';
-import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
+import { getPublicSupabase, formatVND, savingPercent } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
 import LeadMagnet from '@/components/LeadMagnet';
@@ -100,7 +100,7 @@ export default async function CoursesPage() {
                       {course.description && <p className="mt-3 text-muted-foreground leading-relaxed line-clamp-3">{course.description}</p>}
                       <div className="mt-auto pt-6 flex flex-wrap items-end justify-between gap-4">
                         <div>
-                          {hasDiscount && <p className="text-sm text-muted-foreground line-through">{formatVND(course.old_price)}</p>}
+                          {hasDiscount && <p className="text-sm text-muted-foreground"><span className="line-through">{formatVND(course.old_price)}</span> <span className="font-semibold text-gold">· Tiết kiệm {savingPercent(course.price, course.old_price)}%</span></p>}
                           <p className="font-display text-3xl font-bold">{comingSoon ? 'Giá chưa tiết lộ' : Number(course.price) > 0 ? formatVND(course.price) : 'Miễn phí'}</p>
                         </div>
                         <span className="btn btn-dark !min-h-[44px] text-sm whitespace-nowrap">{comingSoon ? 'Đặt trước' : 'Xem chi tiết'} <ArrowRight size={16} aria-hidden="true" /></span>
