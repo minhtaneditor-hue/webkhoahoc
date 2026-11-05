@@ -1,8 +1,9 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ImagePlus, Loader2, Newspaper } from 'lucide-react';
 import AdminCrud from '@/components/admin/AdminCrud';
+import { supabase } from '@/utils/supabase';
 import { Field } from '@/components/admin/AdminUI';
 import { uploadImage } from '@/components/admin/ImageUpload';
 import { formatPostDate, slugify } from '@/lib/blog-format';
@@ -61,6 +62,28 @@ function ContentField({ form, update }: { form: any; update: (patch: Record<stri
 }
 
 export default function AdminBlogPage() {
+  // Views per post from the site's own counter (Admin only). Supabase returns 1000 rows a request, so it reads page by page.
+  const [views, setViews] = useState<Record<string, { times: number; people: number }>>({});
+  useEffect(() => {
+    (async () => {
+      const seen: Record<string, { times: number; visitors: Set<string> }> = {};
+      for (let from = 0; ; from += 1000) {
+        const { data } = await supabase.from('page_views').select('path, visitor').like('path', '/blog/%').order('id').range(from, from + 999);
+        for (const v of data || []) {
+          const s = (seen[v.path] ??= { times: 0, visitors: new Set() });
+          s.times += 1;
+          s.visitors.add(v.visitor);
+        }
+        if (!data || data.length < 1000) break;
+      }
+      setViews(Object.fromEntries(Object.entries(seen).map(([path, s]) => [path, { times: s.times, people: s.visitors.size }])));
+    })();
+  }, []);
+  const viewsOf = (slug: string) => {
+    const v = views[`/blog/${slug}`];
+    return v ? `${v.times} lượt xem · ${v.people} người` : 'Chưa có lượt xem';
+  };
+
   return (
     <AdminCrud
       table="blog_posts"
@@ -82,7 +105,7 @@ export default function AdminBlogPage() {
       ]}
       renderMeta={(row) => (
         row.is_published && row.published_at
-          ? <a href={`/blog/${row.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline underline-offset-4">Đã đăng {formatPostDate(row.published_at)}</a>
+          ? <><a href={`/blog/${row.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline underline-offset-4">Đã đăng {formatPostDate(row.published_at)}</a><br />{viewsOf(row.slug)}</>
           : <span>Bản nháp</span>
       )}
     />
