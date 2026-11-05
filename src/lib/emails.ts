@@ -432,6 +432,33 @@ export function freeDownloadEmail(d: { name?: string | null; email: string; titl
   };
 }
 
+// ---------------------------------------------------------------- campaigns (Admin > Email đã gửi)
+
+/** Coming-soon courses announced to current students. Only what the pre-order section on the site promises: no price, no date. */
+export function preorderAiCourses(d: { name?: string | null; email: string }, courses: { id: string; title: string; description?: string | null }[]): Mail {
+  return {
+    subject: `${firstName(d.name)} ơi, ${courses.length} khóa Edit Video bằng AI sắp mở`,
+    html: layout({
+      preheader: 'Đặt trước để nhận giá tốt hơn giá mở bán, chưa cần thanh toán.',
+      unsubscribeFor: d.email,
+      body: `
+        ${eyebrow('Dành cho học viên TẤN VA')}
+        ${h1(`${courses.length} khóa mới đang được chuẩn bị`)}
+        ${p(`Chào ${esc(firstName(d.name))}, bạn đang học cùng Minh Tấn nên mình báo bạn trước: mình đang chuẩn bị ${courses.length} khóa về edit video bằng AI. Giá chưa công bố, nhưng bạn có thể đặt trước ngay từ bây giờ.`)}
+        ${box(`<strong style="color:${C.ink};">Khi đặt trước, bạn được</strong><br>
+          • Giá đặt trước ưu đãi hơn giá mở bán.<br>
+          • Minh Tấn báo giá riêng cho bạn qua Zalo.<br>
+          • Chưa cần thanh toán lúc này.`)}
+        ${courses.map((c) => `
+          <h2 style="margin:0 0 6px;font-family:${FONT};font-size:19px;line-height:1.35;font-weight:800;color:${C.ink};">${esc(c.title)}</h2>
+          ${p(esc((c.description || '').split('.')[0] + '.'))}
+          ${button(`${SITE}/courses/${c.id}#dat-truoc`, 'Đặt trước khóa này')}`).join('')}
+        ${p('Bạn muốn học khóa nào hơn, hoặc muốn khóa dạy thêm phần nào? Trả lời email này cho mình biết nhé.')}
+        ${signature}`,
+    }),
+  };
+}
+
 // ---------------------------------------------------------------- consult / free Audit booking (/api/consult)
 
 export type ConsultRequest = { kind: 'audit' | 'coaching' | 'course'; product?: string | null; format?: string | null; name: string; email: string; phone: string; message?: string | null };
