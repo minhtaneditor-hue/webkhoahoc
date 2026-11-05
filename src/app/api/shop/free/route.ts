@@ -5,6 +5,7 @@ import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { buyerLink, storageFile } from '@/lib/pdf-stamp';
 import { logDownload } from '@/lib/downloads';
+import { checkEmail } from '@/lib/email-check';
 import { cleanEventId, metaContext, sendMetaEvent, siteUrl } from '@/lib/meta-capi';
 import { FROM, SITE, freeDownloadEmail, unsubscribeHeaders } from '@/lib/emails';
 
@@ -31,10 +32,11 @@ export async function POST(req: Request) {
   if (body.website) return NextResponse.json({ error: 'Chưa gửi được, vui lòng thử lại.' }, { status: 400 });
   const clean = (v: unknown, n: number) => String(v ?? '').trim().slice(0, n);
   const name = clean(body.name, 80);
-  const email = clean(body.email, 120).toLowerCase();
+  const checked = await checkEmail(body.email);
   const phone = clean(body.phone, 20).replace(/[^\d+ ]/g, '');
   if (!name) return NextResponse.json({ error: 'Vui lòng nhập tên.' }, { status: 400 });
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'Email chưa đúng.' }, { status: 400 });
+  if (!checked.ok) return NextResponse.json({ error: checked.error, field: 'email', suggestion: checked.suggestion }, { status: 400 });
+  const { email } = checked;
   if (phone.replace(/\D/g, '').length < 9) return NextResponse.json({ error: 'Số Zalo chưa đúng.' }, { status: 400 });
 
   const db = getSupabaseAdmin();

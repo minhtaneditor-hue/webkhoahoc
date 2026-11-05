@@ -12,12 +12,15 @@ export default function FreeDownloadDialog({ asset, defaultEmail, onClose }: { a
   const [form, setForm] = useState({ name: '', email: defaultEmail || '', phone: '', website: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState<{ text: string; suggestion?: string } | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const [fileUrl, setFileUrl] = useState('');
 
   useEffect(() => {
     if (asset) {
       setError('');
       setFileUrl('');
+      setEmailError(null);
       setForm((f) => ({ ...f, email: f.email || defaultEmail || '' }));
       ref.current?.showModal();
     } else ref.current?.close();
@@ -27,12 +30,18 @@ export default function FreeDownloadDialog({ asset, defaultEmail, onClose }: { a
     e.preventDefault();
     if (!asset) return;
     setBusy(true);
+    setEmailError(null);
     setError('');
     // The same id goes to the Pixel and to the server's Conversions API copy, so Meta counts one event.
     const eventId = `free_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     try {
       const res = await fetch('/api/shop/free', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, assetId: asset.id, eventId }) });
       const data = await res.json().catch(() => ({}));
+      if (data.field === 'email') {
+        setEmailError({ text: data.error, suggestion: data.suggestion });
+        emailRef.current?.focus();
+        return;
+      }
       if (!res.ok || !data.url) return setError(data.error || 'Chưa gửi được, vui lòng thử lại.');
       (window as any).fbq?.('track', 'Lead', { content_name: asset.title }, { eventID: eventId });
       setFileUrl(data.url);
@@ -77,7 +86,17 @@ export default function FreeDownloadDialog({ asset, defaultEmail, onClose }: { a
               </div>
               <div>
                 <label htmlFor="free-email" className="field-label">Email *</label>
-                <input id="free-email" type="email" required className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" placeholder="ban@email.com" />
+                <input id="free-email" ref={emailRef} type="email" required className="input" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); setEmailError(null); }} autoComplete="email" placeholder="ban@email.com" aria-invalid={!!emailError} aria-describedby={emailError ? 'free-email-error' : undefined} />
+                {emailError && (
+                  <p id="free-email-error" role="alert" className="mt-1.5 text-sm text-danger">
+                    {emailError.text}
+                    {emailError.suggestion && (
+                      <button type="button" onClick={() => { setForm({ ...form, email: emailError.suggestion! }); setEmailError(null); }} className="block mt-1 min-h-11 font-semibold underline underline-offset-2">
+                        Dùng {emailError.suggestion}
+                      </button>
+                    )}
+                  </p>
+                )}
               </div>
               <div>
                 <label htmlFor="free-phone" className="field-label">Số Zalo *</label>
