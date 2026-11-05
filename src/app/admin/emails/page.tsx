@@ -6,10 +6,9 @@ import { PageHeader, LoadingRow, EmptyState, Modal, StatCard, thClass, tdClass }
 
 type Row = { email: string; name: string | null; kind: string; label: string; course: string | null; sentAt: string };
 type Recipient = { email: string; name: string | null; sentAt: string | null; optedOut: boolean };
-type Data = {
-  rows: Row[]; total: number; optouts: number;
-  campaign: { label: string; subject: string; html: string; recipients: Recipient[] };
-};
+type Campaign = { label: string; subject: string; html: string; recipients: Recipient[] };
+type Data = { rows: Row[]; total: number; optouts: number; campaign: Campaign; remarketing: Campaign };
+type CampaignKey = 'campaign' | 'remarketing';
 
 const when = (iso: string) => new Date(iso).toLocaleString('vi-VN');
 
@@ -18,9 +17,9 @@ export default function EmailsPage() {
   const [loadError, setLoadError] = useState('');
   const [kind, setKind] = useState('');
   const [query, setQuery] = useState('');
-  const [preview, setPreview] = useState(false);
+  const [preview, setPreview] = useState<CampaignKey | null>(null);
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useState<{ key: CampaignKey; text: string } | null>(null);
 
   const [version, setVersion] = useState(0); // bumped after a send to reload the numbers
 
@@ -45,31 +44,30 @@ export default function EmailsPage() {
       (!q || r.email.includes(q) || (r.name || '').toLowerCase().includes(q)));
   }, [data, kind, query]);
 
-  const post = async (action: 'test' | 'send') => {
+  const post = async (key: CampaignKey, action: 'test' | 'send') => {
     setBusy(true);
-    setNotice('');
-    const res = await fetch('/api/admin/emails', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) });
+    setNotice(null);
+    const res = await fetch('/api/admin/emails', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, campaign: key }) });
     const json = await res.json().catch(() => ({}));
     setBusy(false);
-    if (!res.ok) { setNotice(json.error || 'Chưa gửi được, thử lại sau.'); return; }
-    if (action === 'test') { setNotice(`Đã gửi thử tới ${json.to}. Bản này không tính vào thống kê.`); return; }
+    if (!res.ok) { setNotice({ key, text: json.error || 'Chưa gửi được, thử lại sau.' }); return; }
+    if (action === 'test') { setNotice({ key, text: `Đã gửi thử tới ${json.to}. Bản này không tính vào thống kê.` }); return; }
     const parts = [`Đã gửi ${json.sent} email`];
     if (json.failed) parts.push(`${json.failed} email lỗi, bấm gửi lại để thử tiếp`);
     if (json.remaining) parts.push(`còn ${json.remaining} người, bấm gửi lại để tiếp tục`);
-    setNotice(parts.join('. ') + '.');
+    setNotice({ key, text: parts.join('. ') + '.' });
     setVersion((v) => v + 1);
   };
 
   if (loadError) return <EmptyState icon={MailX} title="Chưa tải được dữ liệu" text={loadError} />;
   if (!data) return <LoadingRow />;
 
-  const { campaign } = data;
-  const pending = campaign.recipients.filter((r) => !r.sentAt && !r.optedOut);
   const reached = new Set(data.rows.map((r) => r.email)).size;
 
-  const sendAll = () => {
-    if (window.confirm(`Gửi email "${campaign.label}" tới ${pending.length} học viên? Email đã gửi thì không thu hồi được.`)) post('send');
-  };
+  const sections: { key: CampaignKey; who: string }[] = [
+    { key: 'remarketing', who: 'người' },
+    { key: 'campaign', who: 'học viên' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -81,24 +79,31 @@ export default function EmailsPage() {
         <StatCard label="Đã ngừng nhận" value={data.optouts} icon={MailX} hint="Vẫn nhận email thanh toán và tài khoản" />
       </div>
 
-      <section className="card p-5 md:p-6 space-y-4" aria-labelledby="campaign-title">
+      {sections.map(({ key, who }) => {
+        const campaign = data[key];
+        const pending = campaign.recipients.filter((r) => !r.sentAt && !r.optedOut);
+        const sendAll = () => {
+          if (window.confirm(`Gửi email "${campaign.label}" tới ${pending.length} ${who}? Email đã gửi thì không thu hồi được.`)) post(key, 'send');
+        };
+        return (
+      <section key={key} className="card p-5 md:p-6 space-y-4" aria-labelledby={`${key}-title`}>
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
-            <h2 id="campaign-title" className="text-2xl">{campaign.label}</h2>
+            <h2 id={`${key}-title`} className="text-2xl">{campaign.label}</h2>
             <p className="mt-1 text-sm text-muted-foreground">Tiêu đề: {campaign.subject}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setPreview(true)} className="btn btn-outline"><Eye size={16} aria-hidden="true" /> Xem email</button>
-            <button onClick={() => post('test')} disabled={busy} className="btn btn-outline">Gửi thử cho tôi</button>
+            <button onClick={() => setPreview(key)} className="btn btn-outline"><Eye size={16} aria-hidden="true" /> Xem email</button>
+            <button onClick={() => post(key, 'test')} disabled={busy} className="btn btn-outline">Gửi thử cho tôi</button>
             <button onClick={sendAll} disabled={busy || pending.length === 0} className="btn btn-gold">
-              <Send size={16} aria-hidden="true" /> {pending.length ? `Gửi cho ${pending.length} học viên` : 'Đã gửi hết'}
+              <Send size={16} aria-hidden="true" /> {pending.length ? `Gửi cho ${pending.length} ${who}` : 'Đã gửi hết'}
             </button>
           </div>
         </div>
-        {notice && <p role="status" className="text-sm font-medium">{notice}</p>}
+        {notice?.key === key && <p role="status" className="text-sm font-medium">{notice.text}</p>}
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead><tr><th className={thClass}>Học viên</th><th className={thClass}>Email</th><th className={thClass}>Trạng thái</th></tr></thead>
+            <thead><tr><th className={thClass}>Người nhận</th><th className={thClass}>Email</th><th className={thClass}>Trạng thái</th></tr></thead>
             <tbody className="divide-y divide-line">
               {campaign.recipients.map((r) => (
                 <tr key={r.email}>
@@ -113,6 +118,8 @@ export default function EmailsPage() {
           </table>
         </div>
       </section>
+        );
+      })}
 
       <section className="space-y-4" aria-labelledby="log-title">
         <h2 id="log-title" className="text-2xl">Lịch sử gửi</h2>
@@ -150,8 +157,8 @@ export default function EmailsPage() {
         </p>
       </section>
 
-      <Modal title="Xem email" open={preview} onClose={() => setPreview(false)} wide>
-        <iframe title="Nội dung email" srcDoc={campaign.html} sandbox="" className="w-full h-[70vh] border border-line rounded-md bg-white" />
+      <Modal title="Xem email" open={!!preview} onClose={() => setPreview(null)} wide>
+        <iframe title="Nội dung email" srcDoc={preview ? data[preview].html : ''} sandbox="" className="w-full h-[70vh] border border-line rounded-md bg-white" />
       </Modal>
     </div>
   );

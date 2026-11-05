@@ -459,6 +459,33 @@ export function preorderAiCourses(d: { name?: string | null; email: string }, co
   };
 }
 
+/** Signed up but never bought: a promo code for the featured course. States only what checkout enforces, so no deadline. */
+export function remarketingDiscount(d: { name?: string | null; email: string }, c: FeaturedCourse, offer: { code: string; price: number; discount: number }): Mail {
+  const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
+  return {
+    subject: `${firstName(d.name)} ơi, mã giảm 10% cho khóa ${c.title}`,
+    html: layout({
+      preheader: `Nhập mã ${offer.code}: còn ${vnd(offer.price - offer.discount)} thay vì ${vnd(offer.price)}.`,
+      unsubscribeFor: d.email,
+      body: `
+        ${eyebrow('Ưu đãi giảm 10%')}
+        ${h1(`Mã giảm 10% cho khóa ${esc(c.title)}`)}
+        ${p(`Chào ${esc(firstName(d.name))}, cảm ơn bạn đã tạo tài khoản TẤN VA. Bạn chưa chọn khóa học nào, nên mình gửi bạn mã giảm giá để bắt đầu nhẹ nhàng hơn.`)}
+        ${box(`Mã giảm giá của bạn<br>
+          <strong style="font-size:24px;letter-spacing:0.08em;color:${C.ink};">${esc(offer.code)}</strong><br>
+          Học phí còn <strong style="color:${C.ink};">${vnd(offer.price - offer.discount)}</strong> thay vì ${vnd(offer.price)}. Mã có số lượt dùng giới hạn.`)}
+        ${steps([
+          ['Mở trang khóa học', 'Bấm nút bên dưới. Bạn có thể học thử trước khi quyết định.'],
+          ['Nhập mã', `Gõ ${esc(offer.code)} vào ô Mã giảm giá rồi bấm Áp dụng.`],
+          ['Thanh toán', 'Khóa học mở ngay sau khi thanh toán thành công.'],
+        ])}
+        ${button(`${courseUrl(c)}#dang-ky`, 'Dùng mã giảm 10%')}
+        ${p('Bạn còn phân vân điều gì về khóa học? Trả lời email này cho mình biết nhé.')}
+        ${signature}`,
+    }),
+  };
+}
+
 // ---------------------------------------------------------------- consult / free Audit booking (/api/consult)
 
 export type ConsultRequest = { kind: 'audit' | 'coaching' | 'course'; product?: string | null; format?: string | null; name: string; email: string; phone: string; message?: string | null };
