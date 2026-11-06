@@ -1,16 +1,37 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
-import { Eye, Mail, MailX, Send, UserCheck } from 'lucide-react';
+import { Eye, Mail, MailCheck, MailOpen, MailX, RefreshCw, Send, UserCheck } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, Modal, StatCard, thClass, tdClass } from '@/components/admin/AdminUI';
 
 type Row = { email: string; name: string | null; kind: string; label: string; course: string | null; sentAt: string };
 type Recipient = { email: string; name: string | null; sentAt: string | null; optedOut: boolean };
 type Campaign = { label: string; subject: string; html: string; recipients: Recipient[] };
-type Data = { rows: Row[]; total: number; optouts: number; campaign: Campaign; remarketing: Campaign };
+type Tracked = { email_id: string; to_email: string; subject: string | null; status: string; reason: string | null; sent_at: string; delivered_at: string | null; opened_at: string | null; clicked_at: string | null };
+type Data = { rows: Row[]; total: number; optouts: number; campaign: Campaign; remarketing: Campaign; tracking: { ready: boolean; webhook: boolean; rows: Tracked[] } };
 type CampaignKey = 'campaign' | 'remarketing';
 
 const when = (iso: string) => new Date(iso).toLocaleString('vi-VN');
+
+const PROBLEMS = ['bounced', 'failed', 'suppressed', 'complained'];
+const OPENED = ['opened', 'clicked'];
+const STATUS_LABELS: Record<string, string> = {
+  queued: 'Đang chờ gửi', scheduled: 'Đang chờ gửi', sent: 'Đang gửi', delivery_delayed: 'Gửi chậm',
+  delivered: 'Đã tới hộp thư', opened: 'Đã mở', clicked: 'Đã bấm link',
+  bounced: 'Bị trả lại', failed: 'Gửi thất bại', suppressed: 'Bị chặn', complained: 'Bị báo spam', canceled: 'Đã hủy',
+};
+const statusClass = (s: string) => (PROBLEMS.includes(s) ? 'text-danger font-semibold' : OPENED.includes(s) || s === 'delivered' ? 'text-success font-semibold' : 'text-muted-foreground');
+
+/** Plain words first, with Resend's own wording kept so it can be looked up. */
+function reasonText(t: Tracked) {
+  const raw = t.reason || '';
+  if (/quota|limit/i.test(raw)) return `Vượt hạn mức gửi của Resend (${raw})`;
+  if (t.status === 'suppressed') return `Địa chỉ này từng bị trả lại hoặc báo spam nên Resend không gửi nữa${raw ? ` (${raw})` : ''}`;
+  if (t.status === 'bounced') return `Máy chủ người nhận từ chối, thường do địa chỉ không tồn tại${raw ? ` (${raw})` : ''}`;
+  if (t.status === 'complained') return 'Người nhận đã báo thư này là spam';
+  if (t.status === 'failed') return raw || 'Resend không cho biết lý do với thư gửi trước khi bật theo dõi';
+  return raw || '—';
+}
 
 export default function EmailsPage() {
   const [data, setData] = useState<Data | null>(null);
@@ -20,6 +41,9 @@ export default function EmailsPage() {
   const [preview, setPreview] = useState<CampaignKey | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ key: CampaignKey; text: string } | null>(null);
+  const [trackFilter, setTrackFilter] = useState('');
+  const [trackQuery, setTrackQuery] = useState('');
+  const [syncNotice, setSyncNotice] = useState('');
 
   const [version, setVersion] = useState(0); // bumped after a send to reload the numbers
 
@@ -44,6 +68,29 @@ export default function EmailsPage() {
       (!q || r.email.includes(q) || (r.name || '').toLowerCase().includes(q)));
   }, [data, kind, query]);
 
+  const tracked = useMemo(() => {
+    const q = trackQuery.trim().toLowerCase();
+    return (data?.tracking.rows || []).filter((t) =>
+      (!trackFilter || (trackFilter === 'problem' ? PROBLEMS.includes(t.status) : trackFilter === 'opened' ? OPENED.includes(t.status) : t.status === trackFilter)) &&
+      (!q || t.to_email.includes(q) || (t.subject || '').toLowerCase().includes(q)));
+  }, [data, trackFilter, trackQuery]);
+
+  /** The Resend record for a logged send: same address, sent within five minutes of the log row. */
+  const outcome = (email: string, sentAt: string) => {
+    const at = Date.parse(sentAt);
+    return data?.tracking.rows.find((t) => t.to_email === email && Math.abs(Date.parse(t.sent_at) - at) < 5 * 60_000);
+  };
+
+  const sync = async () => {
+    setBusy(true);
+    setSyncNotice('');
+    const res = await fetch('/api/admin/emails', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'sync' }) });
+    const json = await res.json().catch(() => ({}));
+    setBusy(false);
+    setSyncNotice(res.ok ? `Đã cập nhật ${json.synced} thư từ Resend.` : json.error || 'Chưa lấy được trạng thái, thử lại sau.');
+    if (res.ok) setVersion((v) => v + 1);
+  };
+
   const post = async (key: CampaignKey, action: 'test' | 'send') => {
     setBusy(true);
     setNotice(null);
@@ -63,6 +110,10 @@ export default function EmailsPage() {
   if (!data) return <LoadingRow />;
 
   const reached = new Set(data.rows.map((r) => r.email)).size;
+  const all = data.tracking.rows;
+  const reachedInbox = all.filter((t) => t.status === 'delivered' || OPENED.includes(t.status)).length;
+  const openedCount = all.filter((t) => OPENED.includes(t.status)).length;
+  const problemCount = all.filter((t) => PROBLEMS.includes(t.status)).length;
 
   const sections: { key: CampaignKey; who: string }[] = [
     { key: 'remarketing', who: 'người' },
@@ -78,6 +129,60 @@ export default function EmailsPage() {
         <StatCard label="Số người đã nhận" value={reached} icon={UserCheck} />
         <StatCard label="Đã ngừng nhận" value={data.optouts} icon={MailX} hint="Vẫn nhận email thanh toán và tài khoản" />
       </div>
+
+      <section className="space-y-4" aria-labelledby="delivery-title">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+          <div>
+            <h2 id="delivery-title" className="text-2xl">Tình trạng từng thư</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Tất cả thư gửi qua Resend, gồm cả thư sản phẩm miễn phí và thư tài khoản.</p>
+          </div>
+          <button onClick={sync} disabled={busy || !data.tracking.ready} className="btn btn-outline shrink-0"><RefreshCw size={16} aria-hidden="true" /> Lấy trạng thái từ Resend</button>
+        </div>
+        {!data.tracking.ready && <p role="status" className="text-sm font-medium text-danger">Chưa bật được theo dõi: cần chạy file 027_email_status.sql trong Supabase.</p>}
+        {data.tracking.ready && !data.tracking.webhook && <p role="status" className="text-sm font-medium text-danger">Chưa kết nối webhook Resend, nên trạng thái chỉ cập nhật khi bấm nút và chưa có lý do thất bại.</p>}
+        {syncNotice && <p role="status" className="text-sm font-medium">{syncNotice}</p>}
+        <div className="grid sm:grid-cols-3 gap-4">
+          <StatCard label="Đã tới hộp thư" value={reachedInbox} icon={MailCheck} hint={`Trong ${all.length} thư gần nhất`} />
+          <StatCard label="Đã mở" value={openedCount} icon={MailOpen} hint="Con số tương đối, xem ghi chú bên dưới" />
+          <StatCard label="Thất bại" value={problemCount} icon={MailX} hint="Bị trả lại, bị chặn, lỗi gửi, báo spam" />
+        </div>
+        <div className="flex flex-col md:flex-row gap-3">
+          <input type="search" value={trackQuery} onChange={(e) => setTrackQuery(e.target.value)} placeholder="Tìm theo email hoặc tiêu đề" aria-label="Tìm theo email hoặc tiêu đề" className="input md:max-w-xs" />
+          <select value={trackFilter} onChange={(e) => setTrackFilter(e.target.value)} aria-label="Lọc theo tình trạng" className="input md:max-w-xs">
+            <option value="">Tất cả tình trạng</option>
+            <option value="problem">Thất bại</option>
+            <option value="delivered">Đã tới, chưa mở</option>
+            <option value="opened">Đã mở</option>
+            <option value="delivery_delayed">Gửi chậm</option>
+          </select>
+        </div>
+        {tracked.length === 0 ? (
+          <EmptyState icon={Mail} title="Chưa có thư nào ở đây" text={all.length ? 'Thử đổi bộ lọc hoặc từ khóa.' : 'Bấm “Lấy trạng thái từ Resend” để tải các thư đã gửi.'} />
+        ) : (
+          <div className="card overflow-x-auto">
+            <table className="w-full">
+              <thead><tr><th className={thClass}>Người nhận</th><th className={thClass}>Tiêu đề</th><th className={thClass}>Tình trạng</th><th className={thClass}>Lý do</th><th className={thClass}>Gửi lúc</th></tr></thead>
+              <tbody className="divide-y divide-line">
+                {tracked.map((t) => (
+                  <tr key={t.email_id}>
+                    <td className={tdClass}>{t.to_email}</td>
+                    <td className={tdClass}>{t.subject || '—'}</td>
+                    <td className={`${tdClass} whitespace-nowrap`}>
+                      <span className={statusClass(t.status)}>{STATUS_LABELS[t.status] || t.status}</span>
+                      {t.opened_at && <span className="block text-xs text-muted-foreground">Mở {when(t.opened_at)}</span>}
+                    </td>
+                    <td className={`${tdClass} text-sm`}>{PROBLEMS.includes(t.status) ? reasonText(t) : '—'}</td>
+                    <td className={`${tdClass} whitespace-nowrap`}>{when(t.sent_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="text-sm text-muted-foreground">
+          &quot;Đã mở&quot; chỉ là con số tương đối: có ứng dụng email tự mở thư thay người dùng, và có người chặn tải ảnh nên đã đọc mà không được tính.
+        </p>
+      </section>
 
       {sections.map(({ key, who }) => {
         const campaign = data[key];
@@ -110,7 +215,12 @@ export default function EmailsPage() {
                   <td className={tdClass}>{r.name || '—'}</td>
                   <td className={tdClass}>{r.email}</td>
                   <td className={`${tdClass} whitespace-nowrap`}>
-                    {r.sentAt ? `Đã gửi ${when(r.sentAt)}` : r.optedOut ? 'Đã ngừng nhận, sẽ không gửi' : 'Chưa gửi'}
+                    {r.sentAt
+                      ? (() => {
+                          const o = outcome(r.email, r.sentAt);
+                          return o ? <span className={statusClass(o.status)}>{STATUS_LABELS[o.status] || o.status}, {when(r.sentAt)}</span> : `Đã giao cho Resend ${when(r.sentAt)}`;
+                        })()
+                      : r.optedOut ? 'Đã ngừng nhận, sẽ không gửi' : 'Chưa gửi'}
                   </td>
                 </tr>
               ))}
@@ -135,7 +245,7 @@ export default function EmailsPage() {
         ) : (
           <div className="card overflow-x-auto">
             <table className="w-full">
-              <thead><tr><th className={thClass}>Người nhận</th><th className={thClass}>Email</th><th className={thClass}>Loại email</th><th className={thClass}>Khóa học</th><th className={thClass}>Thời gian</th></tr></thead>
+              <thead><tr><th className={thClass}>Người nhận</th><th className={thClass}>Email</th><th className={thClass}>Loại email</th><th className={thClass}>Khóa học</th><th className={thClass}>Tình trạng</th><th className={thClass}>Thời gian</th></tr></thead>
               <tbody className="divide-y divide-line">
                 {rows.map((r) => (
                   <tr key={`${r.email}|${r.label}|${r.sentAt}`}>
@@ -143,6 +253,9 @@ export default function EmailsPage() {
                     <td className={tdClass}>{r.email}</td>
                     <td className={tdClass}>{r.label}</td>
                     <td className={tdClass}>{r.course || '—'}</td>
+                    <td className={`${tdClass} whitespace-nowrap`}>
+                      {(() => { const o = outcome(r.email, r.sentAt); return o ? <span className={statusClass(o.status)}>{STATUS_LABELS[o.status] || o.status}</span> : '—'; })()}
+                    </td>
                     <td className={`${tdClass} whitespace-nowrap`}>{when(r.sentAt)}</td>
                   </tr>
                 ))}
@@ -151,8 +264,7 @@ export default function EmailsPage() {
           </div>
         )}
         <p className="text-sm text-muted-foreground">
-          &quot;Đã gửi&quot; nghĩa là hệ thống gửi email đã nhận thư, chưa cho biết người nhận có mở hay không.
-          Email checklist, sản phẩm miễn phí, tư vấn và thanh toán sản phẩm hiện chưa được ghi lại nên không có ở đây.
+          Bảng này chỉ gồm thư tự động và chiến dịch. Thư checklist, sản phẩm miễn phí, tư vấn và thanh toán sản phẩm nằm ở bảng Tình trạng từng thư phía trên.
           {data.total > 1000 ? ' Bảng hiện 1000 lượt gần nhất.' : ''}
         </p>
       </section>

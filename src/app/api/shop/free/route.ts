@@ -1,4 +1,3 @@
-import { createHmac } from 'crypto';
 import { NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
@@ -8,11 +7,9 @@ import { logDownload } from '@/lib/downloads';
 import { checkEmail } from '@/lib/email-check';
 import { cleanEventId, metaContext, sendMetaEvent, siteUrl } from '@/lib/meta-capi';
 import { FROM, SITE, freeDownloadEmail, unsubscribeHeaders } from '@/lib/emails';
+import { freeEmailToken, freeEmailUrl } from '@/lib/free-link';
 
 export const dynamic = 'force-dynamic';
-
-const emailToken = (assetId: string, email: string) =>
-  createHmac('sha256', process.env.CRON_SECRET || 'tanva').update(`${assetId}:${email}`).digest('hex').slice(0, 24);
 
 /** A short-lived link for plain links and private files alike. Paid products never come through here. */
 async function freeFileLink(db: SupabaseClient, assetId: string) {
@@ -66,10 +63,9 @@ export async function POST(req: Request) {
   }
 
   if (process.env.RESEND_API_KEY) {
-    const again = `${SITE}/api/shop/free?asset=${link.asset.id}&e=${encodeURIComponent(email)}&t=${emailToken(link.asset.id, email)}`;
     await new Resend(process.env.RESEND_API_KEY).emails.send({
       from: FROM, to: email, headers: unsubscribeHeaders(email),
-      ...freeDownloadEmail({ name, email, title: link.asset.title, url: again }),
+      ...freeDownloadEmail({ name, email, title: link.asset.title, url: freeEmailUrl(link.asset.id, email) }),
     }).catch(() => {});
   }
   return NextResponse.json({ url: link.url });
@@ -81,7 +77,7 @@ export async function GET(req: Request) {
   const asset = q.get('asset') || '';
   const email = (q.get('e') || '').toLowerCase();
   const db = getSupabaseAdmin();
-  if (!db || !asset || q.get('t') !== emailToken(asset, email)) return NextResponse.redirect(`${SITE}/shop`);
+  if (!db || !asset || q.get('t') !== freeEmailToken(asset, email)) return NextResponse.redirect(`${SITE}/shop`);
   const link = await freeFileLink(db, asset).catch(() => null);
   if (link) await logDownload(db, link.asset.id, email, 'free-email');
   return NextResponse.redirect(link?.url || `${SITE}/shop`);
