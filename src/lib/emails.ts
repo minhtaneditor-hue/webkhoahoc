@@ -494,6 +494,32 @@ export function remarketingDiscount(d: { name?: string | null; email: string }, 
   };
 }
 
+/** To people who took the free 75-repo list: Minh Tấn's birthday-month offer on the featured course. `until` is the code's real expiry. */
+export function repoBirthdaySale(d: { name?: string | null; email: string }, c: FeaturedCourse, offer: { code: string; price: number; discount: number; until: string }): Mail {
+  const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
+  const now = vnd(offer.price - offer.discount);
+  return {
+    subject: 'Tháng sinh nhật mình: giảm 50% khóa quay video bằng điện thoại',
+    html: layout({
+      preheader: `Còn ${now} đến hết ${offer.until}, nhập mã ${offer.code} khi thanh toán.`,
+      unsubscribeFor: d.email,
+      body: `
+        ${eyebrow('Ưu đãi tháng sinh nhật')}
+        ${h1('AI dựng được video, nhưng cảnh quay vẫn là của bạn')}
+        ${p(`Chào ${esc(firstName(d.name))}, bạn đã nhận danh sách 75 repo skill edit video từ mình. Tháng 11 này là tháng sinh nhật của mình, nên mình có một ưu đãi muốn gửi bạn: <strong>giảm 50% khóa ${esc(c.title)}</strong>.`)}
+        ${p('Vì sao mình gửi khóa này cho người đang quan tâm AI? Skill có thể giúp cắt, thêm phụ đề và làm hiệu ứng. Nhưng nếu bạn làm video có chính mình, có sản phẩm hay câu chuyện của mình, thì vẫn phải có người đứng ra quay, và AI chỉ dựng được từ những gì bạn đưa vào.')}
+        ${p('Khóa này dạy phần đó: tự quay, tự dựng và bán hàng bằng video, chỉ với chiếc điện thoại của bạn.')}
+        ${box(`Mã giảm giá tháng sinh nhật<br>
+          <strong style="font-size:24px;letter-spacing:0.08em;color:${C.ink};">${esc(offer.code)}</strong><br>
+          Học phí còn <strong style="color:${C.ink};">${now}</strong> thay vì ${vnd(offer.price)}. Mã dùng được đến hết ngày ${esc(offer.until)}, số lượt có giới hạn.`)}
+        ${p('Bạn có thể học thử trước, rồi nhập mã vào ô Mã giảm giá khi thanh toán.')}
+        ${button(`${courseUrl(c)}#dang-ky`, 'Xem khóa và học thử')}
+        ${p('Nếu bạn chỉ muốn tạo video hoàn toàn bằng AI thì có thể bỏ qua thư này. Còn phân vân điều gì, cứ trả lời email này cho mình nhé.')}
+        ${signature}`,
+    }),
+  };
+}
+
 // ---------------------------------------------------------------- consult / free Audit booking (/api/consult)
 
 export type ConsultRequest = { kind: 'audit' | 'coaching' | 'course'; product?: string | null; format?: string | null; name: string; email: string; phone: string; message?: string | null };

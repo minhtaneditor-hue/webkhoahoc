@@ -8,7 +8,7 @@ import { checkEmail } from '@/lib/email-check';
 import { freeEmailUrl } from '@/lib/free-link';
 import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
-import { DEFAULT_STUDENT_PASSWORD, FROM, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
+import { DEFAULT_STUDENT_PASSWORD, FROM, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, repoBirthdaySale, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -22,6 +22,9 @@ const CAMPAIGN = {
 
 // People with an account who never bought, offered an existing promo code on the featured course.
 const REMARKETING = { ref: 'remarketing-giam10-2026-11', label: 'Giảm 10% cho người chưa mua', code: 'GIAM10' };
+
+// Birthday-month offer to people who took the free 75-repo list, sent in small test batches.
+const REPO_SALE = { ref: 'repo-birthday-50-2026-11', code: 'TANVAO8IH', until: '30/11/2026', asset: '%75 repo%' };
 
 const KIND_LABELS: Record<string, string> = {
   'onboard-0': 'Chào mừng vào khóa',
@@ -236,6 +239,63 @@ async function retryFailed(db: SupabaseClient, resend: Resend, batch: string, it
   return results;
 }
 
+/**
+ * POST { action: 'repo-sale', total, exclude?, dryRun? }: sends until `total` people have had the offer, picked at random.
+ * Skips anyone opted out, already a customer, previously undeliverable, or failing checkEmail. A repeat call only tops up to `total`.
+ */
+async function repoSale(db: SupabaseClient, resend: Resend, total: number, exclude: string[], dryRun: boolean) {
+  const course = await getFeaturedCourse(db);
+  if (!course) return { error: 'Không tìm thấy khóa học chính.' };
+  const { data: row } = await db.from('courses').select('price').eq('id', course.id).maybeSingle();
+  const price = Number(row?.price) || 0;
+  const promo = await checkPromo(db, REPO_SALE.code, { courseId: course.id, price });
+  if (!promo.ok || !price) return { error: `Mã ${REPO_SALE.code} chưa dùng được cho khóa này.` };
+  const offer = { code: promo.code, price, discount: promo.discount, until: REPO_SALE.until };
+
+  const { data: asset } = await db.from('digital_assets').select('id').ilike('title', REPO_SALE.asset).maybeSingle();
+  if (!asset) return { error: 'Không tìm thấy sản phẩm 75 repo.' };
+  const [{ data: downloads }, { data: optouts }, { data: bad }, { data: users }, { data: enrollments }, { data: paid }, { data: leads }, { count: already }] = await Promise.all([
+    db.from('asset_downloads').select('email').eq('asset_id', asset.id).eq('kind', 'free').limit(5000),
+    db.from('email_optouts').select('email'),
+    db.from('email_status').select('to_email').in('status', ['bounced', 'failed', 'complained', 'suppressed']),
+    db.from('users').select('id, email'),
+    db.from('enrollments').select('user_id'),
+    db.from('payments').select('user_id, buyer_email').eq('status', 'success'),
+    db.from('leads').select('email, name'),
+    db.from('email_log').select('email', { count: 'exact', head: true }).eq('kind', 'campaign').eq('ref', REPO_SALE.ref),
+  ]);
+  const low = (e?: string | null) => (e || '').trim().toLowerCase();
+  const blocked = new Set([...exclude.map(low), ...(optouts || []).map((o) => low(o.email)), ...(bad || []).map((b) => low(b.to_email))]);
+  const buyerIds = new Set([...(enrollments || []).map((e) => e.user_id), ...(paid || []).map((b) => b.user_id)]);
+  for (const b of paid || []) blocked.add(low(b.buyer_email));
+  for (const u of users || []) if (buyerIds.has(u.id)) blocked.add(low(u.email));
+  const names = new Map((leads || []).map((l) => [low(l.email), l.name as string | null]));
+  const pool = [...new Set((downloads || []).map((d) => low(d.email)))].filter((e) => e && !blocked.has(e) && !isAdmin(e)).sort(() => Math.random() - 0.5);
+
+  const started = Date.now();
+  let need = Math.max(total - (already || 0), 0);
+  const result = { pool: pool.length, already: already || 0, sent: 0, wouldSend: 0, rejected: 0, duplicates: 0, failed: 0, timedOut: false };
+  for (const email of pool) {
+    if (need <= 0) break;
+    if (Date.now() - started > 50_000) { result.timedOut = true; break; }
+    if (!(await checkEmail(email)).ok) { result.rejected++; continue; }
+    if (dryRun) { result.wouldSend++; need--; continue; }
+    const { error: claim } = await db.from('email_log').insert({ email, kind: 'campaign', ref: REPO_SALE.ref });
+    if (claim) { if (claim.code === '23505') result.duplicates++; else result.failed++; continue; }
+    const { error } = await resend.emails.send({ from: FROM, to: email, headers: unsubscribeHeaders(email), ...repoBirthdaySale({ name: names.get(email), email }, course, offer) });
+    if (error) {
+      console.error(`Campaign ${REPO_SALE.ref} to ${email} failed`, error);
+      await db.from('email_log').delete().match({ email, kind: 'campaign', ref: REPO_SALE.ref });
+      result.failed++;
+      continue;
+    }
+    result.sent++;
+    need--;
+    await sleep(600); // Resend allows ~2 requests/second
+  }
+  return result;
+}
+
 /** POST { action: 'test' } sends one copy to the admin, unlogged. POST { action: 'send' } sends to people who have not had it. { campaign: 'remarketing' } picks the discount email. */
 export async function POST(req: Request) {
   const auth = await requireAdmin();
@@ -244,7 +304,13 @@ export async function POST(req: Request) {
   if (!process.env.RESEND_API_KEY) return NextResponse.json({ error: 'Thiếu RESEND_API_KEY.' }, { status: 500 });
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const { action, campaign, batch, items } = await req.json().catch(() => ({}));
+  const { action, campaign, batch, items, total, exclude, dryRun } = await req.json().catch(() => ({}));
+  if (action === 'repo-sale') {
+    if (!Number.isInteger(total) || total < 1 || total > 373) return NextResponse.json({ error: 'Số người gửi chưa đúng.' }, { status: 400 });
+    const result = await repoSale(db, resend, total, Array.isArray(exclude) ? exclude.map(String) : [], dryRun === true);
+    if ('error' in result) return NextResponse.json({ error: result.error }, { status: 500 });
+    return NextResponse.json({ ok: true, ...result });
+  }
   if (action === 'retry') {
     if (!/^[a-z0-9-]{1,40}$/.test(String(batch)) || !Array.isArray(items) || !items.length || items.length > 60) return NextResponse.json({ error: 'Thiếu batch hoặc danh sách gửi lại.' }, { status: 400 });
     return NextResponse.json({ ok: true, results: await retryFailed(db, resend, batch, items) });
