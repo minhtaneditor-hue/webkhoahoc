@@ -4,15 +4,15 @@ import { isAdmin } from '@/lib/admin';
 import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
 import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
-import { FROM, SITE, welcomeCourse } from '@/lib/emails';
+import { DEFAULT_STUDENT_PASSWORD, FROM, welcomeCourse } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/admin/grant  { email, name?, courseId, sendEmail }
  * Admin > Học viên > Cấp quyền khóa học: opens a course for any email without payment.
- * No account yet → one is created (email confirmed) and the welcome email carries a
- * set-password link. The caller is checked from the session cookie, never the body.
+ * No account yet → one is created (email confirmed) with the default password, which the
+ * welcome email states. Existing accounts keep their password. The caller is checked from the session cookie, never the body.
  */
 export async function POST(req: Request) {
   const db = getSupabaseAdmin();
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   let { data: user } = await db.from('users').select('id, email, full_name').eq('email', email).maybeSingle();
   let created = false;
   if (!user) {
-    const { data, error } = await db.auth.admin.createUser({ email, email_confirm: true, user_metadata: name ? { full_name: name } : {} });
+    const { data, error } = await db.auth.admin.createUser({ email, password: DEFAULT_STUDENT_PASSWORD, email_confirm: true, user_metadata: name ? { full_name: name } : {} });
     if (error || !data.user) return NextResponse.json({ error: `Không tạo được tài khoản: ${error?.message || 'lỗi không rõ'}` }, { status: 500 });
     created = true;
     // The on_auth_user_created trigger adds the public.users row; upsert in case it lags
@@ -45,22 +45,16 @@ export async function POST(req: Request) {
 
   let emailed = false;
   if (body.sendEmail !== false && process.env.RESEND_API_KEY) {
-    let setPasswordUrl: string | undefined;
-    if (created) {
-      const { data: link } = await db.auth.admin.generateLink({ type: 'recovery', email });
-      const hash = link?.properties?.hashed_token;
-      if (hash) setPasswordUrl = `${SITE}/auth/confirm?token_hash=${hash}&type=recovery&next=/auth/update-password`;
-    }
     const contact = contactFrom(await getSiteSettings());
     const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
       from: FROM, to: email,
-      ...welcomeCourse({ name: user.full_name || name, email, courseTitle: course.title, courseId: course.id, contact, setPasswordUrl }),
+      ...welcomeCourse({ name: user.full_name || name, email, courseTitle: course.title, courseId: course.id, contact, defaultPassword: created ? DEFAULT_STUDENT_PASSWORD : undefined }),
     });
     emailed = !error;
     if (emailed) await db.from('email_log').upsert({ email, kind: 'onboard-0', ref: course.id }, { onConflict: 'email,kind,ref', ignoreDuplicates: true });
   }
 
   return NextResponse.json({
-    message: `${created ? 'Đã tạo tài khoản và m' : 'M'}ở khóa “${course.title}” cho ${email}.${emailed ? ' Đã gửi email chào mừng.' : ''}`,
+    message: `${created ? 'Đã tạo tài khoản và m' : 'M'}ở khóa “${course.title}” cho ${email}.${created ? ` Mật khẩu mặc định: ${DEFAULT_STUDENT_PASSWORD}.` : ''}${emailed ? ' Đã gửi email chào mừng.' : ''}`,
   });
 }

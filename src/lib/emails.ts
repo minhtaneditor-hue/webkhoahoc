@@ -148,8 +148,14 @@ const lessonLink = (courseId: string, lessonId?: string | null) => `${SITE}/lear
 // ---------------------------------------------------------------- transactional
 
 /** Day 0 of the onboarding sequence: sent the moment a course is unlocked. */
-/** setPasswordUrl: the account was created by an admin (Admin > Học viên > Cấp quyền), so the student sets a password first. */
-export function welcomeCourse(d: { name?: string | null; email: string; courseTitle: string; courseId: string; contact: Contact; setPasswordUrl?: string }): Mail {
+/** Password of every account created by an admin (Admin > Học viên > Cấp quyền). The owner chose one shared, known password; students may change it. */
+export const DEFAULT_STUDENT_PASSWORD = '123456';
+
+/**
+ * defaultPassword: a new account from Admin > Học viên > Cấp quyền, sign in with this.
+ * setPasswordUrl: an older account that never got a password, set one first.
+ */
+export function welcomeCourse(d: { name?: string | null; email: string; courseTitle: string; courseId: string; contact: Contact; setPasswordUrl?: string; defaultPassword?: string }): Mail {
   const course = esc(d.courseTitle);
   return {
     subject: `Chào mừng ${firstName(d.name)}! Khóa ${d.courseTitle} đã mở`,
@@ -159,6 +165,7 @@ export function welcomeCourse(d: { name?: string | null; email: string; courseTi
         ${eyebrow('Kích hoạt thành công')}
         ${h1(`Chào mừng ${esc(firstName(d.name))} vào lớp!`)}
         ${p(`Khóa <strong>${course}</strong> đã mở cho tài khoản <strong>${esc(d.email)}</strong>. Bạn học được trên cả điện thoại lẫn máy tính.`)}
+        ${d.defaultPassword ? box(`<strong style="color:${C.ink};">Tài khoản đã được tạo sẵn cho bạn</strong><br>Email: <strong>${esc(d.email)}</strong><br>Mật khẩu: <strong>${esc(d.defaultPassword)}</strong><br>Đăng nhập tại <a href="${SITE}/auth" style="color:${C.gold};">trang đăng nhập</a>. Đây là mật khẩu mặc định, bạn nên đổi sang mật khẩu của riêng mình trong phần hồ sơ ở trang học viên.`) : ''}
         ${d.setPasswordUrl ? `${box(`<strong style="color:${C.ink};">Tài khoản đã được tạo sẵn cho bạn</strong><br>Bấm nút bên dưới để đặt mật khẩu, sau đó đăng nhập bằng email <strong>${esc(d.email)}</strong>. Link dùng được một lần; nếu hết hạn, bấm “Quên mật khẩu” ở <a href="${SITE}/auth" style="color:${C.gold};">trang đăng nhập</a> để nhận link mới.`)}
         ${button(d.setPasswordUrl, 'Đặt mật khẩu')}` : ''}
         ${p('Để không bị “mua rồi để đó”, bạn làm 3 việc nhỏ này ngay hôm nay:')}
