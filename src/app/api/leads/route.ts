@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { checkEmail } from '@/lib/email-check';
+import { checkZalo } from '@/lib/phone-check';
 import { CHECKLIST, CHECKLIST_TITLE } from '@/lib/checklist';
 import { FROM, checklistEmail, unsubscribeHeaders, getFeaturedCourse } from '@/lib/emails';
 import { cleanEventId, metaContext, sendMetaEvent, siteUrl } from '@/lib/meta-capi';
@@ -17,7 +18,10 @@ export async function POST(req: Request) {
   if (body.website) return NextResponse.json({ ok: true }); // bots fill hidden fields
   const checked = await checkEmail(body.email);
   const name = String(body.name || '').trim().slice(0, 80);
-  const phone = String(body.phone || '').replace(/[^\d+ ]/g, '').trim().slice(0, 20);
+  // Zalo stays optional here, but a number that is filled in must be a real one
+  const zalo = String(body.phone || '').trim() ? checkZalo(body.phone) : null;
+  if (zalo && !zalo.ok) return NextResponse.json({ error: zalo.error }, { status: 400 });
+  const phone = zalo?.ok ? zalo.phone : '';
   if (!checked.ok) return NextResponse.json({ error: checked.error }, { status: 400 });
   const { email } = checked;
 

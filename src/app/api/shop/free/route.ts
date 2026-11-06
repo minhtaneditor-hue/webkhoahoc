@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { buyerLink, storageFile } from '@/lib/pdf-stamp';
 import { logDownload } from '@/lib/downloads';
 import { checkEmail } from '@/lib/email-check';
+import { checkZalo } from '@/lib/phone-check';
 import { cleanEventId, metaContext, sendMetaEvent, siteUrl } from '@/lib/meta-capi';
 import { FROM, SITE, freeDownloadEmail, unsubscribeHeaders } from '@/lib/emails';
 import { freeEmailToken, freeEmailUrl } from '@/lib/free-link';
@@ -30,11 +31,12 @@ export async function POST(req: Request) {
   const clean = (v: unknown, n: number) => String(v ?? '').trim().slice(0, n);
   const name = clean(body.name, 80);
   const checked = await checkEmail(body.email);
-  const phone = clean(body.phone, 20).replace(/[^\d+ ]/g, '');
+  const zalo = checkZalo(body.phone);
   if (!name) return NextResponse.json({ error: 'Vui lòng nhập tên.' }, { status: 400 });
   if (!checked.ok) return NextResponse.json({ error: checked.error, field: 'email', suggestion: checked.suggestion }, { status: 400 });
   const { email } = checked;
-  if (phone.replace(/\D/g, '').length < 9) return NextResponse.json({ error: 'Số Zalo chưa đúng.' }, { status: 400 });
+  if (!zalo.ok) return NextResponse.json({ error: zalo.error }, { status: 400 });
+  const { phone } = zalo;
 
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Máy chủ chưa sẵn sàng.' }, { status: 500 });
