@@ -1,5 +1,6 @@
 import { createHmac } from 'crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { publicName } from './student-name';
 
 // Every email the site sends: one shared layout (logo, white card, button, signature, footer)
 // and the copy for each message. Table layout + inline styles because email clients ignore <style>.
@@ -14,7 +15,7 @@ const FONT = "'Be Vietnam Pro', Arial, Helvetica, sans-serif";
 export const esc = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** "Nguyễn Văn An" → "An"; Vietnamese people are greeted by the given name, which comes last. */
-export const firstName = (full?: string | null) => (full || '').trim().split(/\s+/).pop() || 'bạn';
+export const firstName = (full?: string | null) => publicName(full).split(/\s+/).pop() || 'bạn';
 
 // ---------------------------------------------------------------- building blocks
 
