@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
-import { Eye, Mail, MailCheck, MailOpen, MailX, RefreshCw, Send, UserCheck } from 'lucide-react';
+import { Eye, Mail, MailCheck, MailOpen, MailX, Send, UserCheck } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, Modal, StatCard, thClass, tdClass } from '@/components/admin/AdminUI';
 
 type Row = { email: string; name: string | null; kind: string; label: string; course: string | null; sentAt: string };
@@ -29,7 +29,7 @@ function reasonText(t: Tracked) {
   if (t.status === 'suppressed') return `Địa chỉ này từng bị trả lại hoặc báo spam nên Resend không gửi nữa${raw ? ` (${raw})` : ''}`;
   if (t.status === 'bounced') return `Máy chủ người nhận từ chối, thường do địa chỉ không tồn tại${raw ? ` (${raw})` : ''}`;
   if (t.status === 'complained') return 'Người nhận đã báo thư này là spam';
-  if (t.status === 'failed') return raw || 'Resend không cho biết lý do với thư gửi trước khi bật theo dõi';
+  if (t.status === 'failed') return raw || 'Resend không cho biết lý do';
   return raw || '—';
 }
 
@@ -43,7 +43,6 @@ export default function EmailsPage() {
   const [notice, setNotice] = useState<{ key: CampaignKey; text: string } | null>(null);
   const [trackFilter, setTrackFilter] = useState('');
   const [trackQuery, setTrackQuery] = useState('');
-  const [syncNotice, setSyncNotice] = useState('');
 
   const [version, setVersion] = useState(0); // bumped after a send to reload the numbers
 
@@ -79,16 +78,6 @@ export default function EmailsPage() {
   const outcome = (email: string, sentAt: string) => {
     const at = Date.parse(sentAt);
     return data?.tracking.rows.find((t) => t.to_email === email && Math.abs(Date.parse(t.sent_at) - at) < 5 * 60_000);
-  };
-
-  const sync = async () => {
-    setBusy(true);
-    setSyncNotice('');
-    const res = await fetch('/api/admin/emails', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'sync' }) });
-    const json = await res.json().catch(() => ({}));
-    setBusy(false);
-    setSyncNotice(res.ok ? `Đã cập nhật ${json.synced} thư từ Resend.` : json.error || 'Chưa lấy được trạng thái, thử lại sau.');
-    if (res.ok) setVersion((v) => v + 1);
   };
 
   const post = async (key: CampaignKey, action: 'test' | 'send') => {
@@ -131,16 +120,12 @@ export default function EmailsPage() {
       </div>
 
       <section className="space-y-4" aria-labelledby="delivery-title">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
-          <div>
-            <h2 id="delivery-title" className="text-2xl">Tình trạng từng thư</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Tất cả thư gửi qua Resend, gồm cả thư sản phẩm miễn phí và thư tài khoản.</p>
-          </div>
-          <button onClick={sync} disabled={busy || !data.tracking.ready} className="btn btn-outline shrink-0"><RefreshCw size={16} aria-hidden="true" /> Lấy trạng thái từ Resend</button>
+        <div>
+          <h2 id="delivery-title" className="text-2xl">Tình trạng từng thư</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Tự cập nhật cho mọi thư gửi qua Resend từ ngày 6/11/2026, gồm cả thư sản phẩm miễn phí và thư tài khoản.</p>
         </div>
         {!data.tracking.ready && <p role="status" className="text-sm font-medium text-danger">Chưa bật được theo dõi: cần chạy file 027_email_status.sql trong Supabase.</p>}
-        {data.tracking.ready && !data.tracking.webhook && <p role="status" className="text-sm font-medium text-danger">Chưa kết nối webhook Resend, nên trạng thái chỉ cập nhật khi bấm nút và chưa có lý do thất bại.</p>}
-        {syncNotice && <p role="status" className="text-sm font-medium">{syncNotice}</p>}
+        {data.tracking.ready && !data.tracking.webhook && <p role="status" className="text-sm font-medium text-danger">Chưa kết nối webhook Resend, nên trạng thái thư mới không được cập nhật.</p>}
         <div className="grid sm:grid-cols-3 gap-4">
           <StatCard label="Đã tới hộp thư" value={reachedInbox} icon={MailCheck} hint={`Trong ${all.length} thư gần nhất`} />
           <StatCard label="Đã mở" value={openedCount} icon={MailOpen} hint="Con số tương đối, xem ghi chú bên dưới" />
@@ -157,7 +142,7 @@ export default function EmailsPage() {
           </select>
         </div>
         {tracked.length === 0 ? (
-          <EmptyState icon={Mail} title="Chưa có thư nào ở đây" text={all.length ? 'Thử đổi bộ lọc hoặc từ khóa.' : 'Bấm “Lấy trạng thái từ Resend” để tải các thư đã gửi.'} />
+          <EmptyState icon={Mail} title="Chưa có thư nào ở đây" text={all.length ? 'Thử đổi bộ lọc hoặc từ khóa.' : 'Thư mới sẽ tự hiện ở đây sau khi được gửi.'} />
         ) : (
           <div className="card overflow-x-auto">
             <table className="w-full">

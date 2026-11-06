@@ -1,7 +1,7 @@
 -- =====================================================================
 -- 027_email_status.sql
 -- What actually happened to each email, one row per Resend email id. Filled by
--- the Resend webhook (/api/webhooks/resend) and Admin > Email đã gửi > Lấy trạng thái.
+-- the Resend webhook (/api/webhooks/resend), shown in Admin > Email đã gửi.
 -- Written with the service role; only admins can read. Safe to run more than once.
 -- =====================================================================
 create table if not exists public.email_status (

@@ -138,33 +138,6 @@ async function retryMail(db: SupabaseClient, type: RetryType, email: string): Pr
   return { mail: freeDownloadEmail({ name: lead?.name, email, title: asset.title, url: freeEmailUrl(download.asset_id, email) }), headers };
 }
 
-/** Fills email_status from Resend's list, for mail sent before the webhook. The list has no reasons, so existing ones are kept. */
-async function syncStatus(db: SupabaseClient, resend: Resend) {
-  const started = Date.now();
-  let after: string | undefined, synced = 0;
-  while (Date.now() - started < 45_000) {
-    const { data, error } = await resend.emails.list({ limit: 100, ...(after ? { after } : {}) });
-    if (error) return { error: error.message };
-    const rows = (data?.data || []).map((e) => ({
-      email_id: e.id,
-      to_email: (e.to?.[0] || '').toLowerCase(),
-      subject: e.subject,
-      status: e.last_event,
-      sent_at: e.created_at,
-      updated_at: new Date().toISOString(),
-    }));
-    if (rows.length) {
-      const { error: saveError } = await db.from('email_status').upsert(rows, { onConflict: 'email_id' });
-      if (saveError) return { error: saveError.message };
-    }
-    synced += rows.length;
-    if (!data?.has_more || !rows.length) break;
-    after = rows[rows.length - 1].email_id;
-    await sleep(600);
-  }
-  return { synced };
-}
-
 /** GET: who has been sent what, plus the campaign with each student's status. */
 export async function GET() {
   const auth = await requireAdmin();
@@ -273,11 +246,6 @@ export async function POST(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   const { action, campaign, batch, items } = await req.json().catch(() => ({}));
-  if (action === 'sync') {
-    const result = await syncStatus(db, resend);
-    if (result.error) return NextResponse.json({ error: result.error }, { status: 502 });
-    return NextResponse.json({ ok: true, synced: result.synced });
-  }
   if (action === 'retry') {
     if (!/^[a-z0-9-]{1,40}$/.test(String(batch)) || !Array.isArray(items) || !items.length || items.length > 60) return NextResponse.json({ error: 'Thiếu batch hoặc danh sách gửi lại.' }, { status: 400 });
     return NextResponse.json({ ok: true, results: await retryFailed(db, resend, batch, items) });
