@@ -8,7 +8,7 @@ import { checkEmail } from '@/lib/email-check';
 import { freeEmailUrl } from '@/lib/free-link';
 import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
-import { FROM, SITE, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
+import { DEFAULT_STUDENT_PASSWORD, FROM, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -108,17 +108,16 @@ async function retryMail(db: SupabaseClient, type: RetryType, email: string): Pr
     const { data: enrolled } = await db.from('enrollments').select('course_id, courses (id, title)').eq('user_id', user.id).eq('status', 'active').limit(1).maybeSingle();
     const course = enrolled?.courses as unknown as { id: string; title: string } | null;
     if (!course) return { skip: 'chưa được mở khóa' };
-    // Never signed in means they have no password yet, and yesterday's link has expired
+    // Never signed in means they have no working password, and a set-password link expires too fast to rely on
     const { data: auth } = await db.auth.admin.getUserById(user.id);
-    let setPasswordUrl: string | undefined;
+    let defaultPassword: string | undefined;
     if (!auth?.user?.last_sign_in_at) {
-      const { data: link } = await db.auth.admin.generateLink({ type: 'recovery', email });
-      const hash = link?.properties?.hashed_token;
-      if (!hash) return { skip: 'không tạo được link đặt mật khẩu' };
-      setPasswordUrl = `${SITE}/auth/confirm?token_hash=${hash}&type=recovery&next=/auth/update-password`;
+      const { error } = await db.auth.admin.updateUserById(user.id, { password: DEFAULT_STUDENT_PASSWORD });
+      if (error) return { skip: `không đặt được mật khẩu: ${error.message}` };
+      defaultPassword = DEFAULT_STUDENT_PASSWORD;
     }
     const contact = contactFrom(await getSiteSettings());
-    return { mail: welcomeCourse({ name: user.full_name, email, courseTitle: course.title, courseId: course.id, contact, setPasswordUrl }) };
+    return { mail: welcomeCourse({ name: user.full_name, email, courseTitle: course.title, courseId: course.id, contact, defaultPassword }) };
   }
 
   const checked = await checkEmail(email);
