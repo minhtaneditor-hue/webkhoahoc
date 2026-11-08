@@ -241,10 +241,11 @@ async function retryFailed(db: SupabaseClient, resend: Resend, batch: string, it
 
 /**
  * POST { action: 'repo-sale', total, exclude?, dryRun?, onlyOpened? }: sends until `total` people have had the offer, picked at random.
- * onlyOpened limits it to people who have opened any tracked email.
+ * onlyOpened limits it to people who opened a tracked email, onlyClicked to people who clicked the file link in the
+ * 75-repo email. With both, either signal counts.
  * Skips anyone opted out, already a customer, previously undeliverable, or failing checkEmail. A repeat call only tops up to `total`.
  */
-async function repoSale(db: SupabaseClient, resend: Resend, total: number, exclude: string[], dryRun: boolean, onlyOpened: boolean) {
+async function repoSale(db: SupabaseClient, resend: Resend, total: number, exclude: string[], dryRun: boolean, onlyOpened: boolean, onlyClicked: boolean) {
   const course = await getFeaturedCourse(db);
   if (!course) return { error: 'Không tìm thấy khóa học chính.' };
   const { data: row } = await db.from('courses').select('price').eq('id', course.id).maybeSingle();
@@ -274,10 +275,17 @@ async function repoSale(db: SupabaseClient, resend: Resend, total: number, exclu
   const pool = [...new Set((downloads || []).map((d) => low(d.email)))].filter((e) => e && !blocked.has(e) && !isAdmin(e)).sort(() => Math.random() - 0.5);
 
   let targets = pool;
-  if (onlyOpened) {
-    const { data: opens } = await db.from('email_status').select('to_email').not('opened_at', 'is', null);
-    const opened = new Set((opens || []).map((o) => low(o.to_email)));
-    targets = pool.filter((e) => opened.has(e));
+  if (onlyOpened || onlyClicked) {
+    const keep = new Set<string>();
+    if (onlyOpened) {
+      const { data: opens } = await db.from('email_status').select('to_email').not('opened_at', 'is', null).limit(5000);
+      for (const o of opens || []) keep.add(low(o.to_email));
+    }
+    if (onlyClicked) {
+      const { data: clicks } = await db.from('asset_downloads').select('email').eq('asset_id', asset.id).eq('kind', 'free-email').limit(5000);
+      for (const c of clicks || []) keep.add(low(c.email));
+    }
+    targets = pool.filter((e) => keep.has(e));
   }
 
   const started = Date.now();
@@ -312,10 +320,10 @@ export async function POST(req: Request) {
   if (!process.env.RESEND_API_KEY) return NextResponse.json({ error: 'Thiếu RESEND_API_KEY.' }, { status: 500 });
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const { action, campaign, batch, items, total, exclude, dryRun, onlyOpened } = await req.json().catch(() => ({}));
+  const { action, campaign, batch, items, total, exclude, dryRun, onlyOpened, onlyClicked } = await req.json().catch(() => ({}));
   if (action === 'repo-sale') {
     if (!Number.isInteger(total) || total < 1 || total > 373) return NextResponse.json({ error: 'Số người gửi chưa đúng.' }, { status: 400 });
-    const result = await repoSale(db, resend, total, Array.isArray(exclude) ? exclude.map(String) : [], dryRun === true, onlyOpened === true);
+    const result = await repoSale(db, resend, total, Array.isArray(exclude) ? exclude.map(String) : [], dryRun === true, onlyOpened === true, onlyClicked === true);
     if ('error' in result) return NextResponse.json({ error: result.error }, { status: 500 });
     return NextResponse.json({ ok: true, ...result });
   }
