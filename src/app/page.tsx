@@ -21,7 +21,7 @@ import { contactFrom } from '@/lib/site-settings';
 import JsonLd from '@/components/JsonLd';
 import { SITE_URL } from '@/lib/site-url';
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 const HOME_TITLE = 'Khóa học làm video bằng điện thoại cùng Minh Tấn | TẤN VA';
 // Other names people search for; /about shows them too, so they match visible text.

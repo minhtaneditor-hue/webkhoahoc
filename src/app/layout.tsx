@@ -46,7 +46,7 @@ import PageViewTracker from "@/components/PageViewTracker";
 import FacebookPixel from "@/components/FacebookPixel";
 
 // Admin edits trigger revalidatePath('/', 'layout'); this is the fallback refresh window.
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export default async function RootLayout({
   children,

@@ -10,8 +10,8 @@ import SocialLinks from '@/components/students/SocialLinks';
 import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
 import WorldStudents from '@/components/students/WorldStudents';
 
-// Short cache: student rows are often changed straight in Supabase, which does not trigger a refresh
-export const revalidate = 60;
+// Student rows edited straight in Supabase show up within an hour (admin saves refresh at once)
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Học viên',

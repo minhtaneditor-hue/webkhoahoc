@@ -6,7 +6,7 @@ import CourseView from '@/components/courses/CourseView';
 import JsonLd from '@/components/JsonLd';
 import { SITE_URL } from '@/lib/site-url';
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 // Built on first visit, then cached: new courses need no redeploy.
 export function generateStaticParams() {

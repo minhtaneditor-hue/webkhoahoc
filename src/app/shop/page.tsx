@@ -4,7 +4,7 @@ import type { ShopAsset } from '@/lib/shop';
 import SectionHeading from '@/components/SectionHeading';
 import ShopGrid from '@/components/shop/ShopGrid';
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function ShopPage() {
   const supabase = getPublicSupabase();

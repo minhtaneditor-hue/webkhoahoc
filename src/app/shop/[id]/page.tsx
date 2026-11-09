@@ -5,7 +5,7 @@ import { getPublicSupabase } from '@/lib/supabase-public';
 import ProductView from '@/components/shop/ProductView';
 import { splitDescription, type ShopAsset } from '@/lib/shop';
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 // Built on first visit, then cached: new products need no redeploy.
 export function generateStaticParams() {

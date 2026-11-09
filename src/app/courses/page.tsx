@@ -8,7 +8,7 @@ import { Reveal } from '@/components/motion/Motion';
 import LeadMagnet from '@/components/LeadMagnet';
 import { isComingSoon } from '@/lib/curriculum';
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Khóa học',
