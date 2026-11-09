@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/utils/supabase';
+import { supabase, getCurrentUser } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
 import { isAdmin } from '@/lib/admin';
 import { lessonsInOrder } from '@/lib/curriculum';
@@ -35,7 +35,7 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCurrentUser();
       if (!user) {
         router.push('/auth?redirect=/dashboard');
         return;

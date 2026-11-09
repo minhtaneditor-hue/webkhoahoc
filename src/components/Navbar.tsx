@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import BrandMark from './BrandMark';
 import { usePathname } from 'next/navigation';
-import { supabase } from '@/utils/supabase';
+import { supabase, getCurrentUser } from '@/utils/supabase';
 import {
   ChevronDown,
   LayoutDashboard,
@@ -60,7 +60,7 @@ export default function Navbar() {
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    getCurrentUser().then(setUser);
     // The navbar stays mounted across pages: signing in or out must update it without a reload
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
     let lastY = window.scrollY;
