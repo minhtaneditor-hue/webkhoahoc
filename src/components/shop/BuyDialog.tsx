@@ -5,8 +5,9 @@ import { X, Loader2, ShieldCheck } from 'lucide-react';
 import { formatVND } from '@/lib/supabase-public';
 import { useMembership } from '@/components/membership/useMembership';
 import { MEMBER_DISCOUNT_PERCENT, memberDiscount } from '@/lib/membership';
+import { assetPricing, type ShopAsset } from '@/lib/shop';
 
-type Asset = { id: string; title: string; price: number | string };
+type Asset = Pick<ShopAsset, 'id' | 'title' | 'price' | 'old_price' | 'sale_ends_on'>;
 
 // Guest checkout: name, email, phone, then straight to the QR payment page. No account needed.
 export default function BuyDialog({ asset, defaultEmail, onClose }: { asset: Asset | null; defaultEmail?: string; onClose: () => void }) {
@@ -16,7 +17,7 @@ export default function BuyDialog({ asset, defaultEmail, onClose }: { asset: Ass
   const [error, setError] = useState('');
   // Signed-in members pay less; checkout recomputes this on the server
   const isMember = useMembership();
-  const basePrice = Number(asset?.price) || 0;
+  const basePrice = asset ? assetPricing(asset).price : 0;
   const price = isMember ? basePrice - memberDiscount(basePrice, 'asset') : basePrice;
 
   useEffect(() => {

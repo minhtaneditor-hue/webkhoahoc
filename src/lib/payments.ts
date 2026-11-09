@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { randomBytes } from 'crypto';
 import { Resend } from 'resend';
 import { checkPromo } from './promo';
+import { assetPricing } from './shop';
 import { getSiteSettings } from './content';
 import { contactFrom } from './site-settings';
 import { FROM, welcomeCourse, assetPurchased, membershipActivated } from './emails';
@@ -33,8 +34,9 @@ export async function createPendingPayment(
     product = { id: `membership:${membershipPlan}`, title: plan.title, price: plan.price };
   } else {
     const table = courseId ? 'courses' : 'digital_assets';
-    const { data } = await supabase.from(table).select('id, title, price').eq('id', courseId || assetId).single();
-    product = data;
+    // Shop items: '*' so a sale's columns come along when they exist (migration 028)
+    const { data } = await supabase.from(table).select(courseId ? 'id, title, price' : '*').eq('id', courseId || assetId).single();
+    product = data && !courseId ? { ...(data as any), price: assetPricing(data as any).price } : (data as any);
   }
   if (!product) throw new CheckoutError('Sản phẩm không tồn tại.', 404);
 
