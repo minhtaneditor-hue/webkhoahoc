@@ -100,7 +100,7 @@ export default function MembersAdmin() {
       <PageHeader
         title="Hội viên"
         description="Ai đang là hội viên, còn hạn tới ngày nào. Hội viên không tự gia hạn: mỗi đơn hoặc mỗi lần cộng tay sẽ cộng nối tiếp vào thời hạn còn lại."
-        actions={<button onClick={() => openGrant()} className="btn btn-gold"><Plus size={16} aria-hidden="true" /> Cộng tháng</button>}
+        actions={<button onClick={() => openGrant()} className="btn btn-gold whitespace-nowrap"><Plus size={16} aria-hidden="true" /> Cộng tháng</button>}
       />
 
       {notice && <p role="status" className="rounded-md bg-green-50 p-4 text-sm text-success">{notice}</p>}
