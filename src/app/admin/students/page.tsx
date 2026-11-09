@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
-import { Users, Search, Plus, KeyRound, Trash2, X, Download, UserCheck, UserPlus, Moon, Loader2 } from 'lucide-react';
+import { Users, Search, Plus, KeyRound, Trash2, X, Download, UserCheck, UserPlus, Moon, Loader2, Lock, Copy, Check } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, Modal, Field, StatusBadge, StatCard, thClass, tdClass } from '@/components/admin/AdminUI';
 
 type Notice = { type: 'success' | 'error'; text: string } | null;
@@ -54,6 +54,11 @@ export default function StudentsManagement() {
   const [grantCourse, setGrantCourse] = useState('');
   const [grantForm, setGrantForm] = useState({ email: '', name: '', sendEmail: true });
   const [grantConfirmed, setGrantConfirmed] = useState(false);
+  const [accountFor, setAccountFor] = useState<any>(null);
+  const [accountForm, setAccountForm] = useState({ email: '', name: '', courseId: '' });
+  const [accountConfirmed, setAccountConfirmed] = useState(false);
+  const [accountResult, setAccountResult] = useState<{ email: string; password: string; created: boolean; courseTitle: string | null; warning: string | null } | null>(null);
+  const [passwordCopied, setPasswordCopied] = useState(false);
   const [detail, setDetail] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [now] = useState(() => Date.now());
@@ -141,6 +146,47 @@ export default function StudentsManagement() {
     load();
   }
 
+  // Creates an account, or replaces the password of an existing one, and shows the new password once
+  const openAccount = (u?: any) => {
+    setAccountFor(u || { isNew: true });
+    setAccountForm({ email: u?.email || '', name: '', courseId: '' });
+    setAccountConfirmed(false);
+    setAccountResult(null);
+    setPasswordCopied(false);
+  };
+
+  const closeAccount = () => {
+    if (accountResult && !passwordCopied && !confirm('Mật khẩu sẽ không hiện lại sau khi đóng. Vẫn đóng?')) return;
+    setAccountFor(null);
+    setAccountResult(null);
+  };
+
+  const accountEmail = accountForm.email.trim().toLowerCase();
+  const accountExisting = users.find((u) => u.email?.toLowerCase() === accountEmail);
+  const accountSimilar = accountEmail && !accountExisting ? users.filter((u) => u.email && editDistance(u.email.toLowerCase(), accountEmail) <= 2).map((u) => u.email).slice(0, 3) : [];
+
+  async function submitAccount(e: React.FormEvent) {
+    e.preventDefault();
+    if (!accountEmail || !accountConfirmed || accountExisting?.role === 'admin') return;
+    setBusy(true);
+    const res = await fetch('/api/admin/account', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...accountForm, replacePassword: !!accountExisting }) });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) return setNotice({ type: 'error', text: data.error || 'Không tạo được tài khoản.' });
+    setAccountResult(data);
+    load();
+  }
+
+  async function copyPassword() {
+    if (!accountResult) return;
+    try {
+      await navigator.clipboard.writeText(`Email: ${accountResult.email}\nMật khẩu: ${accountResult.password}`);
+      setPasswordCopied(true);
+    } catch {
+      setNotice({ type: 'error', text: 'Trình duyệt chặn sao chép. Hãy bôi đen mật khẩu để chép tay.' });
+    }
+  }
+
   async function revoke(userId: string, courseId: string, email: string) {
     if (!confirm(`Thu hồi quyền học của ${email}?`)) return;
     const { error } = await supabase.from('enrollments').update({ status: 'expired' }).eq('user_id', userId).eq('course_id', courseId);
@@ -181,6 +227,7 @@ export default function StudentsManagement() {
         description="Theo dõi ai đang học, học tới đâu và đã chi bao nhiêu."
         actions={<>
           <button onClick={() => openGrant()} className="btn btn-gold"><Plus size={16} aria-hidden="true" /> Cấp quyền khóa học</button>
+          <button onClick={() => openAccount()} className="btn btn-outline"><UserPlus size={16} aria-hidden="true" /> Tạo tài khoản</button>
           <button onClick={exportCsv} disabled={filtered.length === 0} className="btn btn-outline"><Download size={16} aria-hidden="true" /> Xuất CSV</button>
         </>}
       />
@@ -258,6 +305,11 @@ export default function StudentsManagement() {
                       <button onClick={() => callAdminApi('POST', u)} className="w-10 h-10 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-ink" aria-label={`Gửi email đặt lại mật khẩu cho ${u.email}`} title="Gửi email đặt lại mật khẩu">
                         <KeyRound size={16} aria-hidden="true" />
                       </button>
+                      {u.role !== 'admin' && (
+                        <button onClick={() => openAccount(u)} className="w-10 h-10 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-ink" aria-label={`Đặt mật khẩu mới cho ${u.email}`} title="Đặt mật khẩu mới">
+                          <Lock size={16} aria-hidden="true" />
+                        </button>
+                      )}
                       <button onClick={() => callAdminApi('DELETE', u)} className="w-10 h-10 rounded-md flex items-center justify-center text-muted-foreground hover:bg-red-50 hover:text-danger" aria-label={`Xóa tài khoản ${u.email}`} title="Xóa tài khoản">
                         <Trash2 size={16} aria-hidden="true" />
                       </button>
@@ -367,6 +419,68 @@ export default function StudentsManagement() {
             <button type="submit" disabled={busy || !grantCourse || !grantForm.email.trim() || (grantEmailIsNew && !grantConfirmed)} className="btn btn-gold">{busy && <Loader2 size={16} className="animate-spin" aria-hidden="true" />} Cấp quyền</button>
           </div>
         </form>
+      </Modal>
+
+      <Modal title={accountFor?.isNew ? 'Tạo tài khoản' : 'Đặt mật khẩu mới'} open={!!accountFor} onClose={closeAccount}>
+        {accountResult ? (
+          <div className="space-y-5">
+            <p role="status" className="font-semibold">{accountResult.created ? 'Đã tạo tài khoản.' : 'Đã đổi mật khẩu.'}{accountResult.courseTitle ? ` Đã mở khóa “${accountResult.courseTitle}”.` : ''}</p>
+            {accountResult.warning && <p role="alert" className="rounded-md bg-red-50 p-4 text-sm text-danger">{accountResult.warning}</p>}
+            <dl className="rounded-md bg-muted p-4 space-y-3 text-sm">
+              <div><dt className="text-muted-foreground">Email</dt><dd className="font-semibold break-all">{accountResult.email}</dd></div>
+              <div><dt className="text-muted-foreground">Mật khẩu</dt><dd className="font-mono font-semibold text-base break-all select-all">{accountResult.password}</dd></div>
+            </dl>
+            <p className="text-sm text-muted-foreground">Mật khẩu chỉ hiện một lần và hệ thống không gửi email. Hãy gửi riêng cho học viên và nhắc họ đổi sau khi vào.</p>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={copyPassword} className="btn btn-outline">{passwordCopied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />} {passwordCopied ? 'Đã sao chép' : 'Sao chép'}</button>
+              <button type="button" onClick={closeAccount} className="btn btn-gold">Xong</button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={submitAccount} className="space-y-5">
+            <p className="text-muted-foreground">Dùng khi học viên không nhận được email. Hệ thống tạo mật khẩu ngẫu nhiên, xác nhận sẵn email và không gửi thư.</p>
+            <Field id="account-email" label="Email học viên">
+              <input id="account-email" type="email" className="input" required value={accountForm.email} disabled={!accountFor?.isNew}
+                     onChange={(e) => { setAccountForm({ ...accountForm, email: e.target.value }); setAccountConfirmed(false); }} placeholder="hocvien@gmail.com" autoComplete="off" />
+            </Field>
+            {accountExisting?.role === 'admin' ? (
+              <p role="alert" className="rounded-md bg-red-50 p-4 text-sm font-semibold text-danger">Đây là tài khoản admin, không đổi mật khẩu ở đây.</p>
+            ) : accountEmail && (
+              <div role="alert" className="rounded-md bg-red-50 p-4 text-sm space-y-3">
+                <p className="font-semibold text-danger">{accountExisting ? 'Email này đã có tài khoản. Tiếp tục sẽ thay mật khẩu hiện tại, học viên không dùng được mật khẩu cũ nữa.' : 'Email này chưa có tài khoản. Tiếp tục sẽ tạo tài khoản mới.'}</p>
+                {accountSimilar.length > 0 && (
+                  <div>
+                    <p>Có phải bạn định nhập:</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {accountSimilar.map((m) => (
+                        <button key={m} type="button" onClick={() => { setAccountForm({ ...accountForm, email: m }); setAccountConfirmed(false); }} className="btn btn-outline !min-h-[36px] !px-3 text-sm">{m}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" className="w-5 h-5 shrink-0 accent-[var(--color-gold)]" checked={accountConfirmed} onChange={(e) => setAccountConfirmed(e.target.checked)} />
+                  <span>{accountExisting ? <>Tôi muốn thay mật khẩu của <strong>{accountEmail}</strong>.</> : <>Tôi đã kiểm tra, email <strong>{accountEmail}</strong> viết đúng.</>}</span>
+                </label>
+              </div>
+            )}
+            {accountEmail && !accountExisting && (
+              <Field id="account-name" label="Họ tên (không bắt buộc)">
+                <input id="account-name" className="input" value={accountForm.name} onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} autoComplete="off" />
+              </Field>
+            )}
+            <Field id="account-course" label="Mở khóa học (không bắt buộc)">
+              <select id="account-course" className="input" value={accountForm.courseId} onChange={(e) => setAccountForm({ ...accountForm, courseId: e.target.value })}>
+                <option value="">Không mở khóa nào</option>
+                {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </Field>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={closeAccount} className="btn btn-outline">Hủy</button>
+              <button type="submit" disabled={busy || !accountEmail || !accountConfirmed || accountExisting?.role === 'admin'} className="btn btn-gold">{busy && <Loader2 size={16} className="animate-spin" aria-hidden="true" />} {accountExisting ? 'Đặt mật khẩu mới' : 'Tạo tài khoản'}</button>
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   );

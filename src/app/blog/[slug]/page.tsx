@@ -12,6 +12,7 @@ import { getPost, getPublishedPosts } from '@/lib/blog';
 import { parsePost } from '@/lib/blog-content';
 import { formatPostDate, readingMinutes } from '@/lib/blog-format';
 import { SITE_URL } from '@/lib/site-url';
+import { skipOptimizer } from '@/lib/image';
 
 // Read fresh on every visit: a cached copy kept a just-published post "not found" and an
 // unpublished one visible, and the admin's page refresh does not clear either.
@@ -111,7 +112,7 @@ export default async function BlogPostPage({ params }: Props) {
           <div className="min-w-0">
             {post.cover_url && (
               <div className="relative mb-8 aspect-video overflow-hidden rounded-[var(--radius-card)] bg-muted">
-                <Image src={post.cover_url} alt="" fill priority sizes="(min-width: 1024px) 704px, 100vw" className="object-cover" unoptimized={post.cover_url.startsWith('http')} />
+                <Image src={post.cover_url} alt="" fill priority sizes="(min-width: 1024px) 704px, 100vw" className="object-cover" unoptimized={skipOptimizer(post.cover_url)} />
               </div>
             )}
             <PostContent post={parsed} afterIntro={toc.length > 1 ? <div className="lg:hidden"><PostTocInline items={toc} /></div> : null} midSlot={<AdContactBanner />} />

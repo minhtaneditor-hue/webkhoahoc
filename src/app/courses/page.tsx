@@ -7,6 +7,7 @@ import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
 import LeadMagnet from '@/components/LeadMagnet';
 import { isComingSoon } from '@/lib/curriculum';
+import { skipOptimizer } from '@/lib/image';
 
 export const revalidate = 3600;
 
@@ -88,7 +89,7 @@ export default async function CoursesPage() {
                         fill
                         sizes="(min-width: 768px) 50vw, 100vw"
                         className="object-cover"
-                        unoptimized={!!course.thumbnail_url?.startsWith('http')}
+                        unoptimized={skipOptimizer(course.thumbnail_url)}
                       />
                       {comingSoon
                         ? <span className="badge absolute top-4 left-4 !bg-onyx !text-gold-light">Coming soon</span>

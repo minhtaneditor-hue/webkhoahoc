@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
 import { bankConfig, vietQrUrl } from '@/lib/payments';
+import { planOf } from '@/lib/membership';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export async function GET(req: Request) {
   const token = params.get('t') || '';
   const { data: p } = await supabase
     .from('payments')
-    .select('order_id, amount, status, course_id, asset_id, user_id, access_token, courses ( title ), digital_assets ( title )')
+    .select('*, courses ( title ), digital_assets ( title )')
     .eq('order_id', orderId)
     .eq('payment_method', 'bank_transfer')
     .single();
@@ -25,7 +26,9 @@ export async function GET(req: Request) {
   const user = tokenOk ? null : await getSessionUser();
   if (!p || (!tokenOk && (!user || p.user_id !== user.id))) return NextResponse.json({ error: 'Không tìm thấy đơn hàng.' }, { status: 404 });
 
-  const product: any = p.courses || p.digital_assets;
+  // '*' rather than a column list, so this still works before migration 026 adds membership_plan.
+  const plan = planOf(p.membership_plan);
+  const product: any = plan || p.courses || p.digital_assets;
   const amount = Number(p.amount);
   return NextResponse.json({
     orderId: p.order_id,
@@ -34,6 +37,7 @@ export async function GET(req: Request) {
     title: product?.title || '',
     courseId: p.course_id,
     assetId: p.asset_id,
+    membership: !!plan,
     bank: cfg.bank,
     account: cfg.account,
     accountName: cfg.accountName,

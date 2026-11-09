@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowRight, BookOpen, Package, Palette } from 'lucide-react';
 import { formatVND } from '@/lib/supabase-public';
 import { CATEGORY_LABELS, splitDescription, type ShopAsset } from '@/lib/shop';
+import { skipOptimizer } from '@/lib/image';
 
 const iconFor = (category?: string | null) => (category === 'ebook' ? BookOpen : category === 'lut' || category === 'preset' ? Palette : Package);
 
@@ -37,7 +38,7 @@ export default function ShopGrid({ assets }: { assets: ShopAsset[] }) {
               <Link href={`/shop/${asset.id}`} className="card card-hover group h-full overflow-hidden flex flex-col">
                 <div className="relative aspect-[4/3] bg-muted overflow-hidden">
                   {asset.thumbnail_url ? (
-                    <Image src={asset.thumbnail_url} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" unoptimized={asset.thumbnail_url.startsWith('http')} className="!rounded-none object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                    <Image src={asset.thumbnail_url} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" unoptimized={skipOptimizer(asset.thumbnail_url)} className="!rounded-none object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
                   ) : (
                     <div className="absolute inset-0 surface-dark flex items-center justify-center"><Icon size={44} className="text-gold-light" aria-hidden="true" /></div>
                   )}

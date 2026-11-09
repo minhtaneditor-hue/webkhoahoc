@@ -13,7 +13,10 @@ import ConsultBox from '@/components/ConsultBox';
 import CourseReviews from '@/components/CourseReviews';
 import PainPoints from '@/components/PainPoints';
 import SignInPrompt from '@/components/courses/SignInPrompt';
+import { useMembership } from '@/components/membership/useMembership';
+import { MEMBER_DISCOUNT_PERCENT, memberDiscount } from '@/lib/membership';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, PlayCircle, X, ChevronLeft, Gift } from 'lucide-react';
+import { skipOptimizer } from '@/lib/image';
 
 type Status = { type: 'success' | 'error'; text: string } | null;
 
@@ -69,6 +72,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
   const [enrolled, setEnrolled] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [signInFor, setSignInFor] = useState<any>(null);
+  const isMember = useMembership();
 
   useEffect(() => {
     async function fetchData() {
@@ -129,7 +133,8 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
       const response = await fetch('/api/payment/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseId: course.id, promoCode: appliedDiscount > 0 ? promoCode : undefined }),
+        // A code that loses to the member price is left out, so it is not used up
+        body: JSON.stringify({ courseId: course.id, promoCode: appliedDiscount > (isMember ? memberDiscount(Number(course.price) || 0, 'course') : 0) ? promoCode : undefined }),
       });
       const data = await response.json();
       if (data.url) window.location.assign(data.url);
@@ -160,7 +165,11 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
   }
 
   const price = Number(course.price) || 0;
-  const finalPrice = Math.max(0, price - appliedDiscount);
+  // Members get their discount or the promo code, whichever saves more (checkout applies the same rule)
+  const memberOff = isMember ? memberDiscount(price, 'course') : 0;
+  const memberWins = memberOff > 0 && memberOff >= appliedDiscount;
+  const totalOff = Math.max(memberOff, appliedDiscount);
+  const finalPrice = Math.max(0, price - totalOff);
   const comingSoon = isComingSoon(course, lessons.length);
   const firstLessonHref = `/learn/${course.id}/${lessons[0]?.id || ''}`;
   const freeLesson = lessons.find((l) => l.is_free);
@@ -212,7 +221,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
               priority
               sizes="(min-width: 1024px) 40vw, 100vw"
               className="object-cover"
-              unoptimized={!!course.thumbnail_url?.startsWith('http')}
+              unoptimized={skipOptimizer(course.thumbnail_url)}
             />
             {freeLesson && !enrolled && (
               <button onClick={() => openLesson(freeLesson)} aria-label="Xem bài học thử" className="absolute inset-0 flex items-center justify-center bg-onyx/30 hover:bg-onyx/40 transition-colors">
@@ -316,11 +325,14 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
                 <p className="eyebrow">Học phí trọn gói</p>
                 <div className="mt-3 flex items-baseline gap-3 flex-wrap">
                   <p className="font-display text-5xl font-bold">{formatVND(finalPrice)}</p>
-                  {(appliedDiscount > 0 || Number(course.old_price) > price) && (
-                    <p className="text-muted-foreground line-through">{formatVND(appliedDiscount > 0 ? price : course.old_price)}</p>
+                  {(totalOff > 0 || Number(course.old_price) > price) && (
+                    <p className="text-muted-foreground line-through">{formatVND(totalOff > 0 ? price : course.old_price)}</p>
                   )}
                 </div>
-                {savingPercent(finalPrice, appliedDiscount > 0 ? price : course.old_price) && <p className="mt-2 font-semibold text-gold">Tiết kiệm {savingPercent(finalPrice, appliedDiscount > 0 ? price : course.old_price)}%</p>}
+                {savingPercent(finalPrice, totalOff > 0 ? price : course.old_price) && <p className="mt-2 font-semibold text-gold">Tiết kiệm {savingPercent(finalPrice, totalOff > 0 ? price : course.old_price)}%</p>}
+                {memberWins && (
+                  <p className="mt-2 badge">Giá hội viên: giảm {MEMBER_DISCOUNT_PERCENT.course}%</p>
+                )}
 
                 <form onSubmit={handleApplyPromo} className="mt-6" noValidate>
                   <label htmlFor="promo" className="field-label">Mã giảm giá</label>
@@ -337,7 +349,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
                     <button type="submit" className="btn btn-outline shrink-0" disabled={!promoCode.trim()}>Áp dụng</button>
                   </div>
                   <p id="promo-status" role="status" className={`mt-2 text-sm min-h-[1.25rem] ${promoStatus?.type === 'error' ? 'text-danger' : 'text-success'}`}>
-                    {promoStatus?.text}
+                    {memberWins && appliedDiscount > 0 ? 'Giá hội viên đang tốt hơn mã này, nên mình giữ giá hội viên cho bạn.' : promoStatus?.text}
                   </p>
                 </form>
 

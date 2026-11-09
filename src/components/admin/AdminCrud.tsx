@@ -7,6 +7,7 @@ import { revalidateSite } from '@/lib/revalidate';
 import { Plus, Pencil, Trash2, X, type LucideIcon } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, Modal, Field } from './AdminUI';
 import ImageUpload from './ImageUpload';
+import { skipOptimizer } from '@/lib/image';
 
 export type CrudField = {
   key: string;
@@ -152,7 +153,7 @@ export default function AdminCrud({
               {imageKey && (
                 <div className={`relative ${imageClassName} bg-muted`}>
                   {row[imageKey] ? (
-                    <Image src={row[imageKey]} alt="" fill sizes="(min-width: 1280px) 33vw, 50vw" className="object-cover" unoptimized={row[imageKey].startsWith('http')} />
+                    <Image src={row[imageKey]} alt="" fill sizes="(min-width: 1280px) 33vw, 50vw" className="object-cover" unoptimized={skipOptimizer(row[imageKey])} />
                   ) : (
                     <div className="absolute inset-0 surface-dark flex items-center justify-center"><Icon size={28} className="text-gold-light" aria-hidden="true" /></div>
                   )}

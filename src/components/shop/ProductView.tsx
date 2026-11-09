@@ -7,12 +7,13 @@ import FaqList from '@/components/FaqList';
 import CopyButton from '@/components/shop/CopyButton';
 import ProductBuy from '@/components/shop/ProductBuy';
 import ProductPreview from '@/components/shop/ProductPreview';
+import { skipOptimizer } from '@/lib/image';
 
 const heading = 'text-2xl md:text-3xl text-ink';
 
 function Picture({ src, sizes, Icon }: { src?: string | null; sizes: string; Icon: typeof Package }) {
   return src ? (
-    <Image src={src} alt="" fill sizes={sizes} className="object-cover" unoptimized={src.startsWith('http')} />
+    <Image src={src} alt="" fill sizes={sizes} className="object-cover" unoptimized={skipOptimizer(src)} />
   ) : (
     <div className="absolute inset-0 surface-dark flex items-center justify-center"><Icon size={48} className="text-gold-light" aria-hidden="true" /></div>
   );
@@ -112,7 +113,7 @@ export default function ProductView({ asset, related }: { asset: ShopAsset; rela
           <h2 className={heading}>Thông tin chi tiết</h2>
           <div className="mt-5 max-w-4xl space-y-6">
             {parseDetails(rest).map((block, i) => block.src ? (
-              <Image key={i} src={block.src} alt={block.alt || ''} width={1600} height={1000} sizes="(min-width: 1024px) 56rem, 100vw" unoptimized={block.src.startsWith('http')} className="w-full h-auto rounded-[var(--radius-img)] border border-line" />
+              <Image key={i} src={block.src} alt={block.alt || ''} width={1600} height={1000} sizes="(min-width: 1024px) 56rem, 100vw" unoptimized={skipOptimizer(block.src)} className="w-full h-auto rounded-[var(--radius-img)] border border-line" />
             ) : (
               <p key={i} className="max-w-3xl text-stone leading-relaxed whitespace-pre-line">{block.text}</p>
             ))}

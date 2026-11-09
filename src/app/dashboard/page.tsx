@@ -11,7 +11,8 @@ import { contactFrom } from '@/lib/site-settings';
 import { useSiteSettings } from '@/components/SiteContext';
 import ConsultBox from '@/components/ConsultBox';
 import ProfileForm, { type Profile } from '@/components/dashboard/ProfileForm';
-import { Loader2, ArrowRight, Award, BookOpen, Download, Gift, MessageCircle, ShoppingBag, LogOut, UserRound, Users } from 'lucide-react';
+import { planOf, MEMBER_DISCOUNT_PERCENT } from '@/lib/membership';
+import { Loader2, ArrowRight, Award, BookOpen, Crown, Download, Gift, MessageCircle, ShoppingBag, LogOut, UserRound, Users } from 'lucide-react';
 
 type CourseStat = { total: number; done: number; next: { id: string; title: string } | null; first: string | null };
 
@@ -29,6 +30,7 @@ export default function StudentDashboard() {
   const [assets, setAssets] = useState<any[]>([]);
   const [downloading, setDownloading] = useState('');
   const [downloadError, setDownloadError] = useState('');
+  const [memberUntil, setMemberUntil] = useState<string | null>(null);
   const contact = contactFrom(useSiteSettings());
 
   useEffect(() => {
@@ -40,13 +42,15 @@ export default function StudentDashboard() {
       }
       setUser(user);
 
-      const [{ data: enrollmentData }, { data: paymentData }, { data: profileData }, { data: paidAssets }] = await Promise.all([
+      const [{ data: enrollmentData }, { data: paymentData }, { data: profileData }, { data: paidAssets }, { data: membershipData }] = await Promise.all([
         supabase.from('enrollments').select('course_id, status, enrolled_at, courses ( id, title, description )').eq('user_id', user.id),
-        supabase.from('payments').select('id, order_id, amount, status, created_at, courses ( title )').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+        supabase.from('payments').select('id, order_id, amount, status, created_at, membership_plan, courses ( title )').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
         supabase.from('users').select('*').eq('id', user.id).maybeSingle(),
         supabase.from('payments').select('asset_id').eq('user_id', user.id).eq('status', 'success').not('asset_id', 'is', null),
+        supabase.from('memberships').select('expires_at').eq('user_id', user.id).maybeSingle(),
       ]);
       setProfile(profileData || {});
+      setMemberUntil(membershipData?.expires_at ?? null);
 
       // Progress per enrolled course, in study order (same count the certificate checks)
       const courseIds = (enrollmentData || []).map((e) => e.course_id);
@@ -124,6 +128,32 @@ export default function StudentDashboard() {
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0];
   const studying = enrollments.some((en) => en.status === 'active');
 
+  // Membership card: only for people who have (or had) a membership
+  const membershipCard = (className: string) => {
+    if (!memberUntil) return null;
+    const daysLeft = Math.ceil((Date.parse(memberUntil) - Date.now()) / 864e5);
+    const active = daysLeft > 0;
+    const until = new Date(memberUntil).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    return (
+      <div className={`rounded-[var(--radius-card)] p-6 ${active ? 'surface-dark' : 'card'} ${className}`}>
+        <p className={`flex items-center gap-2 text-sm font-semibold ${active ? 'text-gold-light' : 'text-muted-foreground'}`}>
+          <Crown size={16} aria-hidden="true" /> {active ? 'Hội viên TẤN VA' : 'Hội viên đã hết hạn'}
+        </p>
+        <p className={`mt-2 text-xl font-bold ${active ? 'text-white' : 'text-ink'}`}>
+          {active ? `Đến hết ngày ${until}` : `Hết hạn ngày ${until}`}
+        </p>
+        <p className={`mt-1 text-sm ${active ? 'text-stone-300' : 'text-muted-foreground'}`}>
+          {active
+            ? `Còn ${daysLeft} ngày · giảm ${MEMBER_DISCOUNT_PERCENT.course}% khoá học, ${MEMBER_DISCOUNT_PERCENT.asset}% Shop`
+            : 'Gia hạn để dùng tiếp template, live và giá hội viên.'}
+        </p>
+        <Link href="/hoi-vien#bang-gia" className={`btn w-full mt-5 ${active && daysLeft > 7 ? 'btn-outline-light' : 'btn-gold'}`}>
+          {active ? 'Gia hạn thêm' : 'Gia hạn ngay'} <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      </div>
+    );
+  };
+
   return (
     <main className="container-lux py-10 md:py-14">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-line">
@@ -150,6 +180,8 @@ export default function StudentDashboard() {
           Bạn chưa có họ tên trong hồ sơ. <a href="#ho-so" className="font-semibold text-gold hover:text-gold-hover">Bổ sung ngay</a> để chứng chỉ in đúng tên của bạn.
         </p>
       )}
+
+      {membershipCard('mt-8 lg:hidden')}
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_340px]">
         <div className="space-y-12 min-w-0">
@@ -266,7 +298,7 @@ export default function StudentDashboard() {
                     {payments.map((p) => (
                       <tr key={p.id}>
                         <td className="p-4 whitespace-nowrap">{new Date(p.created_at).toLocaleDateString('vi-VN')}</td>
-                        <td className="p-4">{p.courses?.title || 'Ebook / Preset'}</td>
+                        <td className="p-4">{planOf(p.membership_plan)?.title || p.courses?.title || 'Ebook / Preset'}</td>
                         <td className="p-4 text-right whitespace-nowrap font-semibold">{formatVND(p.amount)}</td>
                         <td className="p-4"><span className={`badge ${p.status === 'success' ? '!bg-green-50 !text-success' : p.status === 'failed' ? '!bg-red-50 !text-danger' : ''}`}>{STATUS_LABEL[p.status] || p.status}</span></td>
                       </tr>
@@ -287,6 +319,8 @@ export default function StudentDashboard() {
         </div>
 
         <aside className="space-y-6">
+          {/* Membership on wide screens; phones get the same card at the top of the page */}
+          {membershipCard('hidden lg:block')}
           {studying && (
             <a href={contact.zaloGroupHref} target="_blank" rel="noopener noreferrer" className="card card-hover p-6 flex items-center gap-4">
               <span className="w-11 h-11 rounded-md bg-onyx text-gold-light flex items-center justify-center shrink-0"><Users size={20} aria-hidden="true" /></span>

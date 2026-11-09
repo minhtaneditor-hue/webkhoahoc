@@ -7,6 +7,7 @@ import { supabase } from '@/utils/supabase';
 import { Play, X, Layers, Lock } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import HoverPreview from '@/components/HoverPreview';
+import { skipOptimizer } from '@/lib/image';
 
 const CATEGORY_LABELS: Record<string, string> = {
   'game-show': 'Game show',
@@ -81,7 +82,7 @@ export default function WorkPage() {
               <li key={p.id}>
                 <button onClick={() => setSelected(p)} className="group block w-full text-left">
                   <span className="relative block aspect-[4/3] rounded-[var(--radius-card)] overflow-hidden bg-muted">
-                    <Image src={p.thumbnail_url || '/asset/du_an_tieu_bieu/bgd0.jpg'} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" unoptimized={!!p.thumbnail_url?.startsWith('http')} />
+                    <Image src={p.thumbnail_url || '/asset/du_an_tieu_bieu/bgd0.jpg'} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" unoptimized={skipOptimizer(p.thumbnail_url)} />
                     {p.video_url && (
                       <span className="absolute inset-0 flex items-center justify-center bg-onyx/0 group-hover:bg-onyx/30 transition-colors">
                         <span className="w-14 h-14 rounded-full bg-gold-light text-onyx flex items-center justify-center opacity-90"><Play size={22} fill="currentColor" aria-hidden="true" /></span>
@@ -101,7 +102,7 @@ export default function WorkPage() {
             <div className="more-note rounded-2xl sm:rounded-full px-6 py-4 md:px-8 text-center text-white">
               <p className="flex items-center justify-center gap-3 text-base md:text-xl font-bold">
                 <span className="more-note-dot" aria-hidden="true" />
-                Và còn nhiều sản phẩm của <span className="text-gold-light">doanh nghiệp và cá nhân</span> khác nữa
+                <span>Và còn nhiều sản phẩm của <span className="text-gold-light">doanh nghiệp và cá nhân</span> khác nữa</span>
               </p>
               <p className="mt-1 flex items-center justify-center gap-1.5 text-sm text-stone-300"><Lock size={14} aria-hidden="true" /> Vì lý do bảo mật nên không được đăng tải.</p>
             </div>
@@ -120,7 +121,7 @@ export default function WorkPage() {
               {selected.video_url ? (
                 <iframe src={toEmbedUrl(selected.video_url)} title={selected.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
               ) : (
-                <Image src={selected.thumbnail_url || '/asset/du_an_tieu_bieu/bgd0.jpg'} alt={selected.title} fill sizes="900px" className="object-cover" unoptimized={!!selected.thumbnail_url?.startsWith('http')} />
+                <Image src={selected.thumbnail_url || '/asset/du_an_tieu_bieu/bgd0.jpg'} alt={selected.title} fill sizes="900px" className="object-cover" unoptimized={skipOptimizer(selected.thumbnail_url)} />
               )}
             </div>
             <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-end justify-between gap-6">

@@ -7,6 +7,7 @@ import { Play, X, ExternalLink, Quote, VolumeX } from 'lucide-react';
 import { parseMedia, sideThumbnail, type ParsedMedia } from '@/lib/media';
 import { COUNTRY_BY_CODE } from '@/lib/countries';
 import type { FeedbackVideo } from '@/lib/content';
+import { skipOptimizer } from '@/lib/image';
 
 
 /** Player URL for the dialog: autoplay with sound after the visitor's click. */
@@ -37,7 +38,7 @@ export default function FeedbackVideos({ videos }: { videos: FeedbackVideo[] }) 
         <button type="button" data-hover-card onClick={() => show(v)} className="group h-full w-full text-left flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-card hover:shadow-[var(--shadow-lift)] transition-shadow" aria-label={`Xem video feedback của ${v.student_name}`}>
           <div className={`relative bg-onyx overflow-hidden ${v.orientation === 'horizontal' ? 'aspect-video' : 'aspect-[4/5]'}`}>
             {thumb ? (
-              <Image src={thumb} alt="" fill sizes={v.orientation === 'horizontal' ? '(min-width: 1024px) 50vw, (min-width: 768px) 66vw, 100vw' : '(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw'} unoptimized={thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+              <Image src={thumb} alt="" fill sizes={v.orientation === 'horizontal' ? '(min-width: 1024px) 50vw, (min-width: 768px) 66vw, 100vw' : '(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw'} unoptimized={skipOptimizer(thumb)} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-stone-700 to-onyx" />
             )}

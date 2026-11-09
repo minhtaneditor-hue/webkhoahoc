@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Quote, Images } from 'lucide-react';
 import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
 import { studentKey, worksLabel, type Student } from '@/lib/content';
+import { skipOptimizer } from '@/lib/image';
 
 // Every student with a photo, drifting left to right in one endless row (same
 // marquee as the partner logos). Pauses on hover; static wrap under reduced motion.
@@ -20,7 +21,7 @@ export default function StudentsMarquee({ students, counts = {} }: { students: S
             <li key={`${s.id}-${i}`} aria-hidden={i >= list.length || undefined} className="shrink-0 w-[230px] md:w-[260px]">
               <figure className="h-full flex flex-col">
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-img)]">
-                  <Image src={s.avatar_url!} alt={i < list.length ? s.name : ''} fill sizes="260px" unoptimized={s.avatar_url!.startsWith('http')} className="object-cover" />
+                  <Image src={s.avatar_url!} alt={i < list.length ? s.name : ''} fill sizes="260px" unoptimized={skipOptimizer(s.avatar_url!)} className="object-cover" />
                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-onyx/90 to-transparent" aria-hidden="true" />
                   {s.results && <span className="badge absolute top-3 left-3 !bg-gold-light !text-onyx">{s.results}</span>}
                   <figcaption className="absolute left-4 right-4 bottom-4">

@@ -10,6 +10,7 @@ import { studentKey, pairsOf, type StudentWork, type FeedbackVideo } from '@/lib
 import { sidesOf, PairView } from './StudentWorks';
 import SocialLinks, { type Links } from './SocialLinks';
 import FeedbackVideos from './FeedbackVideos';
+import { skipOptimizer } from '@/lib/image';
 
 type Kind = 'all' | 'image' | 'video';
 
@@ -161,7 +162,7 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
                     <div className={`absolute inset-0 grid gap-px bg-black/20 ${cover.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                       {cover.map((s) => (
                         <div key={s.label} className="relative overflow-hidden bg-onyx">
-                          {s.thumb && <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 17vw, (min-width: 640px) 25vw, 50vw" unoptimized={s.thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />}
+                          {s.thumb && <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 17vw, (min-width: 640px) 25vw, 50vw" unoptimized={skipOptimizer(s.thumb)} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />}
                           <HoverPreview url={s.media?.url} />
                           <span className={`absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/65 text-white'}`}>{s.label}</span>
                         </div>
@@ -178,7 +179,7 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
                   <div className="flex-1 flex flex-col p-5">
                     <div className="flex items-start gap-3">
                       {p.avatar ? (
-                        <Image src={p.avatar} alt="" width={48} height={48} unoptimized={p.avatar.startsWith('http')} className="!rounded-full w-12 h-12 object-cover shrink-0" />
+                        <Image src={p.avatar} alt="" width={48} height={48} unoptimized={skipOptimizer(p.avatar)} className="!rounded-full w-12 h-12 object-cover shrink-0" />
                       ) : (
                         <span className="w-12 h-12 shrink-0 rounded-full bg-onyx text-gold-light flex items-center justify-center font-display text-xl font-bold" aria-hidden="true">{p.name.replace(/^(Anh|Chị|C|A)\s+/i, '').charAt(0)}</span>
                       )}
@@ -237,7 +238,7 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
               <button type="button" onClick={() => dialog.current?.close()} className="absolute top-0 right-0 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center" aria-label="Đóng"><X size={20} aria-hidden="true" /></button>
               <div className="flex flex-col items-center text-center pt-2 pb-8 border-b border-white/10">
                 {open.avatar ? (
-                  <Image src={open.avatar} alt={open.name} width={112} height={112} unoptimized={open.avatar.startsWith('http')} className="!rounded-full w-24 h-24 md:w-28 md:h-28 object-cover ring-4 ring-gold-light/40" />
+                  <Image src={open.avatar} alt={open.name} width={112} height={112} unoptimized={skipOptimizer(open.avatar)} className="!rounded-full w-24 h-24 md:w-28 md:h-28 object-cover ring-4 ring-gold-light/40" />
                 ) : (
                   <span className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-white/10 text-gold-light flex items-center justify-center font-display text-5xl font-bold ring-4 ring-gold-light/40" aria-hidden="true">{open.name.replace(/^(Anh|Chị|Team|C|A)\s+/i, '').charAt(0)}</span>
                 )}

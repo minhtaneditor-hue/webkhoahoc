@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import type { FeedbackImage } from '@/lib/content';
+import { skipOptimizer } from '@/lib/image';
 
 // Two rows of real feedback screenshots drifting in opposite directions.
 // Pure CSS (marquee-track): pauses on hover, becomes a static wrap under reduced motion.
@@ -20,7 +21,7 @@ export default function FeedbackMarquee({ images }: { images: FeedbackImage[] })
                   width={img.width}
                   height={img.height}
                   sizes="420px"
-                  unoptimized={img.src.startsWith('http')}
+                  unoptimized={skipOptimizer(img.src)}
                   className="h-28 md:h-36 w-auto bg-white shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)]"
                 />
               </li>

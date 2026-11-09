@@ -3,8 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
+import { planOf } from '@/lib/membership';
 import { Receipt, Search, Download } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, StatusBadge, thClass, tdClass } from '@/components/admin/AdminUI';
+
+const productTitle = (o: any): string =>
+  planOf(o.membership_plan)?.title || o.courses?.title || o.digital_assets?.title || '';
 
 const TABS = [
   { key: 'all', label: 'Tất cả' },
@@ -22,7 +26,7 @@ export default function OrdersManagement() {
   useEffect(() => {
     supabase
       .from('payments')
-      .select('id, order_id, amount, status, payment_method, transaction_id, created_at, users ( email ), courses ( title ), digital_assets ( title )')
+      .select('*, users ( email ), courses ( title ), digital_assets ( title )')
       .order('created_at', { ascending: false })
       .limit(500)
       .then(({ data }) => { setOrders(data || []); setLoading(false); });
@@ -32,12 +36,12 @@ export default function OrdersManagement() {
     const q = query.trim().toLowerCase();
     return orders.filter((o) =>
       (tab === 'all' || o.status === tab) &&
-      (!q || [o.order_id, o.users?.email, o.courses?.title, o.digital_assets?.title].some((v) => v?.toLowerCase().includes(q))));
+      (!q || [o.order_id, o.users?.email, productTitle(o)].some((v) => v?.toLowerCase().includes(q))));
   }, [orders, tab, query]);
 
   const exportCsv = () => {
     const header = ['Mã đơn', 'Thời gian', 'Email', 'Sản phẩm', 'Số tiền', 'Trạng thái', 'Mã giao dịch'];
-    const rows = filtered.map((o) => [o.order_id, new Date(o.created_at).toLocaleString('vi-VN'), o.users?.email || '', o.courses?.title || o.digital_assets?.title || '', o.amount, o.status, o.transaction_id || '']);
+    const rows = filtered.map((o) => [o.order_id, new Date(o.created_at).toLocaleString('vi-VN'), o.users?.email || '', productTitle(o), o.amount, o.status, o.transaction_id || '']);
     const csv = [header, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
     const a = Object.assign(document.createElement('a'), { href: url, download: `don-hang-${new Date().toISOString().slice(0, 10)}.csv` });
@@ -81,7 +85,7 @@ export default function OrdersManagement() {
                   <td className={`${tdClass} font-mono text-xs`}>{o.order_id}</td>
                   <td className={`${tdClass} whitespace-nowrap`}>{new Date(o.created_at).toLocaleString('vi-VN')}</td>
                   <td className={tdClass}>{o.users?.email || '—'}</td>
-                  <td className={tdClass}>{o.courses?.title || o.digital_assets?.title || '—'}</td>
+                  <td className={tdClass}>{productTitle(o) || '—'}</td>
                   <td className={`${tdClass} text-right font-semibold whitespace-nowrap`}>{formatVND(o.amount)}</td>
                   <td className={tdClass}><StatusBadge status={o.status} /></td>
                 </tr>

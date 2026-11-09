@@ -3,13 +3,14 @@ import Image from 'next/image';
 import { BookOpen } from 'lucide-react';
 import type { BlogPostCard } from '@/lib/blog';
 import { formatPostDate } from '@/lib/blog-format';
+import { skipOptimizer } from '@/lib/image';
 
 export default function PostCard({ post }: { post: BlogPostCard }) {
   return (
     <li className="card card-hover overflow-hidden flex flex-col">
       <Link href={`/blog/${post.slug}`} className="relative block aspect-video bg-muted" tabIndex={-1} aria-hidden="true">
         {post.cover_url ? (
-          <Image src={post.cover_url} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" unoptimized={post.cover_url.startsWith('http')} />
+          <Image src={post.cover_url} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" unoptimized={skipOptimizer(post.cover_url)} />
         ) : (
           <span className="absolute inset-0 surface-dark flex items-center justify-center"><BookOpen size={36} className="text-gold-light" /></span>
         )}

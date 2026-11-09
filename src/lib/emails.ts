@@ -202,6 +202,22 @@ export function assetPurchased(d: { name?: string | null; title: string; orderId
   };
 }
 
+export function membershipActivated(d: { name?: string | null; title: string; orderId: string; expiresOn: string }): Mail {
+  return {
+    subject: `Đã kích hoạt: ${d.title}`,
+    html: layout({
+      preheader: `Hội viên của bạn dùng được đến hết ngày ${d.expiresOn}.`,
+      body: `
+        ${eyebrow('Thanh toán thành công')}
+        ${h1(`Chào mừng ${esc(firstName(d.name))} vào hội viên TẤN VA!`)}
+        ${p(`TẤN VA đã nhận thanh toán cho <strong>${esc(d.title)}</strong> (mã đơn <strong>${esc(d.orderId)}</strong>).`)}
+        ${box(`Hội viên của bạn dùng được đến hết ngày <strong>${esc(d.expiresOn)}</strong>. Hội viên không tự gia hạn: khi muốn dùng tiếp, mua thêm gói và thời hạn sẽ được cộng nối tiếp.`)}
+        ${button(`${SITE}/dashboard`, 'Vào khu học tập')}
+        ${signature}`,
+    }),
+  };
+}
+
 export function checklistEmail(d: { name?: string | null; title: string; groups: { group: string; items: string[] }[]; email: string; course: FeaturedCourse | null }): Mail {
   const list = d.groups.map((g) => `
     <p style="margin:20px 0 8px;font-size:15px;font-weight:800;color:${C.gold};">${esc(g.group)}</p>
