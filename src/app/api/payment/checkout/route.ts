@@ -15,7 +15,14 @@ export async function POST(req: Request) {
     // The buyer is whoever is logged in — never trust a userId sent by the browser.
     const user = await getSessionUser();
     const body = await req.json();
-    const input = { courseId: body.courseId, assetId: body.assetId, promoCode: body.promoCode } as any;
+    const input = { courseId: body.courseId, assetId: body.assetId, membershipPlan: body.membershipPlan, promoCode: body.promoCode } as any;
+
+    // Memberships attach to an account and are paid by bank transfer only (SePay activates them).
+    if (body.membershipPlan) {
+      if (!user) return NextResponse.json({ error: 'Vui lòng đăng nhập trước khi đăng ký hội viên.' }, { status: 401 });
+      if (!bankConfig()) return NextResponse.json({ error: 'Thanh toán online đang tạm dừng. Vui lòng liên hệ Zalo để đăng ký.' }, { status: 503 });
+      input.courseId = input.assetId = undefined;
+    }
 
     // Ebooks, presets, skills can be bought as a guest (name / email / phone); courses need an account.
     if (!user) {

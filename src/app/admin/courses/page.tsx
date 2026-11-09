@@ -10,6 +10,7 @@ import { PageHeader, LoadingRow, EmptyState, Modal, Field, StatusBadge } from '@
 import ImageUpload from '@/components/admin/ImageUpload';
 import { revalidateSite } from '@/lib/revalidate';
 import { groupByChapter, type Chapter } from '@/lib/curriculum';
+import { skipOptimizer } from '@/lib/image';
 
 const emptyCourse = { title: '', slug: '', description: '', price: 0, old_price: '', thumbnail_url: '', is_published: false };
 const emptyLesson = { title: '', video_url: '', content: '', is_free: false, chapter_id: '' };
@@ -196,7 +197,7 @@ export default function CourseManagement() {
           {courses.map((c) => (
             <li key={c.id} className="card p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4">
               <div className="relative w-full md:w-40 aspect-video rounded-md overflow-hidden bg-muted shrink-0">
-                <Image src={c.thumbnail_url || '/asset/hoc_vien/tan.jpg'} alt="" fill sizes="160px" className="object-cover" unoptimized={!!c.thumbnail_url?.startsWith('http')} />
+                <Image src={c.thumbnail_url || '/asset/hoc_vien/tan.jpg'} alt="" fill sizes="160px" className="object-cover" unoptimized={skipOptimizer(c.thumbnail_url)} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap"><StatusBadge status={c.is_published ? 'published' : 'draft'} /><span className="text-sm text-muted-foreground">{c.lessons?.length || 0} bài học</span></div>

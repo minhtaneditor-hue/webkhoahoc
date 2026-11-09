@@ -194,6 +194,22 @@ export function assetPurchased(d: { name?: string | null; title: string; orderId
   };
 }
 
+export function membershipActivated(d: { name?: string | null; title: string; orderId: string; expiresOn: string }): Mail {
+  return {
+    subject: `Đã kích hoạt: ${d.title}`,
+    html: layout({
+      preheader: `Hội viên của bạn dùng được đến hết ngày ${d.expiresOn}.`,
+      body: `
+        ${eyebrow('Thanh toán thành công')}
+        ${h1(`Chào mừng ${esc(firstName(d.name))} vào hội viên TẤN VA!`)}
+        ${p(`TẤN VA đã nhận thanh toán cho <strong>${esc(d.title)}</strong> (mã đơn <strong>${esc(d.orderId)}</strong>).`)}
+        ${box(`Hội viên của bạn dùng được đến hết ngày <strong>${esc(d.expiresOn)}</strong>. Hội viên không tự gia hạn: khi muốn dùng tiếp, mua thêm gói và thời hạn sẽ được cộng nối tiếp.`)}
+        ${button(`${SITE}/dashboard`, 'Vào khu học tập')}
+        ${signature}`,
+    }),
+  };
+}
+
 export function checklistEmail(d: { name?: string | null; title: string; groups: { group: string; items: string[] }[]; email: string; course: FeaturedCourse | null }): Mail {
   const list = d.groups.map((g) => `
     <p style="margin:20px 0 8px;font-size:15px;font-weight:800;color:${C.gold};">${esc(g.group)}</p>
@@ -411,6 +427,33 @@ export function leadDay6(d: { name?: string | null; email: string }, c: Featured
           • Bài học mới cập nhật sau này: miễn phí.<br>
           • Chứng chỉ hoàn thành khóa học.`)}
         ${button(courseUrl(c), `Học thử ${c.freeLessons.length} bài miễn phí`)}
+        ${signature}`,
+    }),
+  };
+}
+
+// ---------------------------------------------------------------- campaigns (Admin > Email đã gửi)
+
+/** Coming-soon courses announced to current students. Only what the pre-order section on the site promises: no price, no date. */
+export function preorderAiCourses(d: { name?: string | null; email: string }, courses: { id: string; title: string; description?: string | null }[]): Mail {
+  return {
+    subject: `${firstName(d.name)} ơi, ${courses.length} khóa Edit Video bằng AI sắp mở`,
+    html: layout({
+      preheader: 'Đặt trước để nhận giá tốt hơn giá mở bán, chưa cần thanh toán.',
+      unsubscribeFor: d.email,
+      body: `
+        ${eyebrow('Dành cho học viên TẤN VA')}
+        ${h1(`${courses.length} khóa mới đang được chuẩn bị`)}
+        ${p(`Chào ${esc(firstName(d.name))}, bạn đang học cùng Minh Tấn nên mình báo bạn trước: mình đang chuẩn bị ${courses.length} khóa về edit video bằng AI. Giá chưa công bố, nhưng bạn có thể đặt trước ngay từ bây giờ.`)}
+        ${box(`<strong style="color:${C.ink};">Khi đặt trước, bạn được</strong><br>
+          • Giá đặt trước ưu đãi hơn giá mở bán.<br>
+          • Minh Tấn báo giá riêng cho bạn qua Zalo.<br>
+          • Chưa cần thanh toán lúc này.`)}
+        ${courses.map((c) => `
+          <h2 style="margin:0 0 6px;font-family:${FONT};font-size:19px;line-height:1.35;font-weight:800;color:${C.ink};">${esc(c.title)}</h2>
+          ${p(esc((c.description || '').split('.')[0] + '.'))}
+          ${button(`${SITE}/courses/${c.id}#dat-truoc`, 'Đặt trước khóa này')}`).join('')}
+        ${p('Bạn muốn học khóa nào hơn, hoặc muốn khóa dạy thêm phần nào? Trả lời email này cho mình biết nhé.')}
         ${signature}`,
     }),
   };

@@ -13,6 +13,7 @@ type Order = {
   title: string;
   courseId: string | null;
   assetId: string | null;
+  membership?: boolean;
   bank: string;
   account: string;
   accountName: string;
@@ -99,7 +100,12 @@ export default function BankTransferPage() {
             Đã nhận {formatVND(order.amount)} cho “{order.title}”. Email xác nhận đã được gửi tới hộp thư của bạn.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            {order.courseId ? (
+            {order.membership ? (
+              <>
+                <Link href="/dashboard" className="btn btn-gold">Vào khu học tập</Link>
+                <Link href="/hoi-vien" className="btn btn-outline">Quyền lợi hội viên</Link>
+              </>
+            ) : order.courseId ? (
               <>
                 <Link href={`/courses/${order.courseId}`} className="btn btn-gold">Vào học ngay</Link>
                 <Link href="/dashboard" className="btn btn-outline">Khu học tập</Link>

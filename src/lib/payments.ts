@@ -4,38 +4,57 @@ import { Resend } from 'resend';
 import { checkPromo } from './promo';
 import { getSiteSettings } from './content';
 import { contactFrom } from './site-settings';
-import { FROM, welcomeCourse, assetPurchased } from './emails';
+import { FROM, welcomeCourse, assetPurchased, membershipActivated } from './emails';
 import { metaContext, metaEnabled, sendMetaEvent, siteUrl } from './meta-capi';
+import { MEMBERSHIP_PLANS, isMembershipPlan, memberDiscount, planOf, type MembershipPlan } from './membership';
 
 // Shared checkout pieces for every payment method (VNPay, SePay bank transfer).
 
 export type Buyer = { name: string; email: string; phone: string };
-export type CheckoutInput = { courseId?: string; assetId?: string; promoCode?: string; buyer?: Buyer };
+export type CheckoutInput = { courseId?: string; assetId?: string; membershipPlan?: MembershipPlan; promoCode?: string; buyer?: Buyer };
 
 /** Looks up the price server-side and stores a pending payment. Throws a user-facing message on bad input. */
 export async function createPendingPayment(
   supabase: SupabaseClient,
   userId: string | null,
-  { courseId, assetId, promoCode, buyer }: CheckoutInput,
+  { courseId, assetId, membershipPlan, promoCode, buyer }: CheckoutInput,
   method: 'vnpay' | 'bank_transfer',
   orderId: string,
   req: Request
 ) {
-  if (!courseId && !assetId) throw new CheckoutError('Thiếu sản phẩm cần thanh toán.', 400);
+  if (!courseId && !assetId && !membershipPlan) throw new CheckoutError('Thiếu sản phẩm cần thanh toán.', 400);
 
-  // Price always comes from the database, never from the request body.
-  const table = courseId ? 'courses' : 'digital_assets';
-  const { data: product } = await supabase.from(table).select('id, title, price').eq('id', courseId || assetId).single();
+  // Price always comes from the server (database or membership plans), never from the request body.
+  let product: { id: string; title: string; price: number } | null;
+  if (membershipPlan) {
+    if (!isMembershipPlan(membershipPlan)) throw new CheckoutError('Gói hội viên không tồn tại.', 404);
+    if (!userId) throw new CheckoutError('Vui lòng đăng nhập trước khi đăng ký hội viên.', 401);
+    const plan = MEMBERSHIP_PLANS[membershipPlan];
+    product = { id: `membership:${membershipPlan}`, title: plan.title, price: plan.price };
+  } else {
+    const table = courseId ? 'courses' : 'digital_assets';
+    const { data } = await supabase.from(table).select('id, title, price').eq('id', courseId || assetId).single();
+    product = data;
+  }
   if (!product) throw new CheckoutError('Sản phẩm không tồn tại.', 404);
 
   const basePrice = Number(product.price) || 0;
   let discount = 0;
   let usedCode: string | null = null;
-  if (promoCode?.trim()) {
+  // Promo codes are tied to courses and shop items; memberships have their own fixed prices.
+  if (promoCode?.trim() && !membershipPlan) {
     const promo = await checkPromo(supabase, promoCode, { courseId, price: basePrice });
     if (!promo.ok) throw new CheckoutError(promo.error, 400);
     discount = promo.discount;
     usedCode = promo.code;
+  }
+  // Active members get their discount, or the promo code, whichever saves more. Never both.
+  if (!membershipPlan && (await isActiveMember(supabase, userId))) {
+    const memberOff = memberDiscount(basePrice, courseId ? 'course' : 'asset');
+    if (memberOff >= discount) {
+      discount = memberOff;
+      usedCode = null; // the code was not what priced this order, so it must not use up a turn
+    }
   }
   const amount = Math.max(0, basePrice - discount);
   if (amount <= 0) throw new CheckoutError('Sản phẩm miễn phí không cần thanh toán.', 400);
@@ -51,6 +70,8 @@ export async function createPendingPayment(
     access_token: accessToken,
     course_id: courseId || null,
     asset_id: assetId || null,
+    // Only set for memberships, so a database without migration 026 still takes course and shop orders.
+    ...(membershipPlan ? { membership_plan: membershipPlan } : {}),
     amount,
     promo_code: usedCode,
     payment_method: method,
@@ -73,6 +94,13 @@ export async function createPendingPayment(
   }
 
   return { orderId, amount, title: product.title as string, accessToken };
+}
+
+/** True while the user's prepaid membership has time left. False before migration 026 too. */
+export async function isActiveMember(supabase: SupabaseClient, userId: string | null) {
+  if (!userId) return false;
+  const { data } = await supabase.from('memberships').select('expires_at').eq('user_id', userId).maybeSingle();
+  return !!data && Date.parse(data.expires_at) > Date.now();
 }
 
 export class CheckoutError extends Error {
@@ -124,6 +152,11 @@ export async function fulfillPayment(supabase: SupabaseClient, payment: any) {
   // Resend's constructor throws without a key; the email is skipped when RESEND_API_KEY is unset
   const resend = new Resend(process.env.RESEND_API_KEY || 're_missing_key');
 
+  if (payment.membership_plan) {
+    await activateMembership(supabase, resend, payment);
+    return;
+  }
+
   // Auto-enrolment (courses only — digital assets are unlocked via the successful payment row)
   if (payment.course_id) {
     await supabase.from('enrollments').upsert({
@@ -161,9 +194,12 @@ async function trackPurchase(supabase: SupabaseClient, payment: any) {
     const { data: user } = payment.user_id
       ? await supabase.from('users').select('email, full_name').eq('id', payment.user_id).single()
       : { data: null };
-    const { data: product } = payment.course_id
-      ? await supabase.from('courses').select('title').eq('id', payment.course_id).single()
-      : await supabase.from('digital_assets').select('title').eq('id', payment.asset_id).single();
+    const plan = planOf(payment.membership_plan);
+    const { data: product } = plan
+      ? { data: { title: plan.title } }
+      : payment.course_id
+        ? await supabase.from('courses').select('title').eq('id', payment.course_id).single()
+        : await supabase.from('digital_assets').select('title').eq('id', payment.asset_id).single();
 
     sendMetaEvent({
       name: 'Purchase',
@@ -179,7 +215,7 @@ async function trackPurchase(supabase: SupabaseClient, payment: any) {
       data: {
         value: Number(payment.amount),
         contentName: product?.title,
-        contentId: payment.course_id || payment.asset_id,
+        contentId: payment.course_id || payment.asset_id || (plan ? `membership:${payment.membership_plan}` : undefined),
         orderId: payment.order_id,
       },
     });
@@ -201,6 +237,31 @@ export function readBuyer(raw: any): Buyer {
   return { name, email, phone };
 }
 
+
+/** Adds the plan's months to the buyer's membership, then emails the new end date. */
+async function activateMembership(supabase: SupabaseClient, resend: Resend, payment: any) {
+  const plan = planOf(payment.membership_plan);
+  if (!plan || !payment.user_id) {
+    console.error(`Membership not granted for ${payment.order_id}: plan=${payment.membership_plan} user=${payment.user_id}`);
+    return;
+  }
+  const { data: expiresAt, error } = await supabase.rpc('extend_membership', { p_user: payment.user_id, p_months: plan.months });
+  if (error) {
+    // The order is already marked paid: log loudly so the admin can grant the time by hand.
+    console.error(`Membership extend failed for ${payment.order_id}`, error);
+    return;
+  }
+
+  const { data: user } = await supabase.from('users').select('email, full_name').eq('id', payment.user_id).single();
+  if (!user?.email || !process.env.RESEND_API_KEY) return;
+  const expiresOn = new Date(expiresAt as string).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+  const { error: mailError } = await resend.emails.send({
+    from: FROM,
+    to: user.email,
+    ...membershipActivated({ name: user.full_name, title: plan.title, orderId: payment.order_id, expiresOn }),
+  });
+  if (mailError) console.error(`Resend: membership email for ${payment.order_id} failed`, mailError);
+}
 
 async function emailAssetBuyer(supabase: SupabaseClient, resend: Resend, payment: any) {
   let to = payment.buyer_email as string | null;

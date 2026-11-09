@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Loader2, ShieldCheck } from 'lucide-react';
 import { formatVND } from '@/lib/supabase-public';
+import { useMembership } from '@/components/membership/useMembership';
+import { MEMBER_DISCOUNT_PERCENT, memberDiscount } from '@/lib/membership';
 
 type Asset = { id: string; title: string; price: number | string };
 
@@ -12,6 +14,10 @@ export default function BuyDialog({ asset, defaultEmail, onClose }: { asset: Ass
   const [form, setForm] = useState({ name: '', email: defaultEmail || '', phone: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // Signed-in members pay less; checkout recomputes this on the server
+  const isMember = useMembership();
+  const basePrice = Number(asset?.price) || 0;
+  const price = isMember ? basePrice - memberDiscount(basePrice, 'asset') : basePrice;
 
   useEffect(() => {
     if (asset) {
@@ -61,7 +67,11 @@ export default function BuyDialog({ asset, defaultEmail, onClose }: { asset: Ass
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 id="buy-title" className="text-2xl leading-tight">{asset.title}</h2>
-              <p className="mt-1 font-display text-2xl font-bold text-gold">{formatVND(asset.price)}</p>
+              <p className="mt-1 flex items-baseline gap-2 flex-wrap">
+                <span className="font-display text-2xl font-bold text-gold">{formatVND(price)}</span>
+                {isMember && <s className="text-sm text-muted-foreground">{formatVND(basePrice)}</s>}
+              </p>
+              {isMember && <p className="mt-1.5 badge">Giá hội viên: giảm {MEMBER_DISCOUNT_PERCENT.asset}%</p>}
             </div>
             <button type="button" onClick={() => ref.current?.close()} className="w-10 h-10 shrink-0 rounded-full hover:bg-muted flex items-center justify-center" aria-label="Đóng"><X size={18} aria-hidden="true" /></button>
           </div>
@@ -71,7 +81,7 @@ export default function BuyDialog({ asset, defaultEmail, onClose }: { asset: Ass
           {field('phone', 'Số điện thoại / Zalo', { type: 'tel', autoComplete: 'tel', inputMode: 'tel', placeholder: '0912 345 678' })}
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
           <button type="submit" disabled={busy} className="btn btn-gold w-full">
-            {busy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : null} Thanh toán {formatVND(asset.price)}
+            {busy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : null} Thanh toán {formatVND(price)}
           </button>
           <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground"><ShieldCheck size={14} aria-hidden="true" /> Quét QR ngân hàng, xác nhận tự động</p>
         </form>

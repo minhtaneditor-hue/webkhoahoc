@@ -9,9 +9,10 @@ import StudentShowcase from '@/components/students/StudentShowcase';
 import SocialLinks from '@/components/students/SocialLinks';
 import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
 import WorldStudents from '@/components/students/WorldStudents';
+import { skipOptimizer } from '@/lib/image';
 
-// Short cache: student rows are often changed straight in Supabase, which does not trigger a refresh
-export const revalidate = 60;
+// Student rows edited straight in Supabase show up within an hour (admin saves refresh at once)
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Học viên & sản phẩm',
@@ -72,7 +73,7 @@ export default async function StudentsPage() {
           {students.filter((s) => s.quote || s.story).map((s: any, i: number) => (
             <li key={`${s.id}-${i}`} className="card overflow-hidden grid sm:grid-cols-[200px_1fr]">
               <div className="relative aspect-square sm:aspect-auto bg-muted">
-                <Image src={s.avatar_url || '/asset/hoc_vien/tan.jpg'} alt={s.name} fill sizes="(min-width: 640px) 200px, 100vw" className="object-cover" unoptimized={!!s.avatar_url?.startsWith('http')} />
+                <Image src={s.avatar_url || '/asset/hoc_vien/tan.jpg'} alt={s.name} fill sizes="(min-width: 640px) 200px, 100vw" className="object-cover" unoptimized={skipOptimizer(s.avatar_url)} />
               </div>
               <figure className="p-6 md:p-7 flex flex-col">
                 {s.results && <span className="badge self-start">{s.results}</span>}
@@ -95,7 +96,7 @@ export default async function StudentsPage() {
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {students.filter((s) => !s.quote && !s.story).map((s) => (
               <li key={s.id} className="flex items-center gap-4 rounded-[var(--radius-card)] border border-line bg-card p-4">
-                <Image src={s.avatar_url || '/asset/hoc_vien/tan.jpg'} alt="" width={64} height={64} unoptimized={!!s.avatar_url?.startsWith('http')} className="!rounded-full w-16 h-16 object-cover shrink-0" />
+                <Image src={s.avatar_url || '/asset/hoc_vien/tan.jpg'} alt="" width={64} height={64} unoptimized={skipOptimizer(s.avatar_url)} className="!rounded-full w-16 h-16 object-cover shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-ink truncate">{s.name}</p>
                   {s.title && <p className="text-sm text-muted-foreground line-clamp-2">{s.title}</p>}
@@ -133,7 +134,7 @@ export default async function StudentsPage() {
           <ul className="mt-12 columns-1 md:columns-2 gap-4 [&>li]:mb-4">
             {feedback.map((img, i) => (
               <li key={img.src} className="break-inside-avoid overflow-hidden rounded-[var(--radius-img)] bg-white">
-                <Image src={img.src} alt={`Phản hồi học viên ${i + 1}`} width={img.width} height={img.height} unoptimized={img.src.startsWith('http')} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" className="w-full h-auto" />
+                <Image src={img.src} alt={`Phản hồi học viên ${i + 1}`} width={img.width} height={img.height} unoptimized={skipOptimizer(img.src)} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" className="w-full h-auto" />
               </li>
             ))}
           </ul>

@@ -28,6 +28,7 @@ const mails: Record<string, { subject: string; html: string }> = {
   '12-asset': E.assetPurchased({ name: s.name, title: 'Preset màu Cinematic', orderId: 'TV123456', link: 'https://www.minhtanacademy.com' }),
   '13-auth-confirm': E.authEmail('confirm'),
   '14-auth-recovery': E.authEmail('recovery'),
+  '15-preorder-ai': E.preorderAiCourses({ name: s.name, email: s.email }, [{ id: 'a', title: 'Edit Video Bằng AI Với Claude', description: 'Học cách dùng Claude để edit video bằng AI. Khóa học đang được chuẩn bị.' }, { id: 'b', title: 'Edit Video Bằng AI Với ChatGPT Plus', description: 'Học cách dùng ChatGPT Plus để edit video bằng AI. Khóa học đang được chuẩn bị.' }]),
 };
 for (const [k, m] of Object.entries(mails)) writeFileSync(`${out}/${k}.html`, m.html.replace('<body', `<!-- ${m.subject} --><body`));
 writeFileSync(`${out}/index.html`, `<meta charset="utf-8"><body style="font-family:Arial;padding:20px">` + Object.entries(mails).map(([k, m]) => `<p><a href="${k}.html">${k}</a> · ${m.subject}</p>`).join(''));

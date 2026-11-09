@@ -21,7 +21,7 @@ import { contactFrom } from '@/lib/site-settings';
 import JsonLd from '@/components/JsonLd';
 import { SITE_URL } from '@/lib/site-url';
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 const HOME_TITLE = 'Khóa học làm video bằng điện thoại cùng Minh Tấn | TẤN VA';
 const HOME_DESCRIPTION = 'Học quay, dựng và làm video bán hàng bằng điện thoại cùng Minh Tấn. Khóa học online, coaching 1:1, ebook và preset cho người kinh doanh.';
@@ -48,7 +48,7 @@ const projects = [
   { title: '2 Ngày 1 Đêm', category: 'Show truyền hình', image: '/asset/du_an_tieu_bieu/project_2n1d.webp' },
   { title: 'Anh Trai Say Hi — Movie', category: 'Sản xuất điện ảnh', image: '/asset/du_an_tieu_bieu/project_atsh_movie.jpg' },
   { title: 'Anh Trai Say Hi — Las Vegas', category: 'Sự kiện quốc tế', image: '/asset/du_an_tieu_bieu/project_atsh_vegas.webp' },
-  { title: 'Nghệ Thuật Truyền Hình', category: 'Nội dung số', image: '/asset/du_an_tieu_bieu/project_nhth.jpg' },
+  { title: 'Người Hùng Tí Hon', category: 'Nội dung số', image: '/asset/du_an_tieu_bieu/project_nhth.jpg' },
   { title: 'Mái Ấm Tình Thương', category: 'Phim tài liệu', image: '/asset/du_an_tieu_bieu/project_matn.webp' },
   { title: 'Ký Ức Vui Vẻ', category: 'Sản xuất truyền hình', image: '/asset/du_an_tieu_bieu/project_kuvv.png' },
 ];

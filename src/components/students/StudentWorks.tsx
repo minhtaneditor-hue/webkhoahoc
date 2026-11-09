@@ -7,6 +7,7 @@ import { Play, X, ExternalLink } from 'lucide-react';
 import { parseMedia, sideThumbnail, WORK_CATEGORIES, type ParsedMedia } from '@/lib/media';
 import { COUNTRY_BY_CODE } from '@/lib/countries';
 import { pairsOf, type MediaPair, type StudentWork } from '@/lib/content';
+import { skipOptimizer } from '@/lib/image';
 
 export type Side = { label: 'Trước' | 'Sau'; media: ParsedMedia | null; thumb: string | null; more: string[] };
 
@@ -97,7 +98,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
                       {sides.map((s) => (
                         <div key={s.label} className="relative overflow-hidden bg-onyx">
                           {s.thumb ? (
-                            <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 17vw, (min-width: 640px) 25vw, 50vw" unoptimized={s.thumb.startsWith('http')} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                            <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 17vw, (min-width: 640px) 25vw, 50vw" unoptimized={skipOptimizer(s.thumb)} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-stone-800 to-onyx text-stone-400 text-sm">{s.media?.label}</div>
                           )}
@@ -115,7 +116,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
                       <p className={`font-display text-lg font-bold leading-snug line-clamp-2 min-h-[2.75em] ${light ? 'text-white' : 'text-ink'}`}>{w.title}</p>
                       <div className="mt-3 flex items-center gap-2.5 min-w-0">
                         {w.avatar_url && (
-                          <Image src={w.avatar_url} alt="" width={32} height={32} unoptimized={w.avatar_url.startsWith('http')} className="!rounded-full w-8 h-8 object-cover shrink-0" />
+                          <Image src={w.avatar_url} alt="" width={32} height={32} unoptimized={skipOptimizer(w.avatar_url)} className="!rounded-full w-8 h-8 object-cover shrink-0" />
                         )}
                         <p className={`text-sm truncate ${light ? 'text-stone-300' : 'text-muted-foreground'}`}>
                           <span className={`font-semibold ${light ? 'text-white' : 'text-ink'}`}>{w.student_name}</span>{place ? ` · ${place}` : ''}
@@ -205,7 +206,7 @@ function SideView({ side, vertical }: { side: Side; vertical: boolean }) {
           <button key={i} type="button" onClick={() => setShown(i)} aria-pressed={i === shown} aria-label={`Ảnh ${i + 1} / ${all.length}`}
             className={`relative shrink-0 w-14 h-14 rounded-md overflow-hidden bg-black ring-2 transition ${i === shown ? 'ring-gold-light' : 'ring-transparent opacity-60 hover:opacity-100'}`}>
             {s.thumb ? (
-              <Image src={s.thumb} alt="" fill sizes="56px" unoptimized={s.thumb.startsWith('http')} className="!rounded-none object-cover" />
+              <Image src={s.thumb} alt="" fill sizes="56px" unoptimized={skipOptimizer(s.thumb)} className="!rounded-none object-cover" />
             ) : (
               <span className="absolute inset-0 flex items-center justify-center text-white"><Play size={16} aria-hidden="true" /></span>
             )}
@@ -238,14 +239,14 @@ export function Player({ side, vertical }: { side: Side; vertical: boolean }) {
   if (thumb && (!media || media.kind === 'image')) {
     return (
       <div className={frame}>
-        <Image src={thumb} alt={`Ảnh ${side.label.toLowerCase()}`} fill sizes="(min-width: 768px) 50vw, 100vw" unoptimized={thumb.startsWith('http')} className="!rounded-none object-contain" />
+        <Image src={thumb} alt={`Ảnh ${side.label.toLowerCase()}`} fill sizes="(min-width: 768px) 50vw, 100vw" unoptimized={skipOptimizer(thumb)} className="!rounded-none object-contain" />
       </div>
     );
   }
   // Unknown host: show the picture (if any) and link out.
   return (
     <a href={media?.url} target="_blank" rel="noopener noreferrer" className={`${frame} group flex items-center justify-center`}>
-      {thumb && <Image src={thumb} alt="" fill sizes="50vw" unoptimized={thumb.startsWith('http')} className="!rounded-none object-cover opacity-60" />}
+      {thumb && <Image src={thumb} alt="" fill sizes="50vw" unoptimized={skipOptimizer(thumb)} className="!rounded-none object-cover opacity-60" />}
       <span className="relative btn btn-gold">Mở video <ExternalLink size={16} aria-hidden="true" /></span>
     </a>
   );

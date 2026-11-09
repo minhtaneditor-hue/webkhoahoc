@@ -2,24 +2,15 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import { formatVND } from '@/lib/supabase-public';
 import { ShoppingBag, Download, Loader2, BookOpen, Palette, Package } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import BuyDialog from '@/components/shop/BuyDialog';
 import { isAdmin } from '@/lib/admin';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  ebook: 'Ebook',
-  preset: 'Preset',
-  lut: 'LUT màu',
-  template: 'Template',
-  skill: 'Skill AI',
-  wedding: 'Cưới hỏi',
-  travel: 'Du lịch',
-  vlog: 'Vlog',
-  cinematic: 'Điện ảnh',
-};
+import { CATEGORY_LABELS, splitDescription } from '@/lib/shop';
+import { skipOptimizer } from '@/lib/image';
 
 const categoryIcon = (cat?: string) => (cat === 'ebook' ? BookOpen : cat === 'lut' || cat === 'preset' ? Palette : Package);
 
@@ -88,7 +79,7 @@ export default function ShopPage() {
           as="h1"
 
           title="Sản phẩm khác"
-          description="Tài nguyên để làm video nhanh và đẹp hơn: ebook, preset màu, LUT và template studio của Minh Tấn dùng hằng ngày. Mua một lần, tải về dùng mãi."
+          description="Tài nguyên để làm video nhanh và đẹp hơn: ebook và skill AI của Minh Tấn. Mua một lần, tải về dùng mãi."
         />
 
         {categories.length > 2 && (
@@ -133,15 +124,15 @@ export default function ShopPage() {
               return (
                 <li key={asset.id} className="card overflow-hidden grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
                   <div className="flex flex-col">
-                    <div className="relative aspect-[4/3] bg-muted">
+                    <Link href={`/shop/${asset.id}`} className="relative block aspect-[4/3] bg-muted" aria-label={`Xem chi tiết ${asset.title}`}>
                       {asset.thumbnail_url ? (
-                        <Image src={asset.thumbnail_url} alt="" fill sizes="(min-width: 768px) 45vw, 100vw" className="object-cover" unoptimized={asset.thumbnail_url.startsWith('http')} />
+                        <Image src={asset.thumbnail_url} alt="" fill sizes="(min-width: 768px) 45vw, 100vw" className="object-cover" unoptimized={skipOptimizer(asset.thumbnail_url)} />
                       ) : (
                         <div className="absolute inset-0 surface-dark flex items-center justify-center"><Icon size={48} className="text-gold-light" aria-hidden="true" /></div>
                       )}
-                      {asset.category && <span className="badge absolute top-3 left-3">{CATEGORY_LABELS[asset.category] || asset.category}</span>}
-                    </div>
-                    <h2 className="p-6 md:p-7 text-2xl md:text-3xl leading-snug">{asset.title}</h2>
+                      {asset.category && <span className="badge absolute top-3 right-3">{CATEGORY_LABELS[asset.category] || asset.category}</span>}
+                    </Link>
+                    <h2 className="p-6 md:p-7 text-2xl md:text-3xl leading-snug"><Link href={`/shop/${asset.id}`} className="hover:underline">{asset.title}</Link></h2>
                   </div>
 
                   <div className="p-6 md:p-8 md:border-l border-t md:border-t-0 border-line flex flex-col">
@@ -152,10 +143,11 @@ export default function ShopPage() {
                     {asset.description && (
                       <div className="mt-6">
                         <p className="text-sm font-bold text-ink">Thông tin sản phẩm</p>
-                        <p className="mt-2 text-stone leading-relaxed whitespace-pre-line">{asset.description}</p>
+                        <p className="mt-2 text-stone leading-relaxed whitespace-pre-line">{splitDescription(asset.description).lead}</p>
                       </div>
                     )}
                     <div className="mt-auto pt-8">
+                      <Link href={`/shop/${asset.id}`} className="btn btn-outline w-full mb-3">Xem chi tiết</Link>
                       <button
                         onClick={() => (owned ? handleDownload(asset) : handlePurchase(asset))}
                         disabled={busyId === asset.id}
