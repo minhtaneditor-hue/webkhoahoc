@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import BrandMark from './BrandMark';
 import { usePathname } from 'next/navigation';
-import { supabase } from '@/utils/supabase';
+import { supabase, getCurrentUser } from '@/utils/supabase';
 import {
   ChevronDown,
   LayoutDashboard,
@@ -59,7 +59,7 @@ export default function Navbar() {
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    getCurrentUser().then(setUser);
     let lastY = window.scrollY;
     let frame = 0;
     const handleScroll = () => {

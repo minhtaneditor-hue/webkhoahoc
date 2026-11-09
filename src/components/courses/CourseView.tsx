@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { supabase } from '@/utils/supabase';
+import { supabase, getCurrentUser } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import { formatVND } from '@/lib/supabase-public';
@@ -74,7 +74,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
 
   useEffect(() => {
     async function fetchData() {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const currentUser = await getCurrentUser();
       setUser(currentUser);
 
       if (!initialCourse) {

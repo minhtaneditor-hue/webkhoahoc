@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { supabase } from '@/utils/supabase';
+import { supabase, getCurrentUser } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import { Logo } from '@/components/Navbar';
 import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart, Activity, ShieldCheck, Inbox, TicketPercent, CalendarCheck, MessageSquareText, Mail, Crown } from 'lucide-react';
@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCurrentUser();
       if (!user || !isAdmin(user.email)) {
         router.push('/auth?redirect=' + pathname);
         return;
