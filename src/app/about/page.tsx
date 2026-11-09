@@ -6,7 +6,7 @@ import SectionHeading from '@/components/SectionHeading';
 
 export const metadata: Metadata = {
   title: 'Về Minh Tấn',
-  description: 'Sứ mệnh của TẤN VA: giúp người kinh doanh tự làm video bằng điện thoại để bán hàng và xây thương hiệu.',
+  description: 'TẤN VA (Minh Tấn Video Advisor, Minh Tấn Academy) giúp người kinh doanh tự làm video bằng điện thoại để bán hàng và xây thương hiệu.',
   alternates: { canonical: '/about' },
 };
 
@@ -63,13 +63,13 @@ export default function AboutPage() {
           <SectionHeading
             as="h1"
 
-            title="Về TẤN VA"
-            description="Sứ mệnh của chúng tôi là giúp một triệu doanh nhân và nhà sáng tạo làm chủ kỹ năng video bằng chính chiếc điện thoại, rồi dùng video để bán hàng và xây thương hiệu."
+            title={<>Về TẤN VA <span className="text-[0.5em] font-semibold whitespace-nowrap">(Video Advisor)</span></>}
+            description="TẤN VA là thương hiệu của Minh Tấn, còn được biết đến là Minh Tấn Video Advisor và Minh Tấn Academy. Sứ mệnh của chúng tôi là giúp một triệu doanh nhân và nhà sáng tạo làm chủ kỹ năng video bằng chính chiếc điện thoại, rồi dùng video để bán hàng và xây thương hiệu."
           />
           <Link href="/courses" className="btn btn-gold mt-8">Khám phá khóa học <ArrowRight size={18} aria-hidden="true" /></Link>
         </div>
         <div className="relative aspect-[4/3] rounded-[var(--radius-card)] overflow-hidden bg-muted">
-          <Image src="/asset/du_an_tieu_bieu/project_2n1d.webp" alt="Hậu trường show 2 Ngày 1 Đêm" fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+          <Image src="/asset/avatar/hero_expert.jpg" alt="Minh Tấn, người sáng lập TẤN VA" fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover object-top" />
         </div>
       </section>
 
@@ -117,7 +117,7 @@ export default function AboutPage() {
           <dl className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-3">
             {values.map(({ t, d }) => (
               <div key={t}>
-                <dt className="font-display text-3xl font-bold text-ink">{t}</dt>
+                <dt className="font-display text-2xl font-semibold tracking-[0.01em] text-ink">{t}</dt>
                 <dd className="mt-2 text-lg text-muted-foreground leading-relaxed">{d}</dd>
               </div>
             ))}

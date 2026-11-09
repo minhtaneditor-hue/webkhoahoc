@@ -9,6 +9,7 @@ import { studentCode } from '@/lib/content-agreement';
 import { Award, Loader2, Printer, ArrowLeft } from 'lucide-react';
 import CertificateCard from '@/components/certificate/CertificateCard';
 import ConsultBox from '@/components/ConsultBox';
+import { publicName } from '@/lib/student-name';
 
 // Completion certificate: available once every lesson of the course is marked done.
 // "Tải PDF" uses the browser's print dialog (Save as PDF); print CSS keeps only the certificate.
@@ -32,7 +33,7 @@ export default function CertificatePage() {
         : { data: [] };
       const last = (progress || []).map((p) => p.last_watched_at).sort().pop();
       setData({
-        name: profile?.full_name || user.email?.split('@')[0] || 'Học viên',
+        name: publicName(profile?.full_name) || user.email?.split('@')[0] || 'Học viên',
         course: course?.title || '',
         done: isAdmin(user.email) ? ids.length : (progress || []).length,
         total: ids.length,

@@ -43,6 +43,7 @@ export default function AdminCrud({
   orderBy = { column: 'created_at', ascending: false },
   layout = 'cards',
   imageClassName = 'aspect-video',
+  wideForm = false,
 }: {
   table: string;
   title: string;
@@ -57,6 +58,7 @@ export default function AdminCrud({
   orderBy?: { column: string; ascending: boolean };
   layout?: 'cards' | 'list';
   imageClassName?: string;
+  wideForm?: boolean;
 }) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,7 +169,7 @@ export default function AdminCrud({
         </ul>
       )}
 
-      <Modal title={form?.id ? `Sửa ${itemLabel}` : `Thêm ${itemLabel}`} open={!!form} onClose={() => setForm(null)}>
+      <Modal title={form?.id ? `Sửa ${itemLabel}` : `Thêm ${itemLabel}`} open={!!form} onClose={() => setForm(null)} wide={wideForm}>
         {form && (
           <form onSubmit={save} className="space-y-5">
             {fields.map((f) => f.type === 'custom' ? (

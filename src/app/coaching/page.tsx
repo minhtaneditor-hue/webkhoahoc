@@ -8,7 +8,8 @@ import { contactFrom } from '@/lib/site-settings';
 import ConsultBox from '@/components/ConsultBox';
 
 export const metadata: Metadata = {
-  title: 'Coaching 1:1',
+  title: 'Coaching',
+  openGraph: { title: 'Coaching 1:1 cùng Minh Tấn | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
   description: 'Học 1-1 cùng Minh Tấn: chụp ảnh, quay và dựng video bằng điện thoại hoặc bằng AI. Audit miễn phí 30 phút, gói 6 buổi và 10 buổi, học online hoặc offline.',
   alternates: { canonical: '/coaching' },
 };

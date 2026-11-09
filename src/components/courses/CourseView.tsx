@@ -7,11 +7,12 @@ import Image from 'next/image';
 import { supabase, getCurrentUser } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
-import { formatVND } from '@/lib/supabase-public';
+import { formatVND, savingPercent } from '@/lib/supabase-public';
 import { groupByChapter, isComingSoon, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import ConsultBox from '@/components/ConsultBox';
 import CourseReviews from '@/components/CourseReviews';
 import PainPoints from '@/components/PainPoints';
+import SignInPrompt from '@/components/courses/SignInPrompt';
 import { useMembership } from '@/components/membership/useMembership';
 import { MEMBER_DISCOUNT_PERCENT, memberDiscount } from '@/lib/membership';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, PlayCircle, X, ChevronLeft, Gift } from 'lucide-react';
@@ -70,6 +71,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
   const [user, setUser] = useState<any>(null);
   const [enrolled, setEnrolled] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const [signInFor, setSignInFor] = useState<any>(null);
   const isMember = useMembership();
 
   useEffect(() => {
@@ -172,8 +174,13 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
   const firstLessonHref = `/learn/${course.id}/${lessons[0]?.id || ''}`;
   const freeLesson = lessons.find((l) => l.is_free);
 
-  const openLesson = (lesson: any) => {
-    if (lesson.video_url?.startsWith('drm:') || !lesson.video_url) router.push(`/learn/${course.id}/${lesson.id}`);
+  const openLesson = async (lesson: any) => {
+    if (lesson.video_url?.startsWith('drm:') || !lesson.video_url) {
+      // Protected videos need an account: guests get the popup first, however early they click
+      const viewer = authChecked ? user : (await supabase.auth.getUser()).data.user;
+      if (viewer) router.push(`/learn/${course.id}/${lesson.id}`);
+      else setSignInFor(lesson);
+    }
     else setSelectedLesson(lesson);
   };
 
@@ -322,6 +329,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
                     <p className="text-muted-foreground line-through">{formatVND(totalOff > 0 ? price : course.old_price)}</p>
                   )}
                 </div>
+                {savingPercent(finalPrice, totalOff > 0 ? price : course.old_price) && <p className="mt-2 font-semibold text-gold">Tiết kiệm {savingPercent(finalPrice, totalOff > 0 ? price : course.old_price)}%</p>}
                 {memberWins && (
                   <p className="mt-2 badge">Giá hội viên: giảm {MEMBER_DISCOUNT_PERCENT.course}%</p>
                 )}
@@ -374,6 +382,8 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
       )}
 
       {/* Free preview modal */}
+      {signInFor && <SignInPrompt next={`/learn/${course.id}/${signInFor.id}`} lessonTitle={signInFor.title} onClose={() => setSignInFor(null)} />}
+
       {selectedLesson && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={selectedLesson.title}>
           <div className="absolute inset-0 bg-onyx/90" onClick={() => setSelectedLesson(null)} aria-hidden="true" />

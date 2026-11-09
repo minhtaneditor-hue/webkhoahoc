@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Check, PlayCircle } from 'lucide-react';
-import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
+import { getPublicSupabase, formatVND, savingPercent } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import FaqList from '@/components/FaqList';
 import { ShutterImage, Reveal } from '@/components/motion/Motion';
@@ -24,10 +24,12 @@ import { SITE_URL } from '@/lib/site-url';
 export const revalidate = 3600;
 
 const HOME_TITLE = 'Khóa học làm video bằng điện thoại cùng Minh Tấn | TẤN VA';
+// Other names people search for; /about shows them too, so they match visible text.
+const BRAND_ALIASES = ['Tấn VA', 'Minh Tấn Video Advisor', 'Minh Tấn Academy', 'Tấn Academy'];
 const HOME_DESCRIPTION = 'Học quay, dựng và làm video bán hàng bằng điện thoại cùng Minh Tấn. Khóa học online, coaching 1:1, ebook và preset cho người kinh doanh.';
 
 export const metadata: Metadata = {
-  title: { absolute: HOME_TITLE },
+  title: { absolute: 'TẤN VA' },
   description: HOME_DESCRIPTION,
   alternates: { canonical: '/' },
   openGraph: { title: HOME_TITLE, description: HOME_DESCRIPTION, type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
@@ -97,12 +99,13 @@ export default async function Home() {
           {
             '@type': 'Organization',
             name: 'TẤN VA',
+            alternateName: BRAND_ALIASES,
             url: SITE_URL,
             logo: `${SITE_URL}/brand/tan-va-mark.png`,
             founder: { '@type': 'Person', name: 'Minh Tấn' },
             sameAs: ['https://www.facebook.com/profile.php?id=61583837884143', 'https://www.youtube.com/@minhtanvideoadvisor', 'https://www.tiktok.com/@minhtanvideoadvisor'],
           },
-          { '@type': 'WebSite', name: 'TẤN VA', url: SITE_URL, inLanguage: 'vi' },
+          { '@type': 'WebSite', name: 'TẤN VA', alternateName: BRAND_ALIASES, url: SITE_URL, inLanguage: 'vi' },
           {
             '@type': 'FAQPage',
             mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
@@ -163,13 +166,13 @@ export default async function Home() {
               <p className="mt-5 text-lg text-stone-300 max-w-xl">{settings.students_subtitle}</p>
             </Reveal>
             <dl className="grid grid-cols-2 gap-3 sm:gap-6">
-              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-6 flex flex-col-reverse">
-                <dt className="mt-2 text-stone-300">học viên đã theo học</dt>
-                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(2.25rem,3.6vw,3.25rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_students) || 0} suffix="+" /></dd>
+              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-5 flex flex-col-reverse justify-end">
+                <dt className="mt-2 text-sm sm:text-base text-stone-300">học viên đã theo học</dt>
+                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(1.875rem,2.9vw,2.75rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_students) || 0} suffix="+" /></dd>
               </div>
-              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-6 flex flex-col-reverse">
-                <dt className="mt-2 text-stone-300">năm làm truyền hình</dt>
-                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(2.25rem,3.6vw,3.25rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_years) || 0} suffix="+" /></dd>
+              <div className="min-w-0 rounded-[var(--radius-card)] bg-white/[0.05] p-4 sm:p-5 flex flex-col-reverse justify-end">
+                <dt className="mt-2 text-sm sm:text-base text-stone-300">năm làm truyền hình</dt>
+                <dd className="font-display text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(1.875rem,2.9vw,2.75rem)] leading-none whitespace-nowrap font-bold text-gold-light"><CountUp to={Number(settings.stat_years) || 0} suffix="+" /></dd>
               </div>
             </dl>
           </div>
@@ -236,6 +239,7 @@ export default async function Home() {
                 <p className="text-lg text-stone-400 line-through">{formatVND(course.old_price)}</p>
               )}
             </div>
+            {savingPercent(course?.price, course?.old_price) && <p className="mt-2 font-semibold text-gold-light">Tiết kiệm {savingPercent(course?.price, course?.old_price)}%</p>}
             <ul className="mt-8 space-y-3 text-stone-300 text-lg">
               {['Truy cập trọn đời', 'Hỗ trợ 1:1 qua Zalo', 'Học thử miễn phí trước khi mua', 'Quét QR, kích hoạt tự động'].map((x) => (
                 <li key={x} className="flex gap-3"><Check size={20} className="text-gold-light shrink-0 mt-1" aria-hidden="true" /> {x}</li>
@@ -245,7 +249,7 @@ export default async function Home() {
               Xem lộ trình và đăng ký <ArrowRight size={18} aria-hidden="true" />
             </Link>
             <Link href={courseHref} className="mt-3 flex items-center justify-center gap-2 text-gold-light hover:underline min-h-[44px]">
-              <PlayCircle size={18} aria-hidden="true" /> Học thử miễn phí bài đầu tiên
+              <PlayCircle size={18} aria-hidden="true" /> Học thử miễn phí
             </Link>
             <div className="mt-6 pt-6 border-t border-white/10">
               <p className="text-sm text-stone-400 mb-3 text-center">Còn băn khoăn? Để lại số Zalo, Minh Tấn tư vấn cho bạn.</p>
@@ -300,7 +304,7 @@ export default async function Home() {
 
       <section className="surface-dark">
         <div className="container-lux py-20 md:py-28 grid gap-10 lg:grid-cols-[1.3fr_0.7fr] items-end">
-          <h2 className="text-white text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1.15]">Học thử bài đầu tiên, miễn phí.</h2>
+          <h2 className="text-white text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1.15]">Học thử miễn phí.</h2>
           <div className="flex flex-col gap-3">
             <Link href={courseHref} className="btn btn-gold">Vào học thử <ArrowRight size={18} aria-hidden="true" /></Link>
             <Link href="/courses" className="btn btn-outline-light">Xem tất cả khóa học</Link>

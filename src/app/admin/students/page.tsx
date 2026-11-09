@@ -376,7 +376,7 @@ export default function StudentsManagement() {
 
       <Modal title="Cấp quyền khóa học" open={!!grantFor} onClose={() => setGrantFor(null)}>
         <form onSubmit={grant} className="space-y-5">
-          <p className="text-muted-foreground">Mở khóa học miễn phí, không cần thanh toán: tặng học viên, học viên chuyển khoản trực tiếp, đối tác… Email chưa có tài khoản thì hệ thống tự tạo và gửi link đặt mật khẩu.</p>
+          <p className="text-muted-foreground">Mở khóa học miễn phí, không cần thanh toán: tặng học viên, học viên chuyển khoản trực tiếp, đối tác… Email chưa có tài khoản thì hệ thống tự tạo với mật khẩu mặc định 123456 và gửi trong email chào mừng.</p>
           <Field id="grant-email" label="Email học viên">
             <input id="grant-email" type="email" className="input" required value={grantForm.email} disabled={!grantFor?.isNew}
                    onChange={(e) => { setGrantForm({ ...grantForm, email: e.target.value }); setGrantConfirmed(false); }} placeholder="hocvien@gmail.com" autoComplete="off" />
@@ -412,7 +412,7 @@ export default function StudentsManagement() {
           </Field>
           <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
             <input type="checkbox" className="w-5 h-5 accent-[var(--color-gold)]" checked={grantForm.sendEmail} onChange={(e) => setGrantForm({ ...grantForm, sendEmail: e.target.checked })} />
-            <span className="text-sm">Gửi email chào mừng (kèm link đặt mật khẩu nếu là tài khoản mới)</span>
+            <span className="text-sm">Gửi email chào mừng (kèm mật khẩu mặc định nếu là tài khoản mới)</span>
           </label>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setGrantFor(null)} className="btn btn-outline">Hủy</button>

@@ -6,6 +6,7 @@ import { Download, Loader2, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import BuyDialog from '@/components/shop/BuyDialog';
+import FreeDownloadDialog from '@/components/shop/FreeDownloadDialog';
 import type { ShopAsset } from '@/lib/shop';
 
 // Buy or download button. The page around it is cached for everyone, so whether this visitor
@@ -18,7 +19,8 @@ export default function ProductBuy({ asset, light = false }: { asset: ShopAsset;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [needLogin, setNeedLogin] = useState(false);
-  const owned = free || bought;
+  const [gettingFree, setGettingFree] = useState<ShopAsset | null>(null);
+  const owned = bought && !free;
 
   useEffect(() => {
     let live = true;
@@ -62,14 +64,16 @@ export default function ProductBuy({ asset, light = false }: { asset: ShopAsset;
     <>
       <button
         type="button"
-        onClick={() => (owned ? download() : setBuying(asset))}
+        onClick={() => (free ? setGettingFree(asset) : owned ? download() : setBuying(asset))}
         disabled={busy}
         className={`btn w-full ${owned && !light ? 'btn-dark' : 'btn-gold'}`}
       >
-        {busy ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : owned ? <Download size={16} aria-hidden="true" /> : <ShoppingBag size={16} aria-hidden="true" />}
-        {owned ? 'Tải về' : 'Mua ngay'}
+        {busy ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : owned || free ? <Download size={16} aria-hidden="true" /> : <ShoppingBag size={16} aria-hidden="true" />}
+        {free ? 'Tải miễn phí' : owned ? 'Tải về' : 'Mua ngay'}
       </button>
-      {!owned && <p className={`mt-3 text-center text-xs ${note}`}>Thanh toán xong nhận link tải ngay qua email.</p>}
+      {free
+        ? <p className={`mt-3 text-center text-xs ${note}`}>Để lại tên, email và Zalo để nhận link tải ngay.</p>
+        : !owned && <p className={`mt-3 text-center text-xs ${note}`}>Thanh toán xong nhận link tải ngay qua email.</p>}
       {needLogin && (
         <p role="alert" className={`mt-3 text-center text-sm ${note}`}>
           Bạn cần đăng nhập để tải file. <Link href={`/auth?redirect=/shop/${asset.id}`} className="underline font-semibold">Đăng nhập</Link>
@@ -77,6 +81,7 @@ export default function ProductBuy({ asset, light = false }: { asset: ShopAsset;
       )}
       {error && <p role="alert" className={`mt-3 text-center text-sm ${light ? 'text-red-300' : 'text-danger'}`}>{error}</p>}
       <BuyDialog asset={buying} defaultEmail={email} onClose={() => setBuying(null)} />
+      <FreeDownloadDialog asset={gettingFree} defaultEmail={email} onClose={() => setGettingFree(null)} />
     </>
   );
 }

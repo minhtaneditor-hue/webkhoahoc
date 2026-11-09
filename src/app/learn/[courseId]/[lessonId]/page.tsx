@@ -9,6 +9,7 @@ import { CheckCircle2, Circle, ChevronLeft, Loader2, Menu, X, ArrowRight, Lock, 
 import DrmPlayer from '@/components/video/DrmPlayer';
 import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import AgreementGate from '@/components/video/AgreementGate';
+import SignInPrompt from '@/components/courses/SignInPrompt';
 import { studentCode } from '@/lib/content-agreement';
 import LessonText from '@/components/LessonText';
 import ProtectedText from '@/components/ProtectedText';
@@ -30,6 +31,7 @@ export default function LearningPortal() {
   const [userEmail, setUserEmail] = useState('STUDENT');
   const [userId, setUserId] = useState('');
   const [hasAccess, setHasAccess] = useState(false);
+  const [guest, setGuest] = useState(false);
   const [finished, setFinished] = useState(false);
 
   const contact = contactFrom(useSiteSettings());
@@ -39,7 +41,9 @@ export default function LearningPortal() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push(`/auth?redirect=/learn/${courseId}/${lessonId}`);
+        // A lesson link opened without an account: popup first, the form only after the button
+        setGuest(true);
+        setLoading(false);
         return;
       }
       setUserEmail(user.email || 'STUDENT');
@@ -94,6 +98,14 @@ export default function LearningPortal() {
     if (!progress.includes(currentLesson.id)) await toggleComplete(currentLesson.id);
     if (currentIndex < lessons.length - 1) router.push(`/learn/${courseId}/${lessons[currentIndex + 1].id}`);
     else setFinished(true);
+  }
+
+  if (guest) {
+    return (
+      <main className="min-h-screen surface-dark">
+        <SignInPrompt next={`/learn/${courseId}/${lessonId}`} onClose={() => router.push(`/courses/${courseId}`)} />
+      </main>
+    );
   }
 
   if (loading) {

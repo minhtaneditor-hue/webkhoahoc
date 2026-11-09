@@ -1,8 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { BookOpen, Check, ChevronLeft, Package, Palette } from 'lucide-react';
-import { formatVND } from '@/lib/supabase-public';
-import { CATEGORY_LABELS, lines, parseDetails, parseFaq, splitDescription, type ShopAsset } from '@/lib/shop';
+import { formatVND, savingPercent } from '@/lib/supabase-public';
+import { CATEGORY_LABELS, assetPricing, lines, parseDetails, parseFaq, shortDate, splitDescription, type ShopAsset } from '@/lib/shop';
 import FaqList from '@/components/FaqList';
 import CopyButton from '@/components/shop/CopyButton';
 import ProductBuy from '@/components/shop/ProductBuy';
@@ -23,6 +23,7 @@ function Picture({ src, sizes, Icon }: { src?: string | null; sizes: string; Ico
 // A section the admin left empty doesn't appear.
 export default function ProductView({ asset, related }: { asset: ShopAsset; related: ShopAsset[] }) {
   const free = Number(asset.price) <= 0;
+  const { price, oldPrice, endsOn } = assetPricing(asset);
   const Icon = asset.category === 'ebook' ? BookOpen : asset.category === 'lut' || asset.category === 'preset' ? Palette : Package;
   const label = asset.category ? CATEGORY_LABELS[asset.category] || asset.category : '';
   const { lead, rest } = splitDescription(asset.description);
@@ -39,23 +40,28 @@ export default function ProductView({ asset, related }: { asset: ShopAsset; rela
           <ChevronLeft size={16} aria-hidden="true" /> Tất cả sản phẩm
         </Link>
 
-        <div className="mt-4 grid gap-8 lg:gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-center">
+        <div className="mt-4 grid gap-8 lg:gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-start">
           {/* The product comes first on a phone: people see the result before they read */}
-          <div className={`relative lg:order-last overflow-hidden bg-muted rounded-[var(--radius-img)] ${asset.preview_url ? 'aspect-video' : 'aspect-[4/3]'}`}>
+          <div className={`relative lg:order-last overflow-hidden bg-muted rounded-[var(--radius-card)] border border-line shadow-[0_24px_60px_-28px_rgba(36,35,33,0.45)] ${asset.preview_url ? 'aspect-video' : 'aspect-[4/3]'}`}>
             {asset.preview_url
               ? <ProductPreview url={asset.preview_url} poster={asset.thumbnail_url} title={asset.title} />
               : <Picture src={asset.thumbnail_url} sizes="(min-width: 1024px) 55vw, 100vw" Icon={Icon} />}
           </div>
 
           <div id="mua">
-            <h1 className="text-ink">{asset.title}</h1>
+            <h1 className="!text-[clamp(1.875rem,3.4vw,3rem)] !leading-[1.15] text-ink [text-wrap:balance]">{asset.title}</h1>
             {lead && <p className="mt-4 text-lg leading-relaxed text-muted-foreground whitespace-pre-line">{lead}</p>}
             {chips.length > 0 && (
               <ul className="mt-5 flex flex-wrap gap-2">
                 {chips.map((c) => <li key={c} className="px-3 py-1.5 rounded-full border border-line-strong bg-card text-sm font-medium text-stone">{c}</li>)}
               </ul>
             )}
-            <p className="mt-7 font-display text-4xl font-extrabold text-ink tabular-nums">{free ? 'Miễn phí' : formatVND(asset.price)}</p>
+            <p className="mt-7 font-display text-4xl font-extrabold text-ink tabular-nums">{free ? 'Miễn phí' : formatVND(price)}</p>
+            {oldPrice && (
+              <p className="mt-2 text-muted-foreground tabular-nums">
+                Giá niêm yết <s>{formatVND(oldPrice)}</s> <span className="font-semibold text-gold">· Giảm {savingPercent(price, oldPrice)}%{endsOn ? ` đến hết ${shortDate(endsOn)}` : ''}</span>
+              </p>
+            )}
             <div className="mt-5 max-w-sm"><ProductBuy asset={asset} /></div>
           </div>
         </div>
@@ -143,7 +149,7 @@ export default function ProductView({ asset, related }: { asset: ShopAsset; rela
                   </div>
                   <div className="p-5">
                     <p className="font-semibold text-ink leading-snug group-hover:underline">{r.title}</p>
-                    <p className="mt-2 font-display font-bold text-gold tabular-nums">{Number(r.price) > 0 ? formatVND(r.price) : 'Miễn phí'}</p>
+                    <p className="mt-2 font-display font-bold text-gold tabular-nums">{Number(r.price) > 0 ? formatVND(assetPricing(r).price) : 'Miễn phí'}</p>
                   </div>
                 </Link>
               </li>
@@ -157,7 +163,10 @@ export default function ProductView({ asset, related }: { asset: ShopAsset; rela
         <div className="container-lux py-12 md:py-16 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <h2 className="text-2xl md:text-3xl text-white">{asset.title}</h2>
-            <p className="mt-2 font-display text-2xl font-bold text-gold-light tabular-nums">{free ? 'Miễn phí' : formatVND(asset.price)}</p>
+            <p className="mt-2 font-display text-2xl font-bold text-gold-light tabular-nums">
+              {free ? 'Miễn phí' : formatVND(price)}
+              {oldPrice && <s className="ml-3 text-base font-normal text-stone-400">{formatVND(oldPrice)}</s>}
+            </p>
           </div>
           <div className="w-full md:w-72 shrink-0"><ProductBuy asset={asset} light /></div>
         </div>

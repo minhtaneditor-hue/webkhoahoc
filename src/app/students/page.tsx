@@ -15,7 +15,8 @@ import { skipOptimizer } from '@/lib/image';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Học viên & sản phẩm',
+  title: 'Học viên',
+  openGraph: { title: 'Học viên & sản phẩm | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
   description: 'Sản phẩm thật của học viên TẤN VA, trước và sau khóa học, cùng câu chuyện từ học viên ở Việt Nam và khắp thế giới.',
   alternates: { canonical: '/students' },
 };
@@ -49,9 +50,9 @@ export default async function StudentsPage() {
               { n: places.length, label: 'quốc gia' },
               { n: plus(settings.students_page_works, 500), label: 'sản phẩm' },
             ].map((s) => (
-              <div key={s.label} className="rounded-[var(--radius-card)] border border-line bg-card p-4 flex flex-col-reverse">
+              <div key={s.label} className="min-w-0 rounded-[var(--radius-card)] border border-line bg-card p-3 sm:p-4 flex flex-col-reverse justify-end">
                 <dt className="mt-1 text-sm text-muted-foreground">{s.label}</dt>
-                <dd className="font-display text-3xl md:text-4xl font-bold text-ink">{s.n}</dd>
+                <dd className="font-display text-[1.375rem] sm:text-3xl md:text-4xl leading-tight whitespace-nowrap font-bold text-ink">{s.n}</dd>
               </div>
             ))}
           </dl>

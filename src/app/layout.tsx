@@ -14,8 +14,9 @@ const beVietnam = Be_Vietnam_Pro({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
   title: {
-    default: "TẤN VA | Từ góc nhìn đến câu chuyện",
-    template: "%s | TẤN VA",
+    default: "TẤN VA",
+    // Tab titles read like a path: TẤN VA / Tab / Sub-page
+    template: "TẤN VA / %s",
   },
   description: "Học làm video, xây dựng thương hiệu cá nhân và biến nội dung thành tài sản cùng Minh Tấn. Khóa học, ebook, preset và coaching 1:1.",
   openGraph: {
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
     siteName: "TẤN VA",
   },
   verification: {
+    google: "toUmFktYgxJn-5qf8KJNo1Qgxl0ff5Tw3X4yArRODcs",
     other: { "facebook-domain-verification": "jjij9i80mxi4f4vs3ojgb99ebod2da" },
   },
   // Share image: src/app/opengraph-image.tsx (and one per course)

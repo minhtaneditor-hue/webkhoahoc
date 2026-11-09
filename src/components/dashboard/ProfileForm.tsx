@@ -54,6 +54,7 @@ export default function ProfileForm({ userId, email, profile, onSaved }: { userI
     setBusy(false);
     if (error) return setNotice({ ok: false, text: 'Chưa lưu được, vui lòng thử lại.' });
     onSaved(patch);
+    window.dispatchEvent(new Event('profile-updated'));
     setNotice({ ok: true, text: 'Đã lưu thông tin.' });
   }
 
@@ -68,6 +69,7 @@ export default function ProfileForm({ userId, email, profile, onSaved }: { userI
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return setPhotoNotice({ ok: false, text: data.error || 'Chưa tải được ảnh, vui lòng thử lại.' });
       onSaved({ avatar_url: data.url });
+      window.dispatchEvent(new Event('profile-updated'));
     } catch {
       setPhotoNotice({ ok: false, text: 'Không đọc được ảnh này, vui lòng chọn ảnh khác.' });
     } finally {

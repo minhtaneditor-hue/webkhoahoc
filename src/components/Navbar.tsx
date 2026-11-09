@@ -51,6 +51,7 @@ export function Logo({ light = false }: { light?: boolean }) {
 export default function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<{ full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -62,6 +63,8 @@ export default function Navbar() {
 
   useEffect(() => {
     getCurrentUser().then(setUser);
+    // The navbar stays mounted across pages: signing in or out must update it without a reload
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
     let lastY = window.scrollY;
     let frame = 0;
     const handleScroll = () => {
@@ -79,8 +82,27 @@ export default function Navbar() {
     };
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', handleScroll); cancelAnimationFrame(frame); };
+    return () => { subscription.unsubscribe(); window.removeEventListener('scroll', handleScroll); cancelAnimationFrame(frame); };
   }, []);
+
+  // Photo and name beside the logout button; ProfileForm announces its saves so they change at once
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return;
+    const load = () => supabase.from('users').select('full_name, avatar_url').eq('id', userId).maybeSingle().then(({ data }) => setProfile(data));
+    load();
+    window.addEventListener('profile-updated', load);
+    return () => window.removeEventListener('profile-updated', load);
+  }, [userId]);
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
+  const avatar = (size: string) => (
+    <span className={`${size} shrink-0 rounded-full overflow-hidden bg-gold-soft text-gold flex items-center justify-center font-bold`}>
+      {profile?.avatar_url ? (
+        // eslint-disable-next-line @next/next/no-img-element -- the student's own uploaded photo
+        <img src={profile.avatar_url} alt="" className="w-full h-full object-cover !rounded-none" />
+      ) : displayName.charAt(0).toUpperCase()}
+    </span>
+  );
 
   // Close menus on navigation (adjusting state during render, as React recommends), outside click and Escape
   const [lastPath, setLastPath] = useState(pathname);
@@ -123,7 +145,7 @@ export default function Navbar() {
     // either one would make the header the containing block and trap the fixed menu inside it
     <header ref={headerRef} className={`sticky top-0 z-[100] transition-[background-color,box-shadow,border-color,translate] duration-500 ease-[cubic-bezier(.22,1,.36,1)] border-b ${isHidden && !isMenuOpen && !isDropdownOpen ? '-translate-y-full' : ''} ${isMenuOpen ? 'bg-ivory border-line' : isScrolled ? 'bg-ivory/95 backdrop-blur-md border-line shadow-[0_8px_24px_-16px_rgba(12,10,9,0.25)]' : 'bg-ivory border-transparent'}`}>
       <div ref={progressRef} aria-hidden="true" className="absolute left-0 right-0 -bottom-px h-[2px] bg-gradient-to-r from-gold via-gold-light to-gold origin-left scale-x-0" />
-      <nav className="container-lux flex items-center justify-between h-[72px]" aria-label="Điều hướng chính">
+      <nav className="container-lux flex items-center justify-between gap-4 h-[72px] whitespace-nowrap" aria-label="Điều hướng chính">
         <Logo />
 
         {/* Desktop */}
@@ -166,16 +188,20 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="hidden lg:flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-2 whitespace-nowrap">
           {user ? (
             <>
               {isAdmin(user.email) && (
                 <Link href="/admin" className="btn btn-outline !min-h-[44px] !px-4 text-sm">
-                  <ShieldCheck size={16} aria-hidden="true" /> Quản trị
+                  <ShieldCheck size={16} aria-hidden="true" className="hidden xl:block" /> Quản trị
                 </Link>
               )}
               <Link href="/dashboard" className="btn btn-dark !min-h-[44px] !px-4 text-sm">
-                <LayoutDashboard size={16} aria-hidden="true" /> Khu học tập
+                <LayoutDashboard size={16} aria-hidden="true" className="hidden xl:block" /> Khu học tập
+              </Link>
+              <Link href="/dashboard#ho-so" className="flex items-center gap-2 min-h-[44px] pl-1 pr-2 rounded-md hover:bg-muted transition-colors" aria-label={`Hồ sơ của ${displayName}`}>
+                {avatar('w-9 h-9')}
+                <span className="hidden xl:inline max-w-[9rem] truncate text-sm font-semibold text-ink">{displayName}</span>
               </Link>
               <button onClick={handleLogout} aria-label="Đăng xuất" className="w-11 h-11 rounded-md flex items-center justify-center text-muted-foreground hover:text-ink hover:bg-muted transition-colors">
                 <LogOut size={18} aria-hidden="true" />
@@ -225,6 +251,10 @@ export default function Navbar() {
             <div className="mt-8 grid gap-3">
               {user ? (
                 <>
+                  <Link href="/dashboard#ho-so" className="flex items-center gap-3 min-w-0 py-1">
+                    {avatar('w-11 h-11')}
+                    <span className="min-w-0 truncate font-semibold text-ink">{displayName}</span>
+                  </Link>
                   <Link href="/dashboard" className="btn btn-dark w-full">Khu học tập</Link>
                   {isAdmin(user.email) && <Link href="/admin" className="btn btn-outline w-full">Quản trị</Link>}
                   <button onClick={handleLogout} className="btn btn-outline w-full">Đăng xuất</button>

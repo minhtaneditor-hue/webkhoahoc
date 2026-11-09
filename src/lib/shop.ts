@@ -26,7 +26,29 @@ export type ShopAsset = {
   requirements?: string | null;
   samples?: string | null;
   faq?: string | null;
+  // Missing until migration 028 has run: no sale then.
+  old_price?: number | string | null;
+  sale_ends_on?: string | null;
 };
+
+type Priced = Pick<ShopAsset, 'price' | 'old_price' | 'sale_ends_on'>;
+
+/**
+ * What a product costs right now. During a sale, price is the sale price and old_price the listed
+ * one; once sale_ends_on is over (end of that day, Vietnam time) old_price applies again by itself.
+ * The checkout uses this too, so the page and the bill always agree.
+ */
+export function assetPricing(a: Priced, now = Date.now()) {
+  const price = Number(a.price) || 0;
+  const listed = Number(a.old_price) || 0;
+  if (listed <= price) return { price, oldPrice: null, endsOn: null };
+  const ends = a.sale_ends_on ? Date.parse(`${a.sale_ends_on.slice(0, 10)}T23:59:59+07:00`) : NaN;
+  if (!Number.isNaN(ends) && now > ends) return { price: listed, oldPrice: null, endsOn: null };
+  return { price, oldPrice: listed, endsOn: Number.isNaN(ends) ? null : a.sale_ends_on!.slice(0, 10) };
+}
+
+// "2026-11-16" → "16/11"
+export const shortDate = (isoDay: string) => isoDay.slice(8, 10) + '/' + isoDay.slice(5, 7);
 
 // One item per line, blank lines ignored.
 export const lines = (text?: string | null) =>

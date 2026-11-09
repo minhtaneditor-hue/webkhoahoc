@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
+import { checkEmail } from '@/lib/email-check';
+import { checkZalo } from '@/lib/phone-check';
 import { CHECKLIST, CHECKLIST_TITLE } from '@/lib/checklist';
 import { FROM, checklistEmail, unsubscribeHeaders, getFeaturedCourse } from '@/lib/emails';
 import { cleanEventId, metaContext, sendMetaEvent, siteUrl } from '@/lib/meta-capi';
@@ -14,10 +16,14 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   if (body.website) return NextResponse.json({ ok: true }); // bots fill hidden fields
-  const email = String(body.email || '').trim().toLowerCase().slice(0, 120);
+  const checked = await checkEmail(body.email);
   const name = String(body.name || '').trim().slice(0, 80);
-  const phone = String(body.phone || '').replace(/[^\d+ ]/g, '').trim().slice(0, 20);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'Email chưa đúng.' }, { status: 400 });
+  // Zalo stays optional here, but a number that is filled in must be a real one
+  const zalo = String(body.phone || '').trim() ? checkZalo(body.phone) : null;
+  if (zalo && !zalo.ok) return NextResponse.json({ error: zalo.error }, { status: 400 });
+  const phone = zalo?.ok ? zalo.phone : '';
+  if (!checked.ok) return NextResponse.json({ error: checked.error }, { status: 400 });
+  const { email } = checked;
 
   const admin = getSupabaseAdmin();
   if (!admin) return NextResponse.json({ error: 'Máy chủ chưa sẵn sàng.' }, { status: 500 });

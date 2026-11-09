@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { checkPromo } from '@/lib/promo';
+import { assetPricing } from '@/lib/shop';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +16,8 @@ export async function POST(req: Request) {
   const table = body.courseId ? 'courses' : 'digital_assets';
   const id = body.courseId || body.assetId;
   if (!id) return NextResponse.json({ ok: false, error: 'Thiếu sản phẩm.' }, { status: 400 });
-  const { data: product } = await db.from(table).select('price').eq('id', id).maybeSingle();
+  const { data: product } = await db.from(table).select(body.courseId ? 'price' : '*').eq('id', id).maybeSingle();
   if (!product) return NextResponse.json({ ok: false, error: 'Sản phẩm không tồn tại.' }, { status: 404 });
-  const result = await checkPromo(db, body.code, { courseId: body.courseId, price: Number(product.price) || 0 });
+  const result = await checkPromo(db, body.code, { courseId: body.courseId, price: body.courseId ? Number((product as any).price) || 0 : assetPricing(product as any).price });
   return NextResponse.json(result);
 }

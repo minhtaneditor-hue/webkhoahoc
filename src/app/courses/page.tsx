@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, BookOpen, Check, Compass, Crown } from 'lucide-react';
-import { getPublicSupabase, formatVND } from '@/lib/supabase-public';
+import { getPublicSupabase, formatVND, savingPercent } from '@/lib/supabase-public';
 import SectionHeading from '@/components/SectionHeading';
 import { Reveal } from '@/components/motion/Motion';
 import LeadMagnet from '@/components/LeadMagnet';
@@ -12,7 +12,8 @@ import { skipOptimizer } from '@/lib/image';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Khóa học làm video bằng điện thoại',
+  title: 'Khóa học',
+  openGraph: { title: 'Khóa học làm video bằng điện thoại | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
   description: 'Các khóa học online về quay, dựng video bằng điện thoại, làm video bán hàng và sáng tạo nội dung cùng Minh Tấn. Có bài học thử miễn phí.',
   alternates: { canonical: '/courses' },
 };
@@ -73,7 +74,7 @@ export default async function CoursesPage() {
             <p className="mt-2 text-muted-foreground">Bấm nút Hỗ trợ để nhận thông báo khi mở đăng ký.</p>
           </div>
         ) : (
-          <Reveal as="ul" className="grid gap-8 md:grid-cols-2">
+          <Reveal as="ul" className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {courses.map((course: any, i: number) => {
               const lessonCount = course.lesson_outline?.[0]?.count ?? 0;
               const hasDiscount = course.old_price && Number(course.old_price) > Number(course.price);
@@ -98,12 +99,12 @@ export default async function CoursesPage() {
                       <p className="text-sm text-muted-foreground">{comingSoon ? 'Đặt trước để nhận giá ưu đãi' : `${lessonCount > 0 ? `${lessonCount} bài học` : 'Sắp ra mắt'} · Truy cập trọn đời`}</p>
                       <h2 className="mt-2 text-3xl group-hover:text-gold transition-colors">{course.title}</h2>
                       {course.description && <p className="mt-3 text-muted-foreground leading-relaxed line-clamp-3">{course.description}</p>}
-                      <div className="mt-auto pt-6 flex items-end justify-between gap-4">
+                      <div className="mt-auto pt-6 flex flex-wrap items-end justify-between gap-4">
                         <div>
-                          {hasDiscount && <p className="text-sm text-muted-foreground line-through">{formatVND(course.old_price)}</p>}
+                          {hasDiscount && <p className="text-sm text-muted-foreground"><span className="line-through">{formatVND(course.old_price)}</span> <span className="font-semibold text-gold">· Tiết kiệm {savingPercent(course.price, course.old_price)}%</span></p>}
                           <p className="font-display text-3xl font-bold">{comingSoon ? 'Giá chưa tiết lộ' : Number(course.price) > 0 ? formatVND(course.price) : 'Miễn phí'}</p>
                         </div>
-                        <span className="btn btn-dark !min-h-[44px] text-sm shrink-0">{comingSoon ? 'Đặt trước' : 'Xem chi tiết'} <ArrowRight size={16} aria-hidden="true" /></span>
+                        <span className="btn btn-dark !min-h-[44px] text-sm whitespace-nowrap">{comingSoon ? 'Đặt trước' : 'Xem chi tiết'} <ArrowRight size={16} aria-hidden="true" /></span>
                       </div>
                     </div>
                   </Link>

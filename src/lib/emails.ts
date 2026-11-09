@@ -1,5 +1,6 @@
 import { createHmac } from 'crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { publicName } from './student-name';
 
 // Every email the site sends: one shared layout (logo, white card, button, signature, footer)
 // and the copy for each message. Table layout + inline styles because email clients ignore <style>.
@@ -14,7 +15,7 @@ const FONT = "'Be Vietnam Pro', Arial, Helvetica, sans-serif";
 export const esc = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** "Nguyễn Văn An" → "An"; Vietnamese people are greeted by the given name, which comes last. */
-export const firstName = (full?: string | null) => (full || '').trim().split(/\s+/).pop() || 'bạn';
+export const firstName = (full?: string | null) => publicName(full).split(/\s+/).pop() || 'bạn';
 
 // ---------------------------------------------------------------- building blocks
 
@@ -148,8 +149,14 @@ const lessonLink = (courseId: string, lessonId?: string | null) => `${SITE}/lear
 // ---------------------------------------------------------------- transactional
 
 /** Day 0 of the onboarding sequence: sent the moment a course is unlocked. */
-/** setPasswordUrl: the account was created by an admin (Admin > Học viên > Cấp quyền), so the student sets a password first. */
-export function welcomeCourse(d: { name?: string | null; email: string; courseTitle: string; courseId: string; contact: Contact; setPasswordUrl?: string }): Mail {
+/** Password of every account created by an admin (Admin > Học viên > Cấp quyền). The owner chose one shared, known password; students may change it. */
+export const DEFAULT_STUDENT_PASSWORD = '123456';
+
+/**
+ * defaultPassword: a new account from Admin > Học viên > Cấp quyền, sign in with this.
+ * setPasswordUrl: an older account that never got a password, set one first.
+ */
+export function welcomeCourse(d: { name?: string | null; email: string; courseTitle: string; courseId: string; contact: Contact; setPasswordUrl?: string; defaultPassword?: string }): Mail {
   const course = esc(d.courseTitle);
   return {
     subject: `Chào mừng ${firstName(d.name)}! Khóa ${d.courseTitle} đã mở`,
@@ -159,6 +166,7 @@ export function welcomeCourse(d: { name?: string | null; email: string; courseTi
         ${eyebrow('Kích hoạt thành công')}
         ${h1(`Chào mừng ${esc(firstName(d.name))} vào lớp!`)}
         ${p(`Khóa <strong>${course}</strong> đã mở cho tài khoản <strong>${esc(d.email)}</strong>. Bạn học được trên cả điện thoại lẫn máy tính.`)}
+        ${d.defaultPassword ? box(`<strong style="color:${C.ink};">Tài khoản đã được tạo sẵn cho bạn</strong><br>Email: <strong>${esc(d.email)}</strong><br>Mật khẩu: <strong>${esc(d.defaultPassword)}</strong><br>Đăng nhập tại <a href="${SITE}/auth" style="color:${C.gold};">trang đăng nhập</a>. Đây là mật khẩu mặc định, bạn nên đổi sang mật khẩu của riêng mình trong phần hồ sơ ở trang học viên.`) : ''}
         ${d.setPasswordUrl ? `${box(`<strong style="color:${C.ink};">Tài khoản đã được tạo sẵn cho bạn</strong><br>Bấm nút bên dưới để đặt mật khẩu, sau đó đăng nhập bằng email <strong>${esc(d.email)}</strong>. Link dùng được một lần; nếu hết hạn, bấm “Quên mật khẩu” ở <a href="${SITE}/auth" style="color:${C.gold};">trang đăng nhập</a> để nhận link mới.`)}
         ${button(d.setPasswordUrl, 'Đặt mật khẩu')}` : ''}
         ${p('Để không bị “mua rồi để đó”, bạn làm 3 việc nhỏ này ngay hôm nay:')}
@@ -402,7 +410,7 @@ export function leadDay2(d: { name?: string | null; email: string }, c: Featured
           ['Đặt điện thoại thấp hơn mắt', 'Góc từ dưới lên làm mặt to và mất thiện cảm. Để camera ngang tầm mắt.'],
           ['Đứng xa điện thoại để nói', 'Tiếng bị vang, xa. Lại gần hơn hoặc dùng mic cài áo.'],
         ])}
-        ${p(`Sửa 3 điều này thôi là video đã khác hẳn. Muốn học bài bản từ đầu, bạn xem thử miễn phí ${c.freeLessons.length} bài đầu của khóa <strong>${esc(c.title)}</strong>:`)}
+        ${p(`Sửa 3 điều này thôi là video đã khác hẳn. Muốn học bài bản từ đầu, bạn xem thử miễn phí ${c.freeLessons.length} bài của khóa <strong>${esc(c.title)}</strong>:`)}
         ${button(courseUrl(c), 'Học thử miễn phí')}
         ${signature}`,
     }),
@@ -432,6 +440,22 @@ export function leadDay6(d: { name?: string | null; email: string }, c: Featured
   };
 }
 
+// ---------------------------------------------------------------- free products (/api/shop/free)
+export function freeDownloadEmail(d: { name?: string | null; email: string; title: string; url: string }): Mail {
+  return {
+    subject: `Link tải ${d.title} của bạn`,
+    html: layout({
+      preheader: 'Bấm nút trong email để tải bất cứ lúc nào.',
+      unsubscribeFor: d.email,
+      body: `
+        ${h1(`Của bạn đây, ${esc(firstName(d.name))}!`)}
+        ${p(`Cảm ơn bạn đã quan tâm. Bấm nút bên dưới để tải <strong>${esc(d.title)}</strong>. Lưu email này lại để tải lại khi cần.`)}
+        ${button(d.url, 'Tải về')}
+        ${signature}`,
+    }),
+  };
+}
+
 // ---------------------------------------------------------------- campaigns (Admin > Email đã gửi)
 
 /** Coming-soon courses announced to current students. Only what the pre-order section on the site promises: no price, no date. */
@@ -454,6 +478,59 @@ export function preorderAiCourses(d: { name?: string | null; email: string }, co
           ${p(esc((c.description || '').split('.')[0] + '.'))}
           ${button(`${SITE}/courses/${c.id}#dat-truoc`, 'Đặt trước khóa này')}`).join('')}
         ${p('Bạn muốn học khóa nào hơn, hoặc muốn khóa dạy thêm phần nào? Trả lời email này cho mình biết nhé.')}
+        ${signature}`,
+    }),
+  };
+}
+
+/** Signed up but never bought: a promo code for the featured course. States only what checkout enforces, so no deadline. */
+export function remarketingDiscount(d: { name?: string | null; email: string }, c: FeaturedCourse, offer: { code: string; price: number; discount: number }): Mail {
+  const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
+  return {
+    subject: `${firstName(d.name)} ơi, mã giảm 10% cho khóa ${c.title}`,
+    html: layout({
+      preheader: `Nhập mã ${offer.code}: còn ${vnd(offer.price - offer.discount)} thay vì ${vnd(offer.price)}.`,
+      unsubscribeFor: d.email,
+      body: `
+        ${eyebrow('Ưu đãi giảm 10%')}
+        ${h1(`Mã giảm 10% cho khóa ${esc(c.title)}`)}
+        ${p(`Chào ${esc(firstName(d.name))}, cảm ơn bạn đã tạo tài khoản TẤN VA. Bạn chưa chọn khóa học nào, nên mình gửi bạn mã giảm giá để bắt đầu nhẹ nhàng hơn.`)}
+        ${box(`Mã giảm giá của bạn<br>
+          <strong style="font-size:24px;letter-spacing:0.08em;color:${C.ink};">${esc(offer.code)}</strong><br>
+          Học phí còn <strong style="color:${C.ink};">${vnd(offer.price - offer.discount)}</strong> thay vì ${vnd(offer.price)}. Mã có số lượt dùng giới hạn.`)}
+        ${steps([
+          ['Mở trang khóa học', 'Bấm nút bên dưới. Bạn có thể học thử trước khi quyết định.'],
+          ['Nhập mã', `Gõ ${esc(offer.code)} vào ô Mã giảm giá rồi bấm Áp dụng.`],
+          ['Thanh toán', 'Khóa học mở ngay sau khi thanh toán thành công.'],
+        ])}
+        ${button(`${courseUrl(c)}#dang-ky`, 'Dùng mã giảm 10%')}
+        ${p('Bạn còn phân vân điều gì về khóa học? Trả lời email này cho mình biết nhé.')}
+        ${signature}`,
+    }),
+  };
+}
+
+/** To people who took the free 75-repo list: Minh Tấn's birthday-month offer on the featured course. `until` is the code's real expiry. */
+export function repoBirthdaySale(d: { name?: string | null; email: string }, c: FeaturedCourse, offer: { code: string; price: number; discount: number; until: string }): Mail {
+  const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
+  const now = vnd(offer.price - offer.discount);
+  return {
+    subject: 'Tháng sinh nhật mình: giảm 50% khóa quay video bằng điện thoại',
+    html: layout({
+      preheader: `Còn ${now} đến hết ${offer.until}, nhập mã ${offer.code} khi thanh toán.`,
+      unsubscribeFor: d.email,
+      body: `
+        ${eyebrow('Ưu đãi tháng sinh nhật')}
+        ${h1('AI dựng được video, nhưng cảnh quay vẫn là của bạn')}
+        ${p(`Chào ${esc(firstName(d.name))}, bạn đã nhận danh sách 75 repo skill edit video từ mình. Tháng 11 này là tháng sinh nhật của mình, nên mình có một ưu đãi muốn gửi bạn: <strong>giảm 50% khóa ${esc(c.title)}</strong>.`)}
+        ${p('Vì sao mình gửi khóa này cho người đang quan tâm AI? Skill có thể giúp cắt, thêm phụ đề và làm hiệu ứng. Nhưng nếu bạn làm video có chính mình, có sản phẩm hay câu chuyện của mình, thì vẫn phải có người đứng ra quay, và AI chỉ dựng được từ những gì bạn đưa vào.')}
+        ${p('Khóa này dạy phần đó: tự quay, tự dựng và bán hàng bằng video, chỉ với chiếc điện thoại của bạn.')}
+        ${box(`Mã giảm giá tháng sinh nhật<br>
+          <strong style="font-size:24px;letter-spacing:0.08em;color:${C.ink};">${esc(offer.code)}</strong><br>
+          Học phí còn <strong style="color:${C.ink};">${now}</strong> thay vì ${vnd(offer.price)}. Mã dùng được đến hết ngày ${esc(offer.until)}, số lượt có giới hạn.`)}
+        ${p('Bạn có thể học thử trước, rồi nhập mã vào ô Mã giảm giá khi thanh toán.')}
+        ${button(`${courseUrl(c)}#dang-ky`, 'Xem khóa và học thử')}
+        ${p('Nếu bạn chỉ muốn tạo video hoàn toàn bằng AI thì có thể bỏ qua thư này. Còn phân vân điều gì, cứ trả lời email này cho mình nhé.')}
         ${signature}`,
     }),
   };

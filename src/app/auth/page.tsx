@@ -28,7 +28,7 @@ function AuthForm() {
   // Only allow same-site paths so ?redirect=https://evil.com can't be abused
   const redirectTo = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard';
 
-  const [mode, setMode] = useState<Mode>('login');
+  const [mode, setMode] = useState<Mode>(searchParams?.get('mode') === 'signup' ? 'signup' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -90,7 +90,7 @@ function AuthForm() {
 
   const titles: Record<Mode, { title: string; sub: string; cta: string }> = {
     login: { title: 'Chào mừng trở lại', sub: 'Đăng nhập để tiếp tục khóa học của bạn.', cta: 'Đăng nhập' },
-    signup: { title: 'Tạo tài khoản', sub: 'Miễn phí — học thử ngay bài đầu tiên.', cta: 'Tạo tài khoản' },
+    signup: { title: 'Tạo tài khoản', sub: 'Miễn phí, học thử ngay.', cta: 'Tạo tài khoản' },
     reset: { title: 'Quên mật khẩu', sub: 'Nhập email, chúng tôi sẽ gửi link đặt lại mật khẩu.', cta: 'Gửi link đặt lại' },
   };
 
