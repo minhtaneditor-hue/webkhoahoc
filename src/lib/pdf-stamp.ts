@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { PDFDocument, rgb } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { r2Get, r2Put, r2SignedUrl } from './drm/server';
+import { r2Get, r2Put, shopFileLink } from './drm/server';
 
 // A private shop file is written in digital_assets.download_url as `storage:<bucket>/<path>`
 // (Supabase Storage) or `r2:<key>` (Cloudflare R2, the video bucket: large uploads from the
@@ -71,7 +71,7 @@ async function signed(store: ReturnType<SupabaseClient['storage']['from']>, path
 // Same as buyerLink, for a file in R2: stamped copies live next to it under stamped/<order>/.
 async function r2BuyerLink(key: string, b: Buyer | null) {
   const name = key.split('/').pop()!;
-  if (!b || !name.toLowerCase().endsWith('.pdf')) return r2SignedUrl(key, LINK_TTL, name);
+  if (!b || !name.toLowerCase().endsWith('.pdf')) return shopFileLink(key, name, LINK_TTL);
   const copy = `${key.split('/').slice(0, -1).join('/')}/stamped/${b.orderId}/${name}`;
   const exists = await r2Get(copy).then((r) => { r.body?.cancel(); return r.ok; });
   if (!exists) {
@@ -81,5 +81,5 @@ async function r2BuyerLink(key: string, b: Buyer | null) {
     const put = await r2Put(copy, stamped, 'application/pdf');
     if (!put.ok) throw new Error(`Cannot save stamped copy r2:${copy}: ${put.status}`);
   }
-  return r2SignedUrl(copy, LINK_TTL, name);
+  return shopFileLink(copy, name, LINK_TTL);
 }

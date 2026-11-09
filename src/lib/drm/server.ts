@@ -85,6 +85,29 @@ export async function r2SignedUrl(key: string, seconds = 120, downloadAs?: strin
   return signed.url;
 }
 
+/*
+ * Shop file links on our own domain (/api/shop/file). A signed R2 URL breaks as soon as anything
+ * adds a query parameter: Facebook's in-app browser appends ?fbclid= to every outbound link, and R2
+ * then answers SignatureDoesNotMatch. Our own HMAC only covers k/n/e, so extra parameters are ignored.
+ */
+const fileSig = (key: string, name: string, exp: number) =>
+  createHmac('sha256', secret()).update(`shopfile\n${key}\n${name}\n${exp}`).digest('base64url');
+
+export function shopFileLink(key: string, name: string, seconds: number) {
+  const exp = Math.floor(Date.now() / 1000) + seconds;
+  const q = new URLSearchParams({ k: key, n: name, e: String(exp), s: fileSig(key, name, exp) });
+  return `/api/shop/file?${q}`;
+}
+
+export function verifyShopFile(params: URLSearchParams) {
+  const key = params.get('k') || '', name = params.get('n') || '', exp = Number(params.get('e'));
+  const given = Buffer.from(params.get('s') || '');
+  if (!key || !name || !exp || exp < Date.now() / 1000) return null;
+  const expected = Buffer.from(fileSig(key, name, exp));
+  if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
+  return { key, name };
+}
+
 /* ---------- Licence: may this user watch this video? ---------- */
 
 export async function canWatch(admin: SupabaseClient, user: User, videoId: string) {
