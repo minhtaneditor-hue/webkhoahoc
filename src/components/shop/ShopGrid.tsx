@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Package, Palette } from 'lucide-react';
-import { formatVND } from '@/lib/supabase-public';
-import { CATEGORY_LABELS, splitDescription, type ShopAsset } from '@/lib/shop';
+import { formatVND, savingPercent } from '@/lib/supabase-public';
+import { CATEGORY_LABELS, assetPricing, splitDescription, type ShopAsset } from '@/lib/shop';
 import { skipOptimizer } from '@/lib/image';
 
 const iconFor = (category?: string | null) => (category === 'ebook' ? BookOpen : category === 'lut' || category === 'preset' ? Palette : Package);
@@ -32,6 +32,7 @@ export default function ShopGrid({ assets }: { assets: ShopAsset[] }) {
       <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((asset) => {
           const free = Number(asset.price) <= 0;
+          const { price, oldPrice } = assetPricing(asset);
           const Icon = iconFor(asset.category);
           return (
             <li key={asset.id} className="min-w-0">
@@ -48,7 +49,10 @@ export default function ShopGrid({ assets }: { assets: ShopAsset[] }) {
                   <h2 className="mt-1.5 !text-xl !leading-snug line-clamp-2 group-hover:text-gold transition-colors">{asset.title}</h2>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground line-clamp-3">{splitDescription(asset.description).lead}</p>
                   <div className="mt-auto pt-5 flex items-center justify-between gap-3">
-                    <span className={`font-display text-2xl font-extrabold tabular-nums ${free ? 'text-gold' : 'text-ink'}`}>{free ? 'Miễn phí' : formatVND(asset.price)}</span>
+                    <span className="min-w-0">
+                      <span className={`block font-display text-2xl font-extrabold tabular-nums ${free ? 'text-gold' : 'text-ink'}`}>{free ? 'Miễn phí' : formatVND(price)}</span>
+                      {oldPrice && <span className="block text-sm text-muted-foreground tabular-nums"><s>{formatVND(oldPrice)}</s> <span className="font-semibold text-gold">· Giảm {savingPercent(price, oldPrice)}%</span></span>}
+                    </span>
                     <span className="inline-flex items-center gap-1 text-sm font-semibold text-ink whitespace-nowrap">Xem chi tiết <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></span>
                   </div>
                 </div>

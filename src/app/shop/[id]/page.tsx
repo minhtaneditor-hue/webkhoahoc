@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPublicSupabase } from '@/lib/supabase-public';
 import ProductView from '@/components/shop/ProductView';
-import { splitDescription, type ShopAsset } from '@/lib/shop';
+import { assetPricing, splitDescription, type ShopAsset } from '@/lib/shop';
 
 export const revalidate = 3600;
 
@@ -43,18 +43,19 @@ export default async function ProductPage({ params }: Props) {
 
   const { data: related } = await getPublicSupabase()!
     .from('digital_assets_public')
-    .select('id, title, price, thumbnail_url')
+    .select('*')
     .neq('id', id)
     .order('created_at', { ascending: false })
     .limit(3);
 
+  const pricing = assetPricing(asset);
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: asset.title,
     description: splitDescription(asset.description).lead || undefined,
     image: asset.thumbnail_url || undefined,
-    offers: { '@type': 'Offer', price: Number(asset.price) || 0, priceCurrency: 'VND', availability: 'https://schema.org/InStock' },
+    offers: { '@type': 'Offer', price: pricing.price, priceCurrency: 'VND', availability: 'https://schema.org/InStock', ...(pricing.endsOn ? { priceValidUntil: pricing.endsOn } : {}) },
   };
 
   return (
