@@ -24,7 +24,7 @@ import { isAdmin } from '@/lib/admin';
 const productLinks = [
   { name: 'Khóa học online', desc: 'Học theo lộ trình, truy cập trọn đời', href: '/courses', icon: GraduationCap },
   { name: 'Coaching 1:1', desc: 'Đồng hành riêng cùng Minh Tấn', href: '/coaching', icon: UserRound },
-  { name: 'Chấm video miễn phí', desc: 'AI chấm video của bạn theo công thức 3S', href: '/cham-video', icon: Sparkles },
+  { name: 'Chấm video miễn phí', desc: 'AI chấm điểm và góp ý video của bạn', href: '/cham-video', icon: Sparkles },
 ];
 
 const navLinks = [
@@ -162,7 +162,7 @@ export default function Navbar() {
               <ChevronDown size={16} aria-hidden="true" className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {isDropdownOpen && (
-              <div className="absolute left-0 top-full mt-2 w-80 card p-2 shadow-[var(--shadow-lift)] animate-fade-up">
+              <div className="absolute left-0 top-full mt-2 w-80 card p-2 whitespace-normal shadow-[var(--shadow-lift)] animate-fade-up">
                 {productLinks.map(({ name, desc, href, icon: Icon }) => (
                   <Link key={href} href={href} className="group flex items-start gap-3 p-3 rounded-md hover:bg-muted transition-colors">
                     <span className="w-10 h-10 rounded-full bg-gold-soft text-gold flex items-center justify-center shrink-0 transition-colors group-hover:bg-gold group-hover:text-white"><Icon size={18} aria-hidden="true" /></span>
@@ -230,7 +230,7 @@ export default function Navbar() {
       {/* Mobile menu */}
       {isMenuOpen && (
         <div id="mobile-menu" style={{ top: menuTop }} className="lg:hidden fixed inset-x-0 bottom-0 bg-ivory overflow-y-auto border-t border-line animate-fade-up">
-          <div className="container-lux py-6 flex flex-col">
+          <div className="container-lux py-6 flex flex-col whitespace-normal">
             <p className="eyebrow mb-1 animate-fade-up">Khóa học</p>
             {productLinks.map(({ name, desc, href, icon: Icon }, i) => (
               <Link key={href} href={href} style={{ animationDelay: `${60 + i * 50}ms` }} className="animate-fade-up flex items-center gap-4 py-3">

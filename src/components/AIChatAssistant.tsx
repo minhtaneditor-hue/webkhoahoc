@@ -18,7 +18,7 @@ const SUGGESTIONS = ["Mình mới bắt đầu, nên học khóa nào?", "Gói h
 
 // Turns "/courses/abc" paths and https links in a reply into real links; drops markdown bold marks.
 function RichText({ text }: { text: string }) {
-  const parts = text.replace(/\*\*/g, "").split(/((?:https?:\/\/[^\s)]+)|(?:\/(?:courses|shop|coaching|hoi-vien|blog|students)[^\s),.]*))/g);
+  const parts = text.replace(/\*\*/g, "").split(/((?:https?:\/\/[^\s)]+)|(?:\/(?:courses|shop|coaching|hoi-vien|blog|students|cham-video)[^\s),.]*))/g);
   return (
     <>
       {parts.map((p, i) =>
