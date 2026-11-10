@@ -15,6 +15,7 @@ import {
   UserRound,
   ShieldCheck,
   ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import { isAdmin } from '@/lib/admin';
 
@@ -23,6 +24,7 @@ import { isAdmin } from '@/lib/admin';
 const productLinks = [
   { name: 'Khóa học online', desc: 'Học theo lộ trình, truy cập trọn đời', href: '/courses', icon: GraduationCap },
   { name: 'Coaching 1:1', desc: 'Đồng hành riêng cùng Minh Tấn', href: '/coaching', icon: UserRound },
+  { name: 'Chấm video miễn phí', desc: 'AI chấm video của bạn theo công thức 3S', href: '/cham-video', icon: Sparkles },
 ];
 
 const navLinks = [

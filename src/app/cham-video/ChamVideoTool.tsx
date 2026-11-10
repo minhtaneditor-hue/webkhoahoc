@@ -1,0 +1,291 @@
+'use client';
+
+import { useRef, useState } from 'react';
+import Link from 'next/link';
+import { Upload, Loader2, Sparkles, Copy, Check, RotateCcw, Headphones } from 'lucide-react';
+import { CRITERIA, COURSE_21_ID, FREE_LESSONS, type Scorecard } from '@/lib/cham-video/criteria';
+
+type Frame = { t: number; data: string; url: string };
+
+const NGANH = ['Bán hàng online', 'Spa, làm đẹp', 'Quán ăn, đồ uống', 'Bất động sản', 'Chia sẻ kiến thức', 'Khác'];
+const MUC_TIEU = ['Bán hàng', 'Tăng người theo dõi', 'Xây thương hiệu cá nhân', 'Chia sẻ kiến thức'];
+const NEN_TANG = ['TikTok', 'Facebook Reels', 'YouTube Shorts', 'Instagram Reels'];
+const MAX_SIDE = 768;
+
+// Pick moments that matter for the rubric: the first frame, the hook (1–2 s), the middle and near the end.
+function pickTimes(d: number) {
+  const ts = [0.1, Math.min(1.5, d * 0.1), Math.min(3, d * 0.2), d * 0.5, d * 0.85];
+  return [...new Set(ts.map((t) => Math.round(Math.max(0, Math.min(t, d - 0.1)) * 10) / 10))];
+}
+
+// Reads the video locally and grabs a few JPEG frames; nothing is uploaded.
+async function extractFrames(file: File): Promise<{ frames: Frame[]; duration: number }> {
+  const url = URL.createObjectURL(file);
+  const v = document.createElement('video');
+  v.muted = true;
+  v.playsInline = true;
+  v.preload = 'auto';
+  v.src = url;
+  try {
+    await new Promise<void>((ok, fail) => {
+      v.onloadeddata = () => ok();
+      v.onerror = () => fail(new Error('load'));
+    });
+    const duration = v.duration;
+    if (!Number.isFinite(duration) || duration <= 0) throw new Error('duration');
+    const scale = Math.min(1, MAX_SIDE / Math.max(v.videoWidth, v.videoHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(v.videoWidth * scale);
+    canvas.height = Math.round(v.videoHeight * scale);
+    const ctx = canvas.getContext('2d')!;
+    const frames: Frame[] = [];
+    for (const t of pickTimes(duration)) {
+      await new Promise<void>((ok) => { v.onseeked = () => ok(); v.currentTime = t; });
+      ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      frames.push({ t, data: dataUrl.split(',')[1], url: dataUrl });
+    }
+    return { frames, duration };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function scoreColor(score10: number) {
+  if (score10 >= 8) return 'bg-success';
+  if (score10 >= 6) return 'bg-gold';
+  if (score10 >= 4) return 'bg-amber-500';
+  return 'bg-danger';
+}
+
+export default function ChamVideoTool() {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState('');
+  const [frames, setFrames] = useState<Frame[]>([]);
+  const [duration, setDuration] = useState(0);
+  const [form, setForm] = useState({ transcript: '', nganh: NGANH[0], muc_tieu: MUC_TIEU[0], nen_tang: NEN_TANG[0] });
+  const [state, setState] = useState<'idle' | 'reading' | 'scoring' | 'done'>('idle');
+  const [error, setError] = useState('');
+  const [result, setResult] = useState<Scorecard | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const onFile = async (file?: File) => {
+    if (!file) return;
+    setError('');
+    setResult(null);
+    setFrames([]);
+    if (!file.type.startsWith('video/')) { setError('Bạn chọn file video nhé (mp4, mov).'); return; }
+    setFileName(file.name);
+    setState('reading');
+    try {
+      const r = await extractFrames(file);
+      if (r.duration > 600) { setError('Video dài quá 10 phút. Công cụ này dành cho video ngắn.'); setState('idle'); return; }
+      setFrames(r.frames);
+      setDuration(r.duration);
+    } catch {
+      setError('Trình duyệt chưa đọc được video này. Bạn thử xuất lại sang mp4 hoặc dùng Chrome nhé.');
+    }
+    setState('idle');
+  };
+
+  const submit = async () => {
+    setError('');
+    setState('scoring');
+    const res = await fetch('/api/cham-video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...form, duration, frames: frames.map(({ t, data }) => ({ t, data })) }),
+    }).then(async (r) => ({ ok: r.ok, data: await r.json().catch(() => ({})) })).catch(() => ({ ok: false, data: {} as { error?: string } }));
+    if (!res.ok) { setError(res.data.error || 'Chưa chấm được, bạn thử lại nhé.'); setState('idle'); return; }
+    setResult(res.data as Scorecard);
+    setState('done');
+    (window as { fbq?: (...a: unknown[]) => void }).fbq?.('trackCustom', 'ChamVideo', { score: (res.data as Scorecard).tong_diem });
+    requestAnimationFrame(() => document.getElementById('ket-qua')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+
+  const reset = () => {
+    setResult(null); setFrames([]); setFileName(''); setState('idle'); setError('');
+    setForm((f) => ({ ...f, transcript: '' }));
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const copy = async () => {
+    if (!result) return;
+    const lines = [
+      `Video của mình được ${result.tong_diem}/100 điểm (${result.xep_loai}) khi chấm theo công thức 3S của TẤN VA.`,
+      ...CRITERIA.map((c, i) => `- ${c.ten}: ${result.tieu_chi[i].diem}/10`),
+      `Chấm thử video của bạn: ${location.origin}/cham-video`,
+    ];
+    await navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const busy = state === 'reading' || state === 'scoring';
+
+  return (
+    <div className="mt-8 space-y-6">
+      {!result && (
+        <div className="card p-5 md:p-8 space-y-6">
+          <div>
+            <p className="field-label">1. Chọn video</p>
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={busy}
+              className="w-full rounded-xl border-2 border-dashed border-gold/50 p-6 text-center hover:border-gold transition-colors disabled:opacity-60"
+            >
+              {state === 'reading'
+                ? <span className="inline-flex items-center gap-2"><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Đang đọc video…</span>
+                : <span className="inline-flex flex-col items-center gap-1">
+                    <Upload size={22} aria-hidden="true" />
+                    <span className="font-semibold">{fileName || 'Bấm để chọn video trong máy'}</span>
+                    <span className="text-xs text-muted-foreground">Video không tải lên đâu cả. Máy bạn tự cắt 5 khung hình để AI xem.</span>
+                  </span>}
+            </button>
+            <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
+            {frames.length > 0 && (
+              <div className="mt-3">
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {frames.map((f) => (
+                    <figure key={f.t} className="shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={f.url} alt={`Khung giây ${f.t}`} className="h-28 w-auto rounded-lg border border-line" />
+                      <figcaption className="mt-1 text-center text-xs text-muted-foreground">giây {f.t}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Độ dài: {Math.round(duration)} giây</p>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="cv-transcript" className="field-label">2. Dán lời nói trong video</label>
+            <textarea
+              id="cv-transcript"
+              className="input min-h-36"
+              maxLength={6000}
+              value={form.transcript}
+              onChange={(e) => setForm({ ...form, transcript: e.target.value })}
+              placeholder="Dán kịch bản hoặc phụ đề của video. Mẹo: trong CapCut bấm Chú thích tự động, rồi chép chữ ra đây. Video không có lời nói thì để trống."
+            />
+            <p className="mt-1 text-xs text-muted-foreground">AI không nghe được âm thanh, nên phần lời nói được chấm từ chữ bạn dán vào.</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            {([
+              ['nganh', 'Ngành của bạn', NGANH],
+              ['muc_tieu', 'Mục tiêu video', MUC_TIEU],
+              ['nen_tang', 'Đăng ở đâu', NEN_TANG],
+            ] as const).map(([key, label, opts]) => (
+              <div key={key}>
+                <label htmlFor={`cv-${key}`} className="field-label">{label}</label>
+                <select id={`cv-${key}`} className="input" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })}>
+                  {opts.map((o) => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+
+          {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+
+          <button type="button" onClick={submit} disabled={busy || frames.length < 2} className="btn btn-gold w-full disabled:opacity-60">
+            {state === 'scoring'
+              ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Đang chấm, khoảng 30 giây…</>
+              : <><Sparkles size={18} aria-hidden="true" /> Chấm video</>}
+          </button>
+        </div>
+      )}
+
+      {result && (
+        <section id="ket-qua" className="space-y-5 scroll-mt-28" aria-labelledby="kq-title">
+          <div className="card p-6 md:p-8 text-center">
+            <p className="text-sm text-muted-foreground">Điểm video của bạn</p>
+            <p id="kq-title" className="mt-1 text-6xl font-bold text-ink">{result.tong_diem}<span className="text-2xl text-muted-foreground">/100</span></p>
+            <p className="mt-2 font-semibold text-gold-hover">{result.xep_loai}</p>
+            <p className="mt-4 text-stone leading-relaxed"><strong className="text-ink">Điểm mạnh:</strong> {result.diem_manh}</p>
+          </div>
+
+          <div className="card p-6 md:p-8 border-2 border-gold/60">
+            <p className="text-sm font-bold uppercase tracking-wide text-gold-hover">Sửa việc này trước</p>
+            <p className="mt-2 text-lg text-ink leading-relaxed">{result.viec_quan_trong_nhat}</p>
+          </div>
+
+          <div className="card p-6 md:p-8 space-y-6">
+            {CRITERIA.map((c, i) => {
+              const t = result.tieu_chi[i];
+              return (
+                <div key={c.ma}>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="text-lg font-semibold text-ink">{c.ten}</h3>
+                    <span className="shrink-0 font-bold text-ink">{t.diem}/10</span>
+                  </div>
+                  <div className="mt-2 h-2 rounded-full bg-line overflow-hidden" aria-hidden="true">
+                    <div className={`h-full rounded-full ${scoreColor(t.diem)}`} style={{ width: `${t.diem * 10}%` }} />
+                  </div>
+                  <p className="mt-3 text-stone leading-relaxed">{t.ly_do}</p>
+                  <p className="mt-2 text-ink leading-relaxed"><strong>Sửa:</strong> {t.sua}</p>
+                  {t.bai_hoc.length > 0 && (
+                    <p className="mt-2 text-sm">
+                      Học ở:{' '}
+                      {t.bai_hoc.map((n, j) => (
+                        <span key={n}>
+                          {j > 0 && ', '}
+                          <Link href={`/courses/${COURSE_21_ID}`} className="text-gold-hover underline underline-offset-2">
+                            Bài {n}{FREE_LESSONS.includes(n) ? ' (học thử miễn phí)' : ''}
+                          </Link>
+                        </span>
+                      ))}{' '}
+                      khóa 21 Ngày
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {result.hook_viet_lai.length > 0 && (
+            <div className="card p-6 md:p-8">
+              <h3 className="text-lg font-semibold text-ink">Gợi ý hook mới cho video này</h3>
+              <ol className="mt-3 space-y-3">
+                {result.hook_viet_lai.map((h, i) => (
+                  <li key={i} className="rounded-xl bg-muted/40 p-4">
+                    <p className="text-ink">“{h.cau_noi}”</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Chữ giây đầu: {h.chu_giay_dau}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {result.tu_kiem_tra.length > 0 && (
+            <div className="card p-6 md:p-8">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-ink"><Headphones size={18} aria-hidden="true" /> Tự nghe lại phần âm thanh</h3>
+              <p className="mt-1 text-sm text-muted-foreground">AI không nghe được âm thanh, nên phần này không tính điểm.</p>
+              <ul className="mt-3 space-y-2 text-stone">
+                {result.tu_kiem_tra.map((x) => <li key={x} className="flex gap-2"><span aria-hidden="true">☐</span>{x}</li>)}
+              </ul>
+            </div>
+          )}
+
+          <div className="card p-6 md:p-8 text-center">
+            <p className="text-ink font-semibold">Muốn Minh Tấn xem và sửa video trực tiếp cho bạn?</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <Link href={`/courses/${COURSE_21_ID}`} className="btn btn-gold">Xem khóa 21 Ngày</Link>
+              <Link href="/coaching" className="btn btn-outline">Đặt lịch Audit miễn phí</Link>
+            </div>
+            <div className="mt-5 flex flex-wrap justify-center gap-4 text-sm">
+              <button type="button" onClick={copy} className="inline-flex items-center gap-1.5 text-gold-hover hover:underline">
+                {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />} {copied ? 'Đã chép' : 'Chép kết quả để chia sẻ'}
+              </button>
+              <button type="button" onClick={reset} className="inline-flex items-center gap-1.5 text-muted-foreground hover:underline">
+                <RotateCcw size={16} aria-hidden="true" /> Chấm video khác
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}

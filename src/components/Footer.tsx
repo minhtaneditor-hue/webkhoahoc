@@ -15,6 +15,7 @@ const columns = [
     links: [
       { name: 'Tất cả khóa học', href: '/courses' },
       { name: 'Coaching 1:1', href: '/coaching' },
+      { name: 'Chấm video miễn phí', href: '/cham-video' },
       { name: 'Sản phẩm khác', href: '/shop' },
       { name: 'Về Minh Tấn', href: '/about' },
     ],
