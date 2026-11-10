@@ -19,6 +19,7 @@ import PainPoints from '@/components/PainPoints';
 import ConsultBox from '@/components/ConsultBox';
 import { contactFrom } from '@/lib/site-settings';
 import JsonLd from '@/components/JsonLd';
+import ChamVideoTeaser from '@/components/ChamVideoTeaser';
 import { SITE_URL } from '@/lib/site-url';
 
 export const revalidate = 3600;
@@ -210,6 +211,9 @@ export default async function Home() {
           <Link href={works.length ? '/students#san-pham' : '/students'} className="btn btn-outline-light">Xem thêm sản phẩm của học viên khác</Link>
         </div>
       </section>
+
+      {/* Free AI video scoring: a low-commitment first step before the course pitch */}
+      <ChamVideoTeaser />
 
       {/* The problems the course answers, right before its price */}
       <PainPoints className="container-lux section" />
