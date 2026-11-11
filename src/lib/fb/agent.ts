@@ -5,6 +5,7 @@ import { SITE } from '@/lib/emails';
 import { sendText, typing } from './graph';
 import { notifyAdmin } from './notify';
 import { activeVoice } from './voice';
+import { SALES_PLAYBOOK } from './sales-playbook';
 
 // The Messenger sales assistant. Answers from the website data plus the knowledge Minh Tấn approved
 // (fb_knowledge), records orders it closes, and hands hard cases to a person. SERVER ONLY.
@@ -127,6 +128,7 @@ export async function replyTo(db: SupabaseClient, psid: string) {
   const [site, learned, voice] = await Promise.all([siteKnowledge(), learnedKnowledge(db), activeVoice(db).catch(() => '')]);
   const system: Anthropic.Beta.BetaTextBlockParam[] = [
     { type: 'text', text: RULES },
+    { type: 'text', text: SALES_PLAYBOOK },
     ...(voice ? [{ type: 'text' as const, text: `GIỌNG CỦA MINH TẤN (rút từ tin nhắn thật anh đã trả lời khách). Nhắn tin đúng giọng này; khi khác phần "Cách nói chuyện" ở trên thì theo giọng này, nhưng các mục "Không bao giờ", chuyển ca khó và giới hạn định dạng Messenger vẫn luôn ưu tiên:\n${voice}` }] : []),
     { type: 'text', text: `DỮ LIỆU WEBSITE:\n${site}` },
     { type: 'text', text: `KINH NGHIỆM MINH TẤN ĐÃ DUYỆT (ưu tiên hơn dữ liệu website nếu khác nhau):\n${learned || '(chưa có)'}`, cache_control: { type: 'ephemeral' } },
