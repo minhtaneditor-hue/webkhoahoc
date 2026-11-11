@@ -52,11 +52,11 @@ async function extractFrames(file: File): Promise<{ frames: Frame[]; duration: n
   }
 }
 
-const STT_RATE = 16000;
+const STT_RATE = 8000; // phone quality: same Scribe transcript as 16 kHz in tests, half the upload for slow connections
 const STT_MAX_SECONDS = 120; // first two minutes are enough for short videos and fit the upload limit
 const STT_TIMEOUT_MS = 60_000;
 
-// Decodes the sound track locally and returns the first two minutes as 16 kHz mono WAV.
+// Decodes the sound track locally and returns the first two minutes as 8 kHz mono WAV.
 async function extractAudioWav(file: File): Promise<Blob | null> {
   const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
   const ctx = new AC();

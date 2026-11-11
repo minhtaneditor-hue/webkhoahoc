@@ -2,14 +2,14 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 /**
- * POST /api/cham-video/loi-thoai  (body: audio/wav, 16 kHz mono, at most ~2 minutes)
+ * POST /api/cham-video/loi-thoai  (body: audio/wav, 8 kHz mono, at most ~2 minutes)
  * Turns the speech of a video into text so visitors don't have to paste it.
  * The browser sends only the sound track; it goes to 11max (ElevenLabs Scribe v2) and the
  * transcription is deleted there as soon as we have the text. Nothing is stored here.
  */
 
 const BASE = 'https://api.11max.id.vn';
-const MAX_BYTES = 4_200_000;          // under Vercel's 4.5 MB request limit (~2 min of 16 kHz mono WAV)
+const MAX_BYTES = 4_200_000;          // under Vercel's 4.5 MB request limit (~2 min of 16 kHz or ~4 min of 8 kHz mono WAV)
 const DAILY_LIMIT = Number(process.env.STT_DAILY_LIMIT) || 6; // per IP; scoring allows 3, this leaves room for retries
 const POLL_MS = 1500;
 const POLL_FOR_MS = 30_000;
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       const t = await r.json().catch(() => ({}));
       if (t.status === 'completed') {
         const text = String(t.result?.text ?? '').replace(/\s+/g, ' ').trim();
-        console.log('loi-thoai ok', Math.round(audio.byteLength / 32000), 's', t.credits_deducted ?? '?', 'credits');
+        console.log('loi-thoai ok', Math.round(audio.byteLength / 16000), 's (8 kHz)', t.credits_deducted ?? '?', 'credits');
         return Response.json({ text });
       }
       if (t.status === 'failed') throw new Error(`failed ${t.detail_error ?? ''}`);
