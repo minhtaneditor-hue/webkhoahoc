@@ -27,7 +27,8 @@ function allow(ip: string) {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function POST(req: Request) {
-  const key = process.env.ELEVENMAX_API_KEY;
+  // Forgive common paste mistakes in the dashboard: spaces, quotes, or the whole "NAME=value" line.
+  const key = (process.env.ELEVENMAX_API_KEY || '').trim().replace(/^ELEVENMAX_API_KEY\s*=\s*/, '').replace(/^["']|["']$/g, '').trim();
   if (!key) return Response.json({ error: 'Chưa bật tự lấy lời thoại. Bạn dán lời nói vào ô bên dưới nhé.' }, { status: 503 });
 
   const type = req.headers.get('content-type') || '';
@@ -52,10 +53,11 @@ export async function POST(req: Request) {
       try {
         const sub = await fetch(`${BASE}/v1/speech-to-text`, { method: 'POST', headers, body: form, signal: AbortSignal.timeout(20_000) });
         const subData = await sub.json().catch(() => ({}));
+        if (sub.status === 401) throw new Error(`submit 401: 11max rejected the key (length ${key.length}, starts with sk_: ${key.startsWith('sk_')})`);
         if (!sub.ok || !subData.task_id) throw new Error(`submit ${sub.status} ${subData.error ?? ''}`);
         taskId = subData.task_id;
       } catch (e) {
-        if (attempt === 2) throw e;
+        if (attempt === 2 || String((e as Error).message).includes('401')) throw e;
         console.warn('loi-thoai retry', (e as Error).message);
       }
     }
