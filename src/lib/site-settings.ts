@@ -35,6 +35,7 @@ export const SETTING_FIELDS: SettingField[] = [
   { key: 'contact_zalo', group: 'contact', label: 'Link Zalo', type: 'url', default: 'https://zalo.me/0962255861' },
   { key: 'contact_zalo_group', group: 'contact', label: 'Link nhóm Zalo cộng đồng (học viên nộp bài tập)', type: 'url', hint: 'Để trống thì nút Nộp bài tập mở Zalo cá nhân ở trên', default: '' },
   { key: 'contact_email', group: 'contact', label: 'Email', default: 'tanva@minhtanacademy.com' },
+  { key: 'contact_fanpage', group: 'contact', label: 'Link Fanpage Facebook', type: 'url', hint: 'In ở chân file kịch bản tải về', default: 'https://www.facebook.com/profile.php?id=61583837884143' },
   { key: 'fb_pixel_id', group: 'contact', label: 'Facebook Pixel ID (chỉ ghi dãy số)', hint: 'Lấy trong Meta Events Manager. Để trống là không gắn Pixel', default: '' },
   { key: 'contact_address', group: 'contact', label: 'Địa chỉ', default: 'Quận 1, TP. Hồ Chí Minh' },
 ];
@@ -65,6 +66,8 @@ export function contactFrom(s: SiteSettings) {
     zaloHref: s.contact_zalo || `https://zalo.me/${digits}`,
     zaloGroupHref: s.contact_zalo_group || s.contact_zalo || `https://zalo.me/${digits}`,
     email: s.contact_email,
+    fanpage: s.contact_fanpage,
+    hasZaloGroup: !!s.contact_zalo_group,
     address: s.contact_address,
   };
 }

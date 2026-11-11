@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Sparkles, Copy, Check, FileText, FileDown, RotateCcw, MessageCircleQuestion, History } from 'lucide-react';
+import { Loader2, Sparkles, FileText, FileDown, RotateCcw, MessageCircleQuestion, History } from 'lucide-react';
 import { DANG, DO_DAI, NEN_TANG, dangById, khungById, type KichBan } from '@/lib/viet-kich-ban/templates';
-import { asText, downloadWord, printPdf } from '@/lib/viet-kich-ban/export';
+import { downloadWord, printPdf, type DocBrand } from '@/lib/viet-kich-ban/export';
+import { useSiteSettings } from '@/components/SiteContext';
+import { contactFrom } from '@/lib/site-settings';
 import ToolFeedback from '@/components/ToolFeedback';
 
 type Usage = { loggedIn: boolean; unavailable?: boolean; member?: boolean; used?: number; limit?: number; freeTotal?: number; history?: { id: string; tieu_de: string; dang: string; created_at: string }[] };
@@ -24,7 +26,6 @@ export default function VietKichBanTool() {
   const [hetLuot, setHetLuot] = useState(false);
   const [script, setScript] = useState<KichBan | null>(null);
   const [meta, setMeta] = useState({ dang: '', khung: '' }); // format/framework of the script on screen, for feedback
-  const [copied, setCopied] = useState(false);
 
   const loadUsage = () => fetch('/api/viet-kich-ban').then((r) => r.json()).then(setUsage).catch(() => setUsage({ loggedIn: false }));
   useEffect(() => { loadUsage(); }, []);
@@ -72,11 +73,13 @@ export default function VietKichBanTool() {
 
   const reset = () => { setScript(null); setQuestions(null); setState('idle'); setError(''); setHetLuot(false); scrollTop(); };
 
-  const copy = async () => {
-    if (!script) return;
-    await navigator.clipboard.writeText(asText(script)).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const contact = contactFrom(useSiteSettings());
+  const brand: DocBrand = {
+    phone: contact.phone,
+    zaloHref: contact.zaloHref,
+    zaloGroupHref: contact.hasZaloGroup ? contact.zaloGroupHref : undefined,
+    fanpage: contact.fanpage || undefined,
+    watermark: !usage?.member,
   };
 
   if (!usage) {
@@ -210,7 +213,7 @@ export default function VietKichBanTool() {
         </div>
       )}
 
-      {script && <ScriptView k={script} copied={copied} onCopy={copy} onReset={reset} />}
+      {script && <ScriptView k={script} brand={brand} onReset={reset} />}
       {script && <ToolFeedback key={script.tieu_de} tool="viet-kich-ban" context={meta} />}
 
       {!!usage.history?.length && (
@@ -241,17 +244,16 @@ function ErrorBox({ error, hetLuot }: { error: string; hetLuot: boolean }) {
   );
 }
 
-function ScriptView({ k, copied, onCopy, onReset }: { k: KichBan; copied: boolean; onCopy: () => void; onReset: () => void }) {
+function ScriptView({ k, brand, onReset }: { k: KichBan; brand: DocBrand; onReset: () => void }) {
   return (
     <section className="space-y-5" aria-labelledby="kb-title">
       <div className="card p-5 md:p-8">
         <h2 id="kb-title" className="text-2xl md:text-3xl text-ink">{k.tieu_de}</h2>
         <div className="mt-5 flex flex-wrap gap-2">
-          <button type="button" onClick={onCopy} className="btn btn-outline !min-h-[44px] text-sm">{copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />} {copied ? 'Đã chép' : 'Chép kịch bản'}</button>
-          <button type="button" onClick={() => downloadWord(k)} className="btn btn-outline !min-h-[44px] text-sm"><FileText size={16} aria-hidden="true" /> Tải Word</button>
-          <button type="button" onClick={() => printPdf(k)} className="btn btn-outline !min-h-[44px] text-sm"><FileDown size={16} aria-hidden="true" /> Tải PDF</button>
+          <button type="button" onClick={() => downloadWord(k, brand)} className="btn btn-gold !min-h-[44px] text-sm"><FileText size={16} aria-hidden="true" /> Tải Word</button>
+          <button type="button" onClick={() => printPdf(k, brand)} className="btn btn-outline !min-h-[44px] text-sm"><FileDown size={16} aria-hidden="true" /> Tải PDF</button>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">Tải PDF: trong hộp in, chọn "Lưu dưới dạng PDF".</p>
+        <p className="mt-2 text-xs text-muted-foreground">Tải PDF: trong hộp in, chọn “Lưu dưới dạng PDF”.{brand.watermark && <> File của tài khoản miễn phí có watermark website. <Link href="/hoi-vien" className="text-gold-hover underline">Hội viên</Link> tải file không watermark.</>}</p>
       </div>
 
       <div className="card p-5 md:p-8">
