@@ -36,7 +36,7 @@ export default function StudentsMarquee({ students, counts = {} }: { students: S
                 ) : c ? (
                   <p className="mt-4 inline-flex items-center gap-2 text-sm text-stone-300">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={flagUrl(c.code)} alt="" width={18} height={12} className="!rounded-[2px] w-[18px] h-3 object-cover" />
+                    <img src={flagUrl(c.code)} alt="" width={18} height={12} loading="lazy" decoding="async" className="!rounded-[2px] w-[18px] h-3 object-cover" />
                     {s.city ? `${s.city}, ${c.name}` : c.name}
                   </p>
                 ) : null}

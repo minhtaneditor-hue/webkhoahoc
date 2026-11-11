@@ -65,8 +65,25 @@ export default function ShowreelVideo({
     // Phones get the still poster: YouTube's mobile player often refuses muted autoplay and
     // overlays its own play controls, and a background video costs mobile data.
     const reduce = matchMedia('(prefers-reduced-motion: reduce), (max-width: 767px)').matches;
-    queueMicrotask(() => setStillOnly(reduce));
-    if (reduce) return;
+    if (reduce) {
+      queueMicrotask(() => setStillOnly(true));
+      return;
+    }
+    // The player is several MB from YouTube: start it only once the page itself has loaded,
+    // so on a slow connection it doesn't hold back the text, pictures and buttons. The poster shows meanwhile.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const start = () => { timer = setTimeout(() => setStillOnly(false), 500); };
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
+    return () => {
+      window.removeEventListener('load', start);
+      clearTimeout(timer);
+    };
+  }, [youtubeId]);
+
+  // Pause the footage while the banner is scrolled out of view (the iframe exists only after the effect above)
+  useEffect(() => {
+    if (stillOnly !== false) return;
     const frame = frameRef.current;
     if (!frame) return;
     const command = (func: 'playVideo' | 'pauseVideo') =>
@@ -74,7 +91,7 @@ export default function ShowreelVideo({
     const io = new IntersectionObserver(([entry]) => command(entry.isIntersecting ? 'playVideo' : 'pauseVideo'));
     io.observe(frame);
     return () => io.disconnect();
-  }, [youtubeId]);
+  }, [stillOnly]);
 
   const settle = `transition-[opacity,transform] duration-[1800ms] ease-[cubic-bezier(.16,1,.3,1)] motion-reduce:transition-none ${ready ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.05]'}`;
 

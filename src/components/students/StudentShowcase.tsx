@@ -56,7 +56,7 @@ function CountryTag({ code, city, dark = false }: { code: string | null; city?: 
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${dark ? 'bg-white/10 text-white' : 'bg-muted text-ink'}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={flagUrl(c.code)} alt="" width={18} height={12} className="!rounded-[2px] w-[18px] h-3 object-cover" />
+      <img src={flagUrl(c.code)} alt="" width={18} height={12} loading="lazy" decoding="async" className="!rounded-[2px] w-[18px] h-3 object-cover" />
       {city ? `${city}, ${c.name}` : c.name}
     </span>
   );

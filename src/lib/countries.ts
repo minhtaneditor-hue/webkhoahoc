@@ -45,9 +45,12 @@ export const COUNTRIES: Country[] = [
 
 export const COUNTRY_BY_CODE = Object.fromEntries(COUNTRIES.map((c) => [c.code, c]));
 
-/** Small flag picture (Windows has no emoji flags, so use an image). */
+/**
+ * Small flag picture (Windows has no emoji flags, so use an image). Served from public/flags
+ * (40px PNGs from flagcdn.com) so pages skip a connection to another site.
+ */
 export function flagUrl(code: string) {
-  return `https://flagcdn.com/w40/${code.toLowerCase()}.png`;
+  return `/flags/${code.toLowerCase()}.png`;
 }
 
 export const COUNTRY_OPTIONS = [
