@@ -52,7 +52,7 @@ async function siteKnowledge() {
     '- Gói 6 hoặc 10 buổi, online hoặc offline. Chụp ảnh, quay và dựng video bằng điện thoại hoặc AI; chương trình riêng, giao và sửa bài trực tiếp, hỗ trợ sau khóa. Link: /coaching',
     '',
     '# CÔNG CỤ MIỄN PHÍ',
-    '- Chấm video miễn phí bằng AI: chọn video trong máy, dán lời nói, nhận điểm 6 tiêu chí theo công thức 3S, việc nên sửa trước và 2 câu hook viết lại. Video không tải lên, 3 lượt mỗi ngày. Gợi ý khi khách muốn biết video của mình sai ở đâu. Link: /cham-video',
+    '- Chấm video miễn phí bằng AI: chọn video trong máy (lời thoại tự lấy, không cần dán), nhận điểm 6 tiêu chí theo công thức 3S, việc nên sửa trước và 2 câu hook viết lại. Video không tải lên, chỉ gửi phần tiếng để lấy lời thoại, 3 lượt mỗi ngày. Gợi ý khi khách muốn biết video của mình sai ở đâu. Link: /cham-video',
     '',
     '# HỘI VIÊN',
     ...Object.values(MEMBERSHIP_PLANS).map((p) => `- ${p.title}: ${formatVND(p.price)}`),
