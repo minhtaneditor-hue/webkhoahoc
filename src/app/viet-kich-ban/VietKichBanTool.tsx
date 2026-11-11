@@ -125,7 +125,10 @@ export default function VietKichBanTool() {
           <div>
             <label htmlFor="vkb-khung" className="field-label">2. Kể theo kiểu nào</label>
             <select id="vkb-khung" className="input" value={form.khung} onChange={(e) => setForm({ ...form, khung: e.target.value })}>
-              {dang.khung.map((id) => { const k = khungById(id)!; return <option key={id} value={id}>{k.ten}</option>; })}
+              {([['ke-chuyen', 'Kể chuyện (storytelling)'], ['cong-thuc', 'Công thức bán hàng, nội dung']] as const).map(([nhom, label]) => {
+                const list = dang.khung.map((id) => khungById(id)!).filter((k) => k.nhom === nhom);
+                return list.length ? <optgroup key={nhom} label={label}>{list.map((k) => <option key={k.id} value={k.id}>{k.ten}</option>)}</optgroup> : null;
+              })}
             </select>
             <p className="mt-1 text-xs text-muted-foreground">{khungById(form.khung)?.mo_ta}</p>
           </div>
