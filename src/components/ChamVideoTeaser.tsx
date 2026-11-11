@@ -25,7 +25,7 @@ export default function ChamVideoTeaser() {
             <div className="mt-4">
               <SectionHeading
                 title={<span id="cham-video-title">Video của bạn được bao nhiêu điểm?</span>}
-                description="Chọn một video trong máy, dán lời nói, và AI chấm theo đúng bộ tiêu chí Minh Tấn dùng để sửa bài cho học viên. Khoảng 30 giây là có kết quả."
+                description="Chọn một video trong máy, lời thoại được tự lấy, và AI chấm theo đúng bộ tiêu chí Minh Tấn dùng để sửa bài cho học viên. Khoảng 30 giây là có kết quả."
               />
             </div>
             <ul className="mt-6 space-y-3">
@@ -37,7 +37,7 @@ export default function ChamVideoTeaser() {
               <Link href="/cham-video" className="btn btn-gold w-full sm:w-auto">Chấm video của tôi <ArrowRight size={18} aria-hidden="true" /></Link>
             </div>
             <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
-              <ShieldCheck size={16} className="shrink-0 mt-0.5" aria-hidden="true" /> Video không tải lên đâu cả. 3 lượt miễn phí mỗi ngày.
+              <ShieldCheck size={16} className="shrink-0 mt-0.5" aria-hidden="true" /> Video không tải lên, chỉ gửi phần tiếng để lấy lời thoại. 3 lượt miễn phí mỗi ngày.
             </p>
           </Reveal>
 

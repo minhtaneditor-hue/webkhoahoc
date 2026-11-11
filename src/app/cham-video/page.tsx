@@ -3,7 +3,7 @@ import ChamVideoTool from './ChamVideoTool';
 
 export const metadata: Metadata = {
   title: 'Chấm video miễn phí bằng AI',
-  description: 'Chấm điểm video ngắn của bạn theo công thức 3S của Minh Tấn: hook 3 giây đầu, thông điệp, lời kêu gọi, hình ảnh, chữ và lời nói. Video không rời khỏi máy bạn.',
+  description: 'Chấm điểm video ngắn của bạn theo công thức 3S của Minh Tấn: hook 3 giây đầu, thông điệp, lời kêu gọi, hình ảnh, chữ và lời nói. Lời thoại được tự lấy từ video, không cần dán.',
   alternates: { canonical: '/cham-video' },
 };
 
