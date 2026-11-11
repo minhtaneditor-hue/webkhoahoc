@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { findOrderCode, fulfillPayment } from '@/lib/payments';
+import { fbTransferReceived, findFbOrderId } from '@/lib/fb/pay';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,13 @@ export async function POST(req: Request) {
   let tx: any = null;
   try { tx = JSON.parse(rawBody); } catch {}
   if (!tx || tx.transferType !== 'in') return ok('ignored: not an incoming transfer');
+
+  // Deposits and payments for orders closed by the Messenger bot (note TANVAFB<id>)
+  const fbOrder = findFbOrderId(tx.code, tx.content, tx.description);
+  if (fbOrder) {
+    const known = await fbTransferReceived(supabase, fbOrder, Number(tx.transferAmount) || 0, String(tx.id));
+    return ok(known ? 'messenger order: received' : 'ignored: unknown messenger order');
+  }
 
   const orderId = findOrderCode(tx.code, tx.content, tx.description);
   if (!orderId) return ok('ignored: no order code');
