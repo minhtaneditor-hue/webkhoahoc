@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ArrowRight,
   Sparkles,
+  PenLine,
 } from 'lucide-react';
 import { isAdmin } from '@/lib/admin';
 
@@ -25,6 +26,7 @@ const productLinks = [
   { name: 'Khóa học online', desc: 'Học theo lộ trình, truy cập trọn đời', href: '/courses', icon: GraduationCap },
   { name: 'Coaching 1:1', desc: 'Đồng hành riêng cùng Minh Tấn', href: '/coaching', icon: UserRound },
   { name: 'Chấm video miễn phí', desc: 'AI chấm điểm và góp ý video của bạn', href: '/cham-video', icon: Sparkles },
+  { name: 'Viết kịch bản bằng AI', desc: 'Dán nội dung, nhận kịch bản hoàn chỉnh', href: '/viet-kich-ban', icon: PenLine },
 ];
 
 const navLinks = [
