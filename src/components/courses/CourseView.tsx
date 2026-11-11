@@ -17,6 +17,7 @@ import { useMembership } from '@/components/membership/useMembership';
 import { MEMBER_DISCOUNT_PERCENT, memberDiscount } from '@/lib/membership';
 import { Play, Lock, ArrowRight, Check, Loader2, ShieldCheck, Infinity as InfinityIcon, MessageCircle, PlayCircle, X, ChevronLeft, Gift } from 'lucide-react';
 import { skipOptimizer } from '@/lib/image';
+import CopyButton from '@/components/shop/CopyButton';
 
 type Status = { type: 'success' | 'error'; text: string } | null;
 
@@ -109,22 +110,43 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
     return () => document.removeEventListener('keydown', onKey);
   }, [selectedLesson]);
 
-  const handleApplyPromo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!course) return;
-    const res = await fetch('/api/promo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: promoCode, courseId: course.id }) })
+  const applyCode = async (code: string) => {
+    if (!course || !code.trim()) return;
+    const res = await fetch('/api/promo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, courseId: course.id }) })
       .then((r) => r.json()).catch(() => ({ ok: false, error: 'Không kiểm tra được mã, thử lại sau.' }));
     const discount = res.ok ? Number(res.discount) || 0 : 0;
     setAppliedDiscount(discount);
     setPromoStatus(discount > 0
       ? { type: 'success', text: `Đã áp dụng mã — giảm ${formatVND(discount)}.` }
       : { type: 'error', text: res.error || 'Mã không hợp lệ hoặc đã hết hạn.' });
+    try {
+      if (discount > 0) sessionStorage.setItem(`promo:${course.id}`, code.trim().toUpperCase());
+      else sessionStorage.removeItem(`promo:${course.id}`);
+    } catch {}
   };
+
+  const handleApplyPromo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await applyCode(promoCode);
+  };
+
+  // Email links carry ?ma=CODE: the code is filled in and applied, so buyers never type it.
+  // Kept for the tab, so it survives the sign-in detour back to this page.
+  useEffect(() => {
+    if (!course?.id) return;
+    let code = new URLSearchParams(window.location.search).get('ma') || '';
+    if (!code) try { code = sessionStorage.getItem(`promo:${course.id}`) || ''; } catch {}
+    code = code.trim().toUpperCase();
+    if (!code) return;
+    setPromoCode(code);
+    applyCode(code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [course?.id]);
 
   const handlePayment = async () => {
     if (!course) return;
     if (!user) {
-      router.push(`/auth?redirect=/courses/${course.id}`);
+      router.push(`/auth?redirect=${encodeURIComponent(`/courses/${course.id}${appliedDiscount > 0 ? `?ma=${promoCode.trim().toUpperCase()}` : ''}#dang-ky`)}`);
       return;
     }
     setPaymentLoading(true);
@@ -332,6 +354,17 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
                 {savingPercent(finalPrice, totalOff > 0 ? price : course.old_price) && <p className="mt-2 font-semibold text-gold">Tiết kiệm {savingPercent(finalPrice, totalOff > 0 ? price : course.old_price)}%</p>}
                 {memberWins && (
                   <p className="mt-2 badge">Giá hội viên: giảm {MEMBER_DISCOUNT_PERCENT.course}%</p>
+                )}
+
+                {appliedDiscount > 0 && !memberWins && (
+                  <div className="mt-6 rounded-md bg-gold-soft p-4">
+                    <p className="flex items-center gap-2 text-sm font-semibold"><Gift size={16} aria-hidden="true" /> Mã của bạn đã được áp dụng</p>
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xl font-bold tracking-wider select-all">{promoCode.trim().toUpperCase()}</span>
+                      <CopyButton text={promoCode.trim().toUpperCase()} label={`Sao chép mã ${promoCode.trim().toUpperCase()}`} />
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">Bấm “{user ? 'Thanh toán ngay' : 'Đăng nhập để đăng ký'}” bên dưới, giá đã giảm sẵn.</p>
+                  </div>
                 )}
 
                 <form onSubmit={handleApplyPromo} className="mt-6" noValidate>
