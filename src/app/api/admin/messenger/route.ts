@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/admin';
 import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
-import { sendText } from '@/lib/fb/graph';
+import { fbConfigured, sendText } from '@/lib/fb/graph';
 import { learnFromConversations, replyTo } from '@/lib/fb/agent';
+import { importHistory } from '@/lib/fb/voice';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -14,7 +15,8 @@ export const maxDuration = 60;
  *   pause   stop the bot for this customer for `hours` (default 24)
  *   resume  let the bot answer again; it replies at once if the customer is waiting
  *   done    mark the case handled
- *   learn   turn recent replies by Minh Tấn into knowledge suggestions
+ *   import  copy one page of the Page's past Messenger conversations (pass `after` to continue)
+ *   learn   turn recent replies by Minh Tấn into knowledge suggestions (`days`, default 14)
  * The caller is checked from the session cookie.
  */
 export async function POST(req: Request) {
@@ -59,6 +61,16 @@ export async function POST(req: Request) {
     case 'done': {
       await db.from('fb_conversations').update({ status: 'done', needs_human: false, handoff_reason: null }).eq('psid', psid);
       return NextResponse.json({ ok: true });
+    }
+    case 'import': {
+      if (!fbConfigured()) return NextResponse.json({ error: 'Thiếu FB_PAGE_ACCESS_TOKEN.' }, { status: 500 });
+      try {
+        return NextResponse.json({ ok: true, ...(await importHistory(db, body.after ? String(body.after) : undefined)) });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'lỗi không rõ';
+        console.error('fb import failed', msg);
+        return NextResponse.json({ error: `Facebook chưa cho đọc tin nhắn cũ: ${msg}` }, { status: 502 });
+      }
     }
     case 'learn': {
       if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: 'Thiếu ANTHROPIC_API_KEY.' }, { status: 500 });
