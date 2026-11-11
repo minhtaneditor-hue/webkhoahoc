@@ -52,6 +52,45 @@ async function extractFrames(file: File): Promise<{ frames: Frame[]; duration: n
   }
 }
 
+const STT_RATE = 16000;
+const STT_MAX_SECONDS = 120; // first two minutes are enough for short videos and fit the upload limit
+
+// Decodes the sound track locally and returns the first two minutes as 16 kHz mono WAV.
+async function extractAudioWav(file: File): Promise<Blob | null> {
+  const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const ctx = new AC();
+  let decoded: AudioBuffer;
+  try {
+    decoded = await ctx.decodeAudioData(await file.arrayBuffer());
+  } catch {
+    return null; // no sound track, or a codec the browser can't decode
+  } finally {
+    ctx.close().catch(() => {});
+  }
+  const seconds = Math.min(decoded.duration, STT_MAX_SECONDS);
+  const off = new OfflineAudioContext(1, Math.ceil(seconds * STT_RATE), STT_RATE);
+  const src = off.createBufferSource();
+  src.buffer = decoded;
+  src.connect(off.destination);
+  src.start(0);
+  const pcm = (await off.startRendering()).getChannelData(0);
+
+  // 16-bit PCM WAV
+  const view = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+  const str = (o: number, t: string) => { for (let i = 0; i < t.length; i++) view.setUint8(o + i, t.charCodeAt(i)); };
+  str(0, 'RIFF'); view.setUint32(4, 36 + pcm.length * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, STT_RATE, true); view.setUint32(28, STT_RATE * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  str(36, 'data'); view.setUint32(40, pcm.length * 2, true);
+  let peak = 0;
+  for (let i = 0; i < pcm.length; i++) {
+    const v = Math.max(-1, Math.min(1, pcm[i]));
+    peak = Math.max(peak, Math.abs(v));
+    view.setInt16(44 + i * 2, v * 0x7fff, true);
+  }
+  return peak < 0.01 ? null : new Blob([view], { type: 'audio/wav' }); // silent: nothing to transcribe
+}
+
 function scoreColor(score10: number) {
   if (score10 >= 8) return 'bg-success';
   if (score10 >= 6) return 'bg-gold';
@@ -69,6 +108,22 @@ export default function ChamVideoTool() {
   const [error, setError] = useState('');
   const [result, setResult] = useState<Scorecard | null>(null);
   const [copied, setCopied] = useState(false);
+  const [stt, setStt] = useState<{ state: 'idle' | 'loading' | 'done' | 'none' | 'error'; msg?: string }>({ state: 'idle' });
+
+  // Fills the transcript box from the video's sound (via /api/cham-video/loi-thoai, which uses 11max).
+  const transcribe = async (file: File) => {
+    setStt({ state: 'loading' });
+    const wav = await extractAudioWav(file).catch(() => null);
+    if (!wav) { setStt({ state: 'none' }); return; }
+    const res = await fetch('/api/cham-video/loi-thoai', { method: 'POST', headers: { 'Content-Type': 'audio/wav' }, body: wav })
+      .then(async (r) => ({ ok: r.ok, data: await r.json().catch(() => ({})) }))
+      .catch(() => ({ ok: false, data: {} as { error?: string; text?: string } }));
+    if (!res.ok) { setStt({ state: 'error', msg: res.data.error || 'Chưa lấy được lời thoại. Bạn dán lời nói vào ô bên dưới nhé.' }); return; }
+    const text = String(res.data.text || '');
+    if (!text) { setStt({ state: 'none' }); return; }
+    setForm((f) => (f.transcript.trim() ? f : { ...f, transcript: text }));
+    setStt({ state: 'done' });
+  };
 
   const onFile = async (file?: File) => {
     if (!file) return;
@@ -77,12 +132,15 @@ export default function ChamVideoTool() {
     setFrames([]);
     if (!file.type.startsWith('video/')) { setError('Bạn chọn file video nhé (mp4, mov).'); return; }
     setFileName(file.name);
+    setForm((f) => ({ ...f, transcript: '' }));
+    setStt({ state: 'idle' });
     setState('reading');
     try {
       const r = await extractFrames(file);
       if (r.duration > 600) { setError('Video dài quá 10 phút. Công cụ này dành cho video ngắn.'); setState('idle'); return; }
       setFrames(r.frames);
       setDuration(r.duration);
+      transcribe(file);
     } catch {
       setError('Trình duyệt chưa đọc được video này. Bạn thử xuất lại sang mp4 hoặc dùng Chrome nhé.');
     }
@@ -106,6 +164,7 @@ export default function ChamVideoTool() {
 
   const reset = () => {
     setResult(null); setFrames([]); setFileName(''); setState('idle'); setError('');
+    setStt({ state: 'idle' });
     setForm((f) => ({ ...f, transcript: '' }));
     if (inputRef.current) inputRef.current.value = '';
   };
@@ -141,7 +200,7 @@ export default function ChamVideoTool() {
                 : <span className="inline-flex flex-col items-center gap-1">
                     <Upload size={22} aria-hidden="true" />
                     <span className="font-semibold">{fileName || 'Bấm để chọn video trong máy'}</span>
-                    <span className="text-xs text-muted-foreground">Video không tải lên đâu cả. Máy bạn tự cắt 5 khung hình để AI xem.</span>
+                    <span className="text-xs text-muted-foreground">Video không tải lên. Máy bạn tự cắt 5 khung hình, chỉ gửi phần tiếng để lấy lời thoại và không lưu lại.</span>
                   </span>}
             </button>
             <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
@@ -162,16 +221,21 @@ export default function ChamVideoTool() {
           </div>
 
           <div>
-            <label htmlFor="cv-transcript" className="field-label">2. Dán lời nói trong video</label>
+            <label htmlFor="cv-transcript" className="field-label">2. Lời nói trong video</label>
+            {stt.state === 'loading' && <p className="mb-2 flex items-center gap-2 text-sm text-gold-hover" role="status"><Loader2 size={16} className="animate-spin" aria-hidden="true" /> Đang tự lấy lời thoại từ video, khoảng 10–20 giây…</p>}
+            {stt.state === 'done' && <p className="mb-2 text-sm text-success" role="status">Đã tự lấy lời thoại. Máy có thể nghe sai vài chữ, bạn đọc lại và sửa cho đúng nhé.</p>}
+            {stt.state === 'none' && <p className="mb-2 text-sm text-muted-foreground" role="status">Không nghe thấy lời nói trong video. Nếu video có lời, bạn dán vào ô bên dưới.</p>}
+            {stt.state === 'error' && <p className="mb-2 text-sm text-danger" role="status">{stt.msg}</p>}
             <textarea
               id="cv-transcript"
               className="input min-h-36"
               maxLength={6000}
               value={form.transcript}
               onChange={(e) => setForm({ ...form, transcript: e.target.value })}
-              placeholder="Dán kịch bản hoặc phụ đề của video. Mẹo: trong CapCut bấm Chú thích tự động, rồi chép chữ ra đây. Video không có lời nói thì để trống."
+              disabled={stt.state === 'loading'}
+              placeholder={frames.length ? 'Lời thoại sẽ tự hiện ở đây. Video không có lời nói thì để trống.' : 'Chọn video ở bước 1, lời thoại sẽ tự hiện ở đây.'}
             />
-            <p className="mt-1 text-xs text-muted-foreground">AI không nghe được âm thanh, nên phần lời nói được chấm từ chữ bạn dán vào.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Máy chỉ lấy lời của 2 phút đầu. Phần lời nói, hook và lời kêu gọi được chấm từ chữ trong ô này.</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -191,7 +255,7 @@ export default function ChamVideoTool() {
 
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
-          <button type="button" onClick={submit} disabled={busy || frames.length < 2} className="btn btn-gold w-full disabled:opacity-60">
+          <button type="button" onClick={submit} disabled={busy || frames.length < 2 || stt.state === 'loading'} className="btn btn-gold w-full disabled:opacity-60">
             {state === 'scoring'
               ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Đang chấm, khoảng 30 giây…</>
               : <><Sparkles size={18} aria-hidden="true" /> Chấm video</>}
