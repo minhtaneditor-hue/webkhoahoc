@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Loader2, Sparkles, Copy, Check, FileText, FileDown, RotateCcw, MessageCircleQuestion, History } from 'lucide-react';
 import { DANG, DO_DAI, NEN_TANG, dangById, khungById, type KichBan } from '@/lib/viet-kich-ban/templates';
 import { asText, downloadWord, printPdf } from '@/lib/viet-kich-ban/export';
+import ToolFeedback from '@/components/ToolFeedback';
 
 type Usage = { loggedIn: boolean; unavailable?: boolean; member?: boolean; used?: number; limit?: number; freeTotal?: number; history?: { id: string; tieu_de: string; dang: string; created_at: string }[] };
 type Question = { hoi: string; goi_y: string; tra_loi: string };
@@ -22,6 +23,7 @@ export default function VietKichBanTool() {
   const [error, setError] = useState('');
   const [hetLuot, setHetLuot] = useState(false);
   const [script, setScript] = useState<KichBan | null>(null);
+  const [meta, setMeta] = useState({ dang: '', khung: '' }); // format/framework of the script on screen, for feedback
   const [copied, setCopied] = useState(false);
 
   const loadUsage = () => fetch('/api/viet-kich-ban').then((r) => r.json()).then(setUsage).catch(() => setUsage({ loggedIn: false }));
@@ -55,6 +57,7 @@ export default function VietKichBanTool() {
       return;
     }
     setScript(res.data.content as KichBan);
+    setMeta({ dang: form.dang, khung: form.khung });
     setState('done');
     setUsage((u) => (u ? { ...u, used: res.data.used as number } : u));
     loadUsage();
@@ -64,7 +67,7 @@ export default function VietKichBanTool() {
 
   const open = async (id: string) => {
     const r = await fetch(`/api/viet-kich-ban?id=${encodeURIComponent(id)}`).then((x) => x.json()).catch(() => null);
-    if (r?.content) { setScript(r.content); setState('done'); scrollTop(); }
+    if (r?.content) { setScript(r.content); setMeta({ dang: r.dang, khung: r.khung }); setState('done'); scrollTop(); }
   };
 
   const reset = () => { setScript(null); setQuestions(null); setState('idle'); setError(''); setHetLuot(false); scrollTop(); };
@@ -208,6 +211,7 @@ export default function VietKichBanTool() {
       )}
 
       {script && <ScriptView k={script} copied={copied} onCopy={copy} onReset={reset} />}
+      {script && <ToolFeedback key={script.tieu_de} tool="viet-kich-ban" context={meta} />}
 
       {!!usage.history?.length && (
         <div className="card p-5 md:p-6">

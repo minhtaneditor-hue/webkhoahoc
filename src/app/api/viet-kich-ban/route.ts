@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
 import { RUBRIC } from '@/lib/cham-video/rubric';
+import { logToolEvent } from '@/lib/tool-events';
 import { DO_DAI, dangById, khungById, FREE_TOTAL, MEMBER_MONTHLY, type KichBan } from '@/lib/viet-kich-ban/templates';
 
 export const dynamic = 'force-dynamic';
@@ -207,6 +208,7 @@ export async function POST(req: Request) {
     if (body.step !== 'viet') return Response.json({ error: 'Yêu cầu không hợp lệ.' }, { status: 400 });
     const u = await usage(user.id);
     if (u.used >= u.limit) {
+      await logToolEvent('viet-kich-ban', 'het-luot', { member: u.member, limit: u.limit }, user.id);
       return Response.json({
         error: u.member
           ? `Tháng này bạn đã viết ${u.limit} kịch bản. Sang tháng sau bạn có lượt mới nhé.`
