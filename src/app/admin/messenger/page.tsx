@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { AlertTriangle, Bot, BrainCircuit, Check, GraduationCap, Loader2, MessageCircle, Pause, Play, Plus, Send, ShoppingCart, Trash2 } from 'lucide-react';
 import { PageHeader, LoadingRow, EmptyState, StatCard, Modal, Field, thClass, tdClass } from '@/components/admin/AdminUI';
@@ -312,6 +312,108 @@ function Orders({ orders, reload, onOpen }: { orders: Order[]; reload: () => voi
   );
 }
 
+// ---------------------------------------------------------------- voice (migration 032)
+
+type Voice = { id: number; profile: string; status: 'draft' | 'active' | 'archived'; conversations: number; created_at: string };
+
+function VoiceCard({ onLearned }: { onLearned: () => void }) {
+  const [voice, setVoice] = useState<Voice | null>(null);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState<'' | 'import' | 'build' | 'save'>('');
+  const [note, setNote] = useState('');
+  const stopRef = useRef(false);
+
+  const load = useCallback(async () => {
+    const { data } = await supabase.from('fb_voice').select('*').neq('status', 'archived').order('id', { ascending: false }).limit(1).maybeSingle();
+    setVoice(data as Voice | null);
+    setText(data?.profile || '');
+  }, []);
+  useEffect(() => { void Promise.resolve().then(load); }, [load]);
+
+  const importAll = async () => {
+    setBusy('import'); stopRef.current = false; setNote('Đang đọc hộp thư Fanpage…');
+    let after: string | undefined; let convos = 0; let msgs = 0;
+    try {
+      for (let i = 0; i < 500; i++) {
+        const r = await api({ action: 'import', after });
+        convos += r.conversations; msgs += r.messages;
+        setNote(`Đã đọc ${convos} hội thoại, thêm ${msgs} tin nhắn mới…`);
+        if (!r.next || stopRef.current) break;
+        after = r.next;
+      }
+      setNote(`Xong: đã đọc ${convos} hội thoại, thêm ${msgs} tin nhắn mới. Bấm “Tạo hồ sơ giọng”.`);
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : 'Có lỗi xảy ra.');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const build = async () => {
+    setBusy('build'); setNote('AI đang đọc cách bạn trả lời khách, mất khoảng 1–3 phút…');
+    try {
+      const res = await fetch('/api/admin/messenger/voice', { method: 'POST' });
+      const r = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(r.error || 'Có lỗi xảy ra.');
+      await load();
+      setNote(`Đã viết hồ sơ từ ${r.conversations} hội thoại (${r.messages} tin bạn trả lời). Đọc lại, sửa nếu cần rồi bấm “Dùng giọng này”. Đang rút thêm câu hỏi thường gặp…`);
+      const l = await api({ action: 'learn', days: 3650 }).catch(() => null);
+      if (l) { setNote((n) => n.replace('Đang rút thêm câu hỏi thường gặp…', `Có thêm ${l.added} câu hỏi đáp chờ duyệt bên dưới.`)); onLearned(); }
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : 'Có lỗi xảy ra.');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const save = async (activate: boolean) => {
+    if (!voice) return;
+    setBusy('save');
+    if (activate) await supabase.from('fb_voice').update({ status: 'archived' }).eq('status', 'active').neq('id', voice.id);
+    const { error } = await supabase.from('fb_voice').update({ profile: text.trim(), ...(activate ? { status: 'active' } : {}) }).eq('id', voice.id);
+    setNote(error ? error.message : activate ? 'Bot đã nhắn theo giọng này từ tin nhắn tiếp theo.' : 'Đã lưu nháp.');
+    await load();
+    setBusy('');
+  };
+  const turnOff = async () => {
+    if (!voice || !confirm('Tắt giọng riêng? Bot sẽ quay về cách nói chuyện mặc định.')) return;
+    await supabase.from('fb_voice').update({ status: 'archived' }).eq('id', voice.id);
+    setNote('Đã tắt giọng riêng.');
+    await load();
+  };
+
+  return (
+    <div className="card p-5 space-y-4">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div>
+          <p className="font-semibold">Giọng của bạn {voice?.status === 'active' && <span className="ml-2 text-xs font-semibold text-gold">Bot đang dùng</span>}{voice?.status === 'draft' && <span className="ml-2 text-xs font-semibold text-muted-foreground">Bản nháp, bot chưa dùng</span>}</p>
+          <p className="text-sm text-muted-foreground">Bot đọc các tin nhắn bạn từng tư vấn khách trên Fanpage để học cách bạn xưng hô, hỏi nhu cầu, xử lý lăn tăn và chốt đơn. Số điện thoại, email, số tài khoản, tên khách và giá riêng được lược bỏ trước khi AI đọc.</p>
+          {note && <p className="mt-2 text-sm text-ink" role="status">{note}</p>}
+        </div>
+        <div className="flex flex-wrap gap-2 shrink-0">
+          {busy === 'import'
+            ? <button onClick={() => { stopRef.current = true; }} className="btn btn-outline"><Loader2 size={16} className="animate-spin" aria-hidden="true" /> Dừng nhập</button>
+            : <button onClick={importAll} disabled={!!busy} className="btn btn-outline"><MessageCircle size={16} aria-hidden="true" /> 1. Nhập tin nhắn cũ</button>}
+          <button onClick={build} disabled={!!busy} className="btn btn-gold">{busy === 'build' ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <BrainCircuit size={16} aria-hidden="true" />} 2. Tạo hồ sơ giọng</button>
+        </div>
+      </div>
+
+      {voice && (
+        <div className="space-y-3">
+          <label htmlFor="voice-profile" className="text-sm font-semibold">Hồ sơ giọng ({voice.conversations} hội thoại · {time(voice.created_at)})</label>
+          <textarea id="voice-profile" value={text} onChange={(e) => setText(e.target.value)} rows={16}
+                    className="w-full rounded-xl border border-line bg-white p-3 text-sm leading-relaxed" />
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => save(true)} disabled={!!busy || !text.trim()} className="btn btn-gold"><Check size={16} aria-hidden="true" /> Dùng giọng này</button>
+            <button onClick={() => save(false)} disabled={!!busy} className="btn btn-outline">Lưu nháp</button>
+            {voice.status === 'active' && <button onClick={turnOff} className="btn btn-outline">Tắt giọng riêng</button>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- knowledge
 
 function KnowledgeTab({ items, reload }: { items: Knowledge[]; reload: () => void }) {
@@ -353,6 +455,8 @@ function KnowledgeTab({ items, reload }: { items: Knowledge[]; reload: () => voi
 
   return (
     <div className="space-y-8">
+      <VoiceCard onLearned={reload} />
+
       <div className="card p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <p className="font-semibold">Bot học từ cách bạn trả lời</p>

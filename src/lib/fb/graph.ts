@@ -68,6 +68,37 @@ export async function typing(psid: string) {
   await post('/me/messages', { recipient: { id: psid }, sender_action: 'typing_on' }).catch(() => {});
 }
 
+export type GraphMessage = { id: string; message?: string; created_time: string; from?: { id: string; name?: string } };
+export type GraphConversation = {
+  id: string;
+  updated_time: string;
+  participants?: { data: { id: string; name?: string }[] };
+  messages?: { data: GraphMessage[] };
+};
+
+async function get(path: string, params: Record<string, string>) {
+  const qs = new URLSearchParams({ ...params, access_token: process.env.FB_PAGE_ACCESS_TOKEN || '' });
+  const res = await fetch(`${GRAPH}${path}?${qs}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error?.message || `Graph API ${res.status}`);
+  return data;
+}
+
+export async function pageId(): Promise<string> {
+  return (await get('/me', { fields: 'id' })).id;
+}
+
+/** One page of the Page's past Messenger conversations, newest first, with their last 100 messages. */
+export async function fetchConversations(after?: string): Promise<{ data: GraphConversation[]; next: string | null }> {
+  const d = await get('/me/conversations', {
+    platform: 'messenger',
+    limit: '20',
+    fields: 'updated_time,participants,messages.limit(100){message,from,created_time}',
+    ...(after ? { after } : {}),
+  });
+  return { data: d.data || [], next: d.paging?.next ? d.paging?.cursors?.after || null : null };
+}
+
 /** Name and avatar. Needs the app's profile access; returns empty fields when Facebook says no. */
 export async function getProfile(psid: string): Promise<{ name: string | null; pic: string | null }> {
   try {
