@@ -55,6 +55,7 @@ Khi app còn ở chế độ phát triển, bot chỉ trả lời người có v
 ## Chi phí và tùy chỉnh
 - Mặc định bot dùng Claude Opus 5.5 ở mức suy nghĩ thấp (`FB_EFFORT=low`). Muốn rẻ hơn nhiều: `FB_MODEL=claude-haiku-5-5`. Nên đặt hạn mức chi tiêu trong Anthropic Console.
 - `FB_BOT_ENABLED=false`: bot chỉ lưu tin nhắn và không tự trả lời (bạn vẫn trả lời từ Admin).
+- Tin tự động của Meta (AI chuyển cuộc trò chuyện, trả lời tức thì, luồng bình luận để nhắn tin) không làm bot tạm dừng: tin Fanpage gửi trong vòng 20 giây sau tin của khách được coi là tự động (đổi bằng `FB_AUTO_ECHO_SECONDS`). Log Vercel ghi `[fb echo]` kèm `app_id` cho mỗi tin Fanpage gửi; app nào là công cụ tự động thì thêm vào `FB_AUTOMATED_APP_IDS` (cách nhau bằng dấu phẩy) để mọi tin của nó đều được bỏ qua.
 - Quy tắc tư vấn, khi nào chuyển ca khó: sửa `RULES` trong `src/lib/fb/agent.ts`.
 
 ## Lưu ý của Facebook
