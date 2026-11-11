@@ -8,7 +8,8 @@ import { checkEmail } from '@/lib/email-check';
 import { freeEmailUrl } from '@/lib/free-link';
 import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
-import { DEFAULT_STUDENT_PASSWORD, FROM, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, repoBirthdaySale, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
+import { resendKind, resendTitle } from '@/lib/email-resend';
+import { DEFAULT_STUDENT_PASSWORD, FROM, SITE, assetPurchased, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, repoBirthdaySale, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -140,11 +141,140 @@ async function retryMail(db: SupabaseClient, type: RetryType, email: string): Pr
   return { mail: freeDownloadEmail({ name: lead?.name, email, title: asset.title, url: freeEmailUrl(download.asset_id, email) }), headers };
 }
 
-/** GET: who has been sent what, plus the campaign with each student's status. */
-export async function GET() {
+const low = (e?: string | null) => (e || '').trim().toLowerCase();
+
+/** The latest name we have for someone: account first, then lead form. */
+async function nameOf(db: SupabaseClient, email: string) {
+  const [{ data: user }, { data: lead }] = await Promise.all([
+    db.from('users').select('full_name').eq('email', email).maybeSingle(),
+    db.from('leads').select('name').eq('email', email).maybeSingle(),
+  ]);
+  return (user?.full_name as string | null) || (lead?.name as string | null) || null;
+}
+
+/** Rebuilds one tracked email from current data, so links are fresh. Returns why not when it cannot. */
+async function rebuildTracked(db: SupabaseClient, email: string, subject: string | null): Promise<{ mail: Mail; headers?: Record<string, string> } | { skip: string }> {
+  const kind = resendKind(subject);
+  if (!kind) return { skip: 'Loại thư này chưa gửi lại được.' };
+  if (kind === 'student' || kind === 'remarketing') {
+    const built = await retryMail(db, kind, email);
+    return 'skip' in built ? { skip: `Không gửi lại được: ${built.skip}.` } : built;
+  }
+  if (kind !== 'order') {
+    const { data: optout } = await db.from('email_optouts').select('email').eq('email', email).maybeSingle();
+    if (optout) return { skip: 'Người này đã ngừng nhận email.' };
+    if (!(await checkEmail(email)).ok) return { skip: 'Địa chỉ email này không nhận được thư.' };
+  }
+  const headers = unsubscribeHeaders(email);
+  if (kind === 'repo-sale') {
+    const made = await repoSaleOffer(db);
+    if ('error' in made) return { skip: made.error || 'Mã giảm giá không dùng được.' };
+    return { mail: repoBirthdaySale({ name: await nameOf(db, email), email }, made.course, made.offer), headers };
+  }
+  const title = resendTitle(subject);
+  const { data: asset } = await db.from('digital_assets').select('id, title, price').eq('title', title || '').maybeSingle();
+  if (!asset) return { skip: 'Không tìm thấy sản phẩm trong thư này.' };
+  if (kind === 'free') {
+    if (Number(asset.price) > 0) return { skip: 'Sản phẩm này không còn miễn phí.' };
+    return { mail: freeDownloadEmail({ name: await nameOf(db, email), email, title: asset.title, url: freeEmailUrl(asset.id, email) }), headers };
+  }
+  // Paid product: the buyer's own successful order, so the link opens their download page
+  const { data: user } = await db.from('users').select('id').eq('email', email).maybeSingle();
+  const { data: orders } = await db.from('payments').select('order_id, access_token, buyer_name, buyer_email, user_id, created_at')
+    .eq('asset_id', asset.id).eq('status', 'success').order('created_at', { ascending: false }).limit(50);
+  const order = (orders || []).find((o) => low(o.buyer_email) === email || (user && o.user_id === user.id));
+  if (!order) return { skip: 'Không tìm thấy đơn đã thanh toán của người này.' };
+  const link = `${SITE}/payment/bank/${order.order_id}?t=${order.access_token}`;
+  return { mail: assetPurchased({ name: order.buyer_name, title: asset.title, orderId: order.order_id, link }) };
+}
+
+/** POST { action: 'resend', emailId }: sends one tracked email again. Each original goes out again at most once. */
+async function resendTracked(db: SupabaseClient, resend: Resend, emailId: string) {
+  const { data: row } = await db.from('email_status').select('email_id, to_email, subject').eq('email_id', emailId).maybeSingle();
+  if (!row) return { error: 'Không tìm thấy thư này.' };
+  const email = low(row.to_email);
+  const built = await rebuildTracked(db, email, row.subject);
+  if ('skip' in built) return { error: built.skip };
+  const ref = `resend:${emailId}`;
+  const { error: claim } = await db.from('email_log').insert({ email, kind: 'retry', ref });
+  if (claim) return { error: claim.code === '23505' ? 'Thư này đã được gửi lại rồi.' : claim.message };
+  const { data, error } = await resend.emails.send({ from: FROM, to: email, ...(built.headers ? { headers: built.headers } : {}), ...built.mail });
+  if (error) {
+    await db.from('email_log').delete().match({ email, kind: 'retry', ref });
+    return { error: `Resend báo lỗi: ${error.message}` };
+  }
+  return { ok: true, to: email, id: data?.id };
+}
+
+const TRACKED_COLUMNS = 'email_id, to_email, subject, status, reason, sent_at, delivered_at, opened_at, clicked_at';
+
+/** Ids of tracked emails already sent again from this page. */
+async function resentIds(db: SupabaseClient) {
+  const { data } = await db.from('email_log').select('ref').eq('kind', 'retry').like('ref', 'resend:%').limit(5000);
+  return (data || []).map((r) => r.ref.slice('resend:'.length));
+}
+
+/** GET ?q=: every email and order matching an address, part of one, a subject or an order code, across all history. */
+async function searchEmails(db: SupabaseClient, raw: string) {
+  const term = raw.trim().toLowerCase().replace(/[,()"%*\\]/g, '').slice(0, 80);
+  if (term.length < 2) return NextResponse.json({ error: 'Nhập ít nhất 2 ký tự.' }, { status: 400 });
+  const like = `"%${term}%"`;
+  const { data: users } = await db.from('users').select('id, email').ilike('email', `%${term}%`).limit(50);
+  const userIds = (users || []).map((u) => u.id);
+  const [byText, byUser] = await Promise.all([
+    db.from('payments').select('order_id, status, amount, buyer_email, buyer_name, user_id, course_id, asset_id, membership_plan, created_at')
+      .or(`order_id.ilike.${like},buyer_email.ilike.${like}`).order('created_at', { ascending: false }).limit(50),
+    userIds.length
+      ? db.from('payments').select('order_id, status, amount, buyer_email, buyer_name, user_id, course_id, asset_id, membership_plan, created_at').in('user_id', userIds).order('created_at', { ascending: false }).limit(50)
+      : Promise.resolve({ data: [] as never[] }),
+  ]);
+  const orderRows = new Map<string, NonNullable<typeof byText.data>[number]>();
+  for (const o of [...(byText.data || []), ...(byUser.data || [])]) orderRows.set(o.order_id, o);
+
+  const { data: owners } = await db.from('users').select('id, email').in('id', [...new Set([...orderRows.values()].map((o) => o.user_id).filter(Boolean))]);
+  const ownerEmail = new Map((owners || []).map((u) => [u.id, low(u.email)]));
+  const [{ data: courses }, { data: assets }] = await Promise.all([
+    db.from('courses').select('id, title'),
+    db.from('digital_assets').select('id, title'),
+  ]);
+  const titles = new Map([...(courses || []), ...(assets || [])].map((c) => [c.id, c.title as string]));
+  const orders = [...orderRows.values()].sort((a, b) => b.created_at.localeCompare(a.created_at)).map((o) => ({
+    orderId: o.order_id, status: o.status, amount: Number(o.amount), createdAt: o.created_at,
+    email: low(o.buyer_email) || ownerEmail.get(o.user_id) || null, name: o.buyer_name,
+    product: titles.get(o.course_id || o.asset_id) || (o.membership_plan ? `Hội viên ${o.membership_plan}` : '—'),
+  }));
+
+  // Emails of the matched orders count too, so searching an order code shows what its buyer was sent
+  const orderEmails = [...new Set(orders.map((o) => o.email).filter((e): e is string => !!e))];
+  const [byAddress, byOrderEmail, log] = await Promise.all([
+    db.from('email_status').select(TRACKED_COLUMNS).or(`to_email.ilike.${like},subject.ilike.${like}`).order('sent_at', { ascending: false }).limit(300),
+    orderEmails.length ? db.from('email_status').select(TRACKED_COLUMNS).in('to_email', orderEmails).order('sent_at', { ascending: false }).limit(300) : Promise.resolve({ data: [] as never[] }),
+    db.from('email_log').select('email, kind, ref, sent_at').or(`email.ilike.${like}${orderEmails.length ? `,email.in.(${orderEmails.map((e) => `"${e}"`).join(',')})` : ''}`).order('sent_at', { ascending: false }).limit(300),
+  ]);
+  const tracked = new Map<string, NonNullable<typeof byAddress.data>[number]>();
+  for (const t of [...(byAddress.data || []), ...(byOrderEmail.data || [])]) tracked.set(t.email_id, t);
+
+  return NextResponse.json({
+    search: {
+      term,
+      orders,
+      tracked: [...tracked.values()].sort((a, b) => b.sent_at.localeCompare(a.sent_at)),
+      log: (log.data || []).map((l) => ({
+        email: l.email, kind: l.kind, sentAt: l.sent_at,
+        label: l.kind === 'campaign' ? (l.ref === CAMPAIGN.ref ? CAMPAIGN.label : l.ref === REMARKETING.ref ? REMARKETING.label : l.ref) : l.kind === 'retry' && l.ref.startsWith('resend:') ? 'Gửi lại từ trang này' : KIND_LABELS[l.kind] || l.kind,
+      })),
+      resent: await resentIds(db),
+    },
+  });
+}
+
+/** GET: who has been sent what, plus the campaign with each student's status. With ?q= it searches instead. */
+export async function GET(req: Request) {
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
   const { db } = auth;
+  const q = new URL(req.url).searchParams.get('q');
+  if (q !== null) return searchEmails(db, q);
 
   const [{ data: log, count, error }, { data: optouts }, { data: users }, { data: leads }, { data: allCourses }, courses, audience] = await Promise.all([
     db.from('email_log').select('email, kind, ref, sent_at', { count: 'exact' }).order('sent_at', { ascending: false }).limit(1000),
@@ -158,8 +288,9 @@ export async function GET() {
   const [remarketing, remarketingPeople, tracked] = await Promise.all([
     remarketingMail(db),
     remarketingAudience(db),
-    db.from('email_status').select('email_id, to_email, subject, status, reason, sent_at, delivered_at, opened_at, clicked_at').order('sent_at', { ascending: false }).limit(1000),
+    db.from('email_status').select(TRACKED_COLUMNS).order('sent_at', { ascending: false }).limit(1000),
   ]);
+  const resent = await resentIds(db);
   if (error) return NextResponse.json({ error: `email_log: ${error.message}` }, { status: 500 });
 
   const names = new Map<string, string>();
@@ -186,7 +317,7 @@ export async function GET() {
     rows,
     total: count ?? rows.length,
     optouts: blocked.size,
-    tracking: { ready: !tracked.error, webhook: !!process.env.RESEND_WEBHOOK_SECRET, rows: tracked.data || [] },
+    tracking: { ready: !tracked.error, webhook: !!process.env.RESEND_WEBHOOK_SECRET, rows: tracked.data || [], resent },
     campaign: {
       label: CAMPAIGN.label,
       subject: sample.subject,
@@ -245,14 +376,21 @@ async function retryFailed(db: SupabaseClient, resend: Resend, batch: string, it
  * 75-repo email. With both, either signal counts.
  * Skips anyone opted out, already a customer, previously undeliverable, or failing checkEmail. A repeat call only tops up to `total`.
  */
-async function repoSale(db: SupabaseClient, resend: Resend, total: number, exclude: string[], dryRun: boolean, onlyOpened: boolean, onlyClicked: boolean) {
+/** The featured course and the birthday code's real price, or why the code would not work at checkout. */
+async function repoSaleOffer(db: SupabaseClient) {
   const course = await getFeaturedCourse(db);
   if (!course) return { error: 'Không tìm thấy khóa học chính.' };
   const { data: row } = await db.from('courses').select('price').eq('id', course.id).maybeSingle();
   const price = Number(row?.price) || 0;
   const promo = await checkPromo(db, REPO_SALE.code, { courseId: course.id, price });
   if (!promo.ok || !price) return { error: `Mã ${REPO_SALE.code} chưa dùng được cho khóa này.` };
-  const offer = { code: promo.code, price, discount: promo.discount, until: REPO_SALE.until };
+  return { course, offer: { code: promo.code, price, discount: promo.discount, until: REPO_SALE.until } };
+}
+
+async function repoSale(db: SupabaseClient, resend: Resend, total: number, exclude: string[], dryRun: boolean, onlyOpened: boolean, onlyClicked: boolean) {
+  const made = await repoSaleOffer(db);
+  if ('error' in made) return { error: made.error };
+  const { course, offer } = made;
 
   const { data: asset } = await db.from('digital_assets').select('id').ilike('title', REPO_SALE.asset).maybeSingle();
   if (!asset) return { error: 'Không tìm thấy sản phẩm 75 repo.' };
@@ -320,7 +458,13 @@ export async function POST(req: Request) {
   if (!process.env.RESEND_API_KEY) return NextResponse.json({ error: 'Thiếu RESEND_API_KEY.' }, { status: 500 });
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const { action, campaign, batch, items, total, exclude, dryRun, onlyOpened, onlyClicked } = await req.json().catch(() => ({}));
+  const { action, campaign, batch, items, total, exclude, dryRun, onlyOpened, onlyClicked, emailId } = await req.json().catch(() => ({}));
+  if (action === 'resend') {
+    if (typeof emailId !== 'string' || !emailId || emailId.length > 80) return NextResponse.json({ error: 'Thiếu mã thư.' }, { status: 400 });
+    const result = await resendTracked(db, resend, emailId);
+    if ('error' in result) return NextResponse.json({ error: result.error }, { status: 400 });
+    return NextResponse.json(result);
+  }
   if (action === 'repo-sale') {
     if (!Number.isInteger(total) || total < 1 || total > 373) return NextResponse.json({ error: 'Số người gửi chưa đúng.' }, { status: 400 });
     const result = await repoSale(db, resend, total, Array.isArray(exclude) ? exclude.map(String) : [], dryRun === true, onlyOpened === true, onlyClicked === true);
