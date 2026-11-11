@@ -13,9 +13,21 @@ export const maxDuration = 60;
  *   Fields        messages, messaging_postbacks, message_echoes
  * Facebook needs a 200 within seconds, so the AI answers in after() once the response is sent.
  * A reply typed by a person in the Page inbox (an echo not sent by this app) pauses the bot for that customer.
+ * Meta's own automations (AI agent hand-off, instant replies, comment-to-DM flows) also arrive as echoes
+ * from other apps: those are stored as automated and never pause the bot (see isAutomatedEcho).
  */
 
 const DEBOUNCE_MS = 4000; // people send several short messages in a row: answer them together
+
+// Apps whose echoes are Meta automations, not a person typing (comma-separated app ids, from the "[fb echo]" log)
+const AUTOMATED_APPS = new Set((process.env.FB_AUTOMATED_APP_IDS || '').split(',').map((s) => s.trim()).filter(Boolean));
+// A person can't read and answer that fast: an echo this soon after the customer's message is an automation
+const AUTO_ECHO_MS = (Number(process.env.FB_AUTO_ECHO_SECONDS) || 20) * 1000;
+
+function isAutomatedEcho(appId: number | undefined, echoAt: number, lastCustomerAt: number | null) {
+  if (appId && AUTOMATED_APPS.has(String(appId))) return true;
+  return lastCustomerAt !== null && echoAt >= lastCustomerAt && echoAt - lastCustomerAt < AUTO_ECHO_MS;
+}
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -66,18 +78,27 @@ export async function POST(req: Request) {
       const mid = ev.message?.mid || ev.postback?.mid || null;
       if (!text) continue;
 
-      const at = new Date(ev.timestamp || Date.now()).toISOString();
-      const { data: existing } = await db.from('fb_conversations').select('psid').eq('psid', psid).maybeSingle();
+      const ts = ev.timestamp || Date.now();
+      const at = new Date(ts).toISOString();
+      const { data: existing } = await db.from('fb_conversations').select('psid, last_customer_at').eq('psid', psid).maybeSingle();
       if (!existing) {
         const profile = await getProfile(psid);
         await db.from('fb_conversations').upsert({ psid, name: profile.name, profile_pic: profile.pic }, { onConflict: 'psid', ignoreDuplicates: true });
       }
 
-      const role = echo ? 'admin' : 'customer';
-      const { data: saved, error } = await db.from('fb_messages').insert({ psid, role, text, mid, created_at: at }).select('id').single();
+      const lastCustomerAt = existing?.last_customer_at ? Date.parse(existing.last_customer_at) : null;
+      const automated = echo && isAutomatedEcho(ev.message?.app_id, ts, lastCustomerAt);
+      if (echo) console.log('[fb echo]', JSON.stringify({ app_id: ev.message?.app_id ?? null, automated, text: text.slice(0, 60) }));
+
+      // Automated echoes are kept as context ('bot' role) but are not Minh Tấn's words: no pause, nothing to learn from
+      const role = automated ? 'bot' : echo ? 'admin' : 'customer';
+      const stored = automated ? `[Tin tự động của Meta] ${text}` : text;
+      const { data: saved, error } = await db.from('fb_messages').insert({ psid, role, text: stored, mid, created_at: at }).select('id').single();
       if (error) continue; // duplicate delivery (same mid)
 
-      if (echo) {
+      if (automated) {
+        await db.from('fb_conversations').update({ last_message_at: at }).eq('psid', psid);
+      } else if (echo) {
         // Minh Tấn answered from the Page inbox: he has this one, the bot steps back
         const hours = Number(process.env.FB_HUMAN_PAUSE_HOURS) || 12;
         await db.from('fb_conversations').update({
