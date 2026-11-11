@@ -63,6 +63,16 @@ export async function sendText(psid: string, text: string, opts: { humanAgent?: 
   return mids;
 }
 
+/** Sends an image (e.g. a VietQR code) by URL; returns the Facebook message id. */
+export async function sendImage(psid: string, url: string) {
+  const data = await post('/me/messages', {
+    recipient: { id: psid },
+    messaging_type: 'RESPONSE',
+    message: { attachment: { type: 'image', payload: { url, is_reusable: false } } },
+  });
+  return data.message_id as string | undefined;
+}
+
 /** "Đang nhập…" bubble while the AI writes. Never fails the caller. */
 export async function typing(psid: string) {
   await post('/me/messages', { recipient: { id: psid }, sender_action: 'typing_on' }).catch(() => {});
