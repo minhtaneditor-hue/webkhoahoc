@@ -54,6 +54,7 @@ async function extractFrames(file: File): Promise<{ frames: Frame[]; duration: n
 
 const STT_RATE = 16000;
 const STT_MAX_SECONDS = 120; // first two minutes are enough for short videos and fit the upload limit
+const STT_TIMEOUT_MS = 60_000;
 
 // Decodes the sound track locally and returns the first two minutes as 16 kHz mono WAV.
 async function extractAudioWav(file: File): Promise<Blob | null> {
@@ -111,13 +112,19 @@ export default function ChamVideoTool() {
   const [stt, setStt] = useState<{ state: 'idle' | 'loading' | 'done' | 'none' | 'error'; msg?: string }>({ state: 'idle' });
 
   // Fills the transcript box from the video's sound (via /api/cham-video/loi-thoai, which uses 11max).
+  // Gives up after STT_TIMEOUT_MS so a slow connection never leaves the form locked; a newer video wins.
+  const sttRun = useRef(0);
   const transcribe = async (file: File) => {
+    const run = ++sttRun.current;
+    const stale = () => run !== sttRun.current;
     setStt({ state: 'loading' });
     const wav = await extractAudioWav(file).catch(() => null);
+    if (stale()) return;
     if (!wav) { setStt({ state: 'none' }); return; }
-    const res = await fetch('/api/cham-video/loi-thoai', { method: 'POST', headers: { 'Content-Type': 'audio/wav' }, body: wav })
+    const res = await fetch('/api/cham-video/loi-thoai', { method: 'POST', headers: { 'Content-Type': 'audio/wav' }, body: wav, signal: AbortSignal.timeout(STT_TIMEOUT_MS) })
       .then(async (r) => ({ ok: r.ok, data: await r.json().catch(() => ({})) }))
-      .catch(() => ({ ok: false, data: {} as { error?: string; text?: string } }));
+      .catch((e: Error) => ({ ok: false, data: { error: e.name === 'TimeoutError' ? 'Mạng hơi chậm nên chưa lấy được lời thoại. Bạn dán lời nói vào ô bên dưới, hoặc chọn lại video để thử lần nữa.' : undefined } as { error?: string; text?: string } }));
+    if (stale()) return;
     if (!res.ok) { setStt({ state: 'error', msg: res.data.error || 'Chưa lấy được lời thoại. Bạn dán lời nói vào ô bên dưới nhé.' }); return; }
     const text = String(res.data.text || '');
     if (!text) { setStt({ state: 'none' }); return; }
@@ -164,6 +171,7 @@ export default function ChamVideoTool() {
 
   const reset = () => {
     setResult(null); setFrames([]); setFileName(''); setState('idle'); setError('');
+    sttRun.current++;
     setStt({ state: 'idle' });
     setForm((f) => ({ ...f, transcript: '' }));
     if (inputRef.current) inputRef.current.value = '';
