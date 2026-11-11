@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { findOrderCode, fulfillPayment } from '@/lib/payments';
 import { fbTransferReceived, findFbOrderId } from '@/lib/fb/pay';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 // SePay calls this for every incoming bank transfer (docs.sepay.vn/tich-hop-webhooks.html).
 // Auth, whichever the webhook is set up with in SePay:
@@ -46,8 +47,9 @@ export async function POST(req: Request) {
   // Deposits and payments for orders closed by the Messenger bot (note TANVAFB<id>)
   const fbOrder = findFbOrderId(tx.code, tx.content, tx.description);
   if (fbOrder) {
-    const known = await fbTransferReceived(supabase, fbOrder, Number(tx.transferAmount) || 0, String(tx.id));
-    return ok(known ? 'messenger order: received' : 'ignored: unknown messenger order');
+    // Answer SePay at once; the AI summary for Minh Tấn runs after the response
+    after(() => fbTransferReceived(supabase, fbOrder, Number(tx.transferAmount) || 0, String(tx.id)).catch((e) => console.error('fb transfer failed', e)));
+    return ok('messenger order: received');
   }
 
   const orderId = findOrderCode(tx.code, tx.content, tx.description);
