@@ -27,8 +27,9 @@ function allow(ip: string) {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function POST(req: Request) {
-  // Forgive common paste mistakes in the dashboard: spaces, quotes, or the whole "NAME=value" line.
-  const key = (process.env.ELEVENMAX_API_KEY || '').trim().replace(/^ELEVENMAX_API_KEY\s*=\s*/, '').replace(/^["']|["']$/g, '').trim();
+  // Forgive paste mistakes in the dashboard (quotes, spaces, "NAME=" or "xi-api-key:" in front): keep the sk_ token.
+  const raw = process.env.ELEVENMAX_API_KEY || '';
+  const key = raw.match(/sk_[A-Za-z0-9_-]+/)?.[0] ?? raw.trim();
   if (!key) return Response.json({ error: 'Chưa bật tự lấy lời thoại. Bạn dán lời nói vào ô bên dưới nhé.' }, { status: 503 });
 
   const type = req.headers.get('content-type') || '';
