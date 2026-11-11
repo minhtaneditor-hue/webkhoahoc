@@ -17,7 +17,7 @@ const MODEL = process.env.FB_MODEL || 'claude-opus-5-5';
 const EFFORT = (process.env.FB_EFFORT || 'low') as 'low' | 'medium' | 'high';
 const HISTORY = 30;                                             // messages of the thread the AI reads
 const PAUSE_HOURS = Number(process.env.FB_HUMAN_PAUSE_HOURS) || 12; // bot stays quiet after a handoff or a human reply
-const DEPOSIT = Number(process.env.FB_DEPOSIT_AMOUNT) || 0;        // fixed deposit to hold a seat (VND), 0 = ask
+const DEPOSIT = Number(process.env.FB_DEPOSIT_AMOUNT) || 0;        // minimum deposit to hold a seat (VND), 0 = ask
 
 const RULES = `Bạn là trợ lý chăm sóc khách hàng và tư vấn bán hàng trên Fanpage Facebook TẤN VA của Minh Tấn (website ${SITE}), người dạy quay, dựng video, CapCut, AI làm video và xây thương hiệu cá nhân. Khách nhắn qua Messenger.
 
@@ -31,7 +31,7 @@ Tư vấn để chốt đơn:
 2. Gợi ý đúng một khóa / gói / sản phẩm hợp nhất, nói lợi ích cụ thể với khách và giá đúng như dữ liệu. Link luôn ghi đầy đủ: ${SITE}/courses/... hoặc ${SITE}/shop/...
 3. Khách còn lăn tăn thì trả lời thật, dựa vào dữ liệu (nội dung khóa, cảm nhận học viên, chính sách). Không ép, không hứa điều dữ liệu không có.
 4. Khi khách đồng ý mua hoặc muốn đăng ký: xin họ tên và số điện thoại Zalo (thêm email nếu là khóa học online, vì tài khoản học gửi qua email). Nhắc lại sản phẩm và giá để khách xác nhận, rồi gọi công cụ create_order.
-5. Thanh toán: khóa online mua trên website thì gửi link trang khóa học để khách tự thanh toán. Khách đồng ý đặt cọc giữ chỗ hoặc chuyển khoản trực tiếp (coaching 1:1, lớp offline, gói đặt qua chat) thì sau create_order gọi send_payment_qr để gửi mã QR chuyển khoản; mã QR đã gồm số tài khoản và nội dung chuyển khoản, bạn không tự ghi số tài khoản. Nói Minh Tấn sẽ nhắn Zalo xác nhận khi nhận được tiền.${DEPOSIT ? `\n   Mức cọc giữ chỗ: ${DEPOSIT.toLocaleString('vi-VN')}đ. Không tự đổi mức cọc.` : '\n   Chưa có mức cọc cố định: khách muốn cọc thì hỏi khách muốn cọc bao nhiêu hoặc chuyển đủ, nếu khách hỏi mức cọc tối thiểu thì chuyển Minh Tấn.'}
+5. Thanh toán: khóa online mua trên website thì gửi link trang khóa học để khách tự thanh toán. Khách đồng ý đặt cọc giữ chỗ hoặc chuyển khoản trực tiếp (coaching 1:1, lớp offline, gói đặt qua chat) thì sau create_order gọi send_payment_qr để gửi mã QR chuyển khoản; mã QR đã gồm số tài khoản và nội dung chuyển khoản, bạn không tự ghi số tài khoản. Nói Minh Tấn sẽ nhắn Zalo xác nhận khi nhận được tiền.${DEPOSIT ? `\n   Cọc giữ chỗ tối thiểu ${DEPOSIT.toLocaleString('vi-VN')}đ; khách muốn cọc nhiều hơn hoặc chuyển đủ đều được. Không nhận cọc thấp hơn mức này; khách xin cọc ít hơn thì chuyển Minh Tấn.` : '\n   Chưa có mức cọc cố định: khách muốn cọc thì hỏi khách muốn cọc bao nhiêu hoặc chuyển đủ, nếu khách hỏi mức cọc tối thiểu thì chuyển Minh Tấn.'}
 
 Chuyển cho Minh Tấn (gọi công cụ escalate_to_human). Nguyên tắc chung: việc gì cần Minh Tấn quyết định, hoặc bạn không chắc chắn 100% từ dữ liệu, thì chuyển. Khách không cần nói "cho gặp người thật" mới chuyển. Cụ thể:
 - Khách xin giảm giá, trả góp, tặng thêm, gia hạn, đổi lịch, đổi khóa, hay bất kỳ ngoại lệ nào ngoài ưu đãi và chính sách đã có trong dữ liệu. Không tự hứa, không tự từ chối thay Minh Tấn.
@@ -206,6 +206,8 @@ export async function replyTo(db: SupabaseClient, psid: string) {
             results.push({ type: 'tool_result', tool_use_id: block.id, is_error: true, content: 'Chưa cài tài khoản nhận tiền. Chuyển Minh Tấn để anh gửi thông tin chuyển khoản.' });
           } else if (!order) {
             results.push({ type: 'tool_result', tool_use_id: block.id, is_error: true, content: 'Chưa có đơn. Gọi create_order trước.' });
+          } else if (kind === 'deposit' && DEPOSIT && amount < DEPOSIT) {
+            results.push({ type: 'tool_result', tool_use_id: block.id, is_error: true, content: `Cọc tối thiểu ${DEPOSIT.toLocaleString('vi-VN')}đ. Báo khách mức này; khách muốn cọc ít hơn thì chuyển Minh Tấn.` });
           } else if (!(amount >= 10_000 && amount <= 100_000_000)) {
             results.push({ type: 'tool_result', tool_use_id: block.id, is_error: true, content: 'Số tiền không hợp lệ. Hỏi lại khách số tiền muốn chuyển.' });
           } else {
