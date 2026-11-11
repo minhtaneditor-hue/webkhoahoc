@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { supabase, getCurrentUser } from '@/utils/supabase';
 import { isAdmin } from '@/lib/admin';
 import { Logo } from '@/components/Navbar';
-import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart, Activity, ShieldCheck, Inbox, TicketPercent, CalendarCheck, MessageSquareText, Newspaper, Mail, Crown } from 'lucide-react';
+import { BarChart3, Users, CreditCard, Settings, Menu, X, LogOut, Database, ShoppingBag, Briefcase, ExternalLink, Loader2, TrendingUp, Star, MessageSquareQuote, HelpCircle, Clapperboard, MessageSquareHeart, Activity, ShieldCheck, Inbox, TicketPercent, CalendarCheck, MessageSquareText, Newspaper, Mail, Crown, MessagesSquare } from 'lucide-react';
 
 const sidebarItems = [
   { group: 'Tổng quan', items: [
@@ -19,6 +19,7 @@ const sidebarItems = [
     { title: 'Mã giảm giá', icon: TicketPercent, href: '/admin/promos' },
     { title: 'Học viên', icon: Users, href: '/admin/students' },
     { title: 'Hội viên', icon: Crown, href: '/admin/members' },
+    { title: 'Facebook Messenger', icon: MessagesSquare, href: '/admin/messenger' },
     { title: 'Đặt lịch & tư vấn', icon: CalendarCheck, href: '/admin/consults' },
     { title: 'Khách tiềm năng', icon: Inbox, href: '/admin/leads' },
     { title: 'Email đã gửi', icon: Mail, href: '/admin/emails' },
