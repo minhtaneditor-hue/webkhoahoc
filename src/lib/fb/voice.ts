@@ -29,7 +29,14 @@ export function scrub(text: string) {
  * automations (old chatbots, Meta AI, instant replies): stored as 'bot' so they never count as his voice.
  */
 export async function importHistory(db: SupabaseClient, after?: string) {
-  const [me, page] = await Promise.all([pageId(), fetchConversations(after)]);
+  const page = await fetchConversations(after);
+  // The Page is the participant present in every conversation (reading /me can need extra permissions)
+  const me = process.env.FB_PAGE_ID || await pageId().catch(() => {
+    const seen = new Map<string, number>();
+    for (const c of page.data) for (const p of c.participants?.data || []) seen.set(p.id, (seen.get(p.id) || 0) + 1);
+    return [...seen.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+  });
+  if (!me) return { conversations: 0, messages: 0, next: null };
   let messages = 0;
 
   for (const c of page.data) {
