@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, Download, Loader2, X } from 'lucide-react';
+import CheckInboxNote from '@/components/shop/CheckInboxNote';
 
 type Asset = { id: string; title: string };
 
@@ -75,7 +76,8 @@ export default function FreeDownloadDialog({ asset, defaultEmail, onClose }: { a
           {fileUrl ? (
             <div role="status" className="mt-5 text-center">
               <CheckCircle2 size={40} className="mx-auto text-success" aria-hidden="true" />
-              <p className="mt-3 text-muted-foreground">Bấm nút bên dưới để tải. Link tải cũng đã được gửi tới {form.email}.</p>
+              <p className="mt-3 text-muted-foreground">Bấm nút bên dưới để tải ngay.</p>
+              <CheckInboxNote email={form.email} />
               <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold w-full mt-5"><Download size={18} aria-hidden="true" /> Tải về ngay</a>
             </div>
           ) : (

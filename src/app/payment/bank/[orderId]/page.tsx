@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { CheckCircle2, Copy, Check, Loader2, ShieldCheck, Download } from 'lucide-react';
 import { formatVND } from '@/lib/supabase-public';
+import CheckInboxNote from '@/components/shop/CheckInboxNote';
 
 type Order = {
   orderId: string;
@@ -99,6 +100,7 @@ export default function BankTransferPage() {
           <p className="mt-3 text-muted-foreground leading-relaxed">
             Đã nhận {formatVND(order.amount)} cho “{order.title}”. Email xác nhận đã được gửi tới hộp thư của bạn.
           </p>
+          <CheckInboxNote />
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             {order.membership ? (
               <>
