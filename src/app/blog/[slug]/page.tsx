@@ -14,9 +14,14 @@ import { formatPostDate, readingMinutes } from '@/lib/blog-format';
 import { SITE_URL } from '@/lib/site-url';
 import { skipOptimizer } from '@/lib/image';
 
-// Read fresh on every visit: a cached copy kept a just-published post "not found" and an
-// unpublished one visible, and the admin's page refresh does not clear either.
-export const dynamic = 'force-dynamic';
+// Cached and rebuilt at most every 5 minutes, so readers get a ready page instead of waiting on
+// the database. Admin saves purge it at once (AdminCrud -> /api/admin/revalidate). A post the
+// daily task just published is built on its first visit, since no page exists for it yet.
+export const revalidate = 300;
+
+export function generateStaticParams() {
+  return [];
+}
 
 type Props = { params: Promise<{ slug: string }> };
 

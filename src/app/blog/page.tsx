@@ -6,8 +6,8 @@ import AdContactBanner from '@/components/blog/AdContactBanner';
 import PostCard from '@/components/blog/PostCard';
 import { getPublishedPosts } from '@/lib/blog';
 
-// Read fresh on every visit, like the post pages, so the list always matches them.
-export const dynamic = 'force-dynamic';
+// Same window as the post pages: a new post shows in the list within 5 minutes, at once after an admin save.
+export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
   const posts = await getPublishedPosts();
