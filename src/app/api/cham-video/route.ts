@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { RUBRIC } from '@/lib/cham-video/rubric';
 import { CRITERIA, ratingFor, type Scorecard } from '@/lib/cham-video/criteria';
+import { logToolEvent } from '@/lib/tool-events';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -158,6 +159,12 @@ export async function POST(req: Request) {
     });
     const tong_diem = Math.round(CRITERIA.reduce((s, c, i) => s + (tieu_chi[i].diem * c.weight) / 10, 0));
     const card: Scorecard = { ...raw, tieu_chi, tong_diem, xep_loai: ratingFor(tong_diem) };
+    // What was scored, for the tool report. No frames or transcript.
+    await logToolEvent('cham-video', 'cham', {
+      tong: tong_diem,
+      tieu_chi: Object.fromEntries(tieu_chi.map((t) => [t.ma, t.diem])),
+      nganh, muc_tieu: mucTieu, nen_tang: nenTang, do_dai: Math.round(duration), co_loi_thoai: !!transcript,
+    });
     console.log('cham-video ok', tong_diem, msg.usage.input_tokens, msg.usage.cache_read_input_tokens, msg.usage.output_tokens);
     return Response.json(card);
   } catch (err) {

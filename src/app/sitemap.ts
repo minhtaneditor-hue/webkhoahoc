@@ -7,7 +7,7 @@ export const revalidate = 3600;
 
 // Public pages plus every published course page, shop product and blog post, for Google and other search engines.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const pages = ['', '/courses', '/students', '/work', '/shop', '/coaching', '/cham-video', '/about', '/privacy', '/terms', '/refund']
+  const pages = ['', '/courses', '/students', '/work', '/shop', '/coaching', '/cham-video', '/viet-kich-ban', '/about', '/privacy', '/terms', '/refund']
     .map((p) => ({ url: `${BASE}${p}`, changeFrequency: 'weekly' as const, priority: p === '' ? 1 : 0.7 }));
   try {
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { Upload, Loader2, Sparkles, Copy, Check, RotateCcw, Headphones } from 'lucide-react';
 import { CRITERIA, COURSE_21_ID, FREE_LESSONS, type Scorecard } from '@/lib/cham-video/criteria';
+import ToolFeedback from '@/components/ToolFeedback';
 
 type Frame = { t: number; data: string; url: string };
 
@@ -268,6 +269,8 @@ export default function ChamVideoTool() {
               </ul>
             </div>
           )}
+
+          <ToolFeedback key={result.tong_diem + result.viec_quan_trong_nhat} tool="cham-video" context={{ diem: result.tong_diem }} />
 
           <div className="card p-6 md:p-8 text-center">
             <p className="text-ink font-semibold">Muốn Minh Tấn xem và sửa video trực tiếp cho bạn?</p>
