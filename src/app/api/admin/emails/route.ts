@@ -481,16 +481,25 @@ async function tokenSale(db: SupabaseClient, resend: Resend, adminEmail: string,
   }
   const { data: asset } = await db.from('digital_assets').select('id').ilike('title', REPO_SALE.asset).maybeSingle();
   if (!asset) return { error: 'Không tìm thấy sản phẩm 75 repo.' };
-  const many = <T,>(q: PromiseLike<{ data: T[] | null }>) => q.then((r) => r.data || []);
+  // Supabase returns at most 1000 rows per request, so read every page
+  const many = async <T,>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) => {
+    const out: T[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await page(from, from + 999);
+      if (error) throw new Error(error.message);
+      out.push(...(data || []));
+      if (!data || data.length < 1000) return out;
+    }
+  };
   const [downloads, optouts, bad, buyers, users, leads, sent, opens] = await Promise.all([
-    many(db.from('asset_downloads').select('email, kind').eq('asset_id', asset.id).limit(10000)),
-    many(db.from('email_optouts').select('email')),
-    many(db.from('email_status').select('to_email').in('status', ['bounced', 'failed', 'complained', 'suppressed']).limit(10000)),
-    many(db.from('payments').select('buyer_email, user_id').eq('asset_id', TOKEN_SALE.productId).eq('status', 'success')),
-    many(db.from('users').select('id, email, full_name')),
-    many(db.from('leads').select('email, name').limit(10000)),
-    many(db.from('email_log').select('email').eq('kind', 'campaign').eq('ref', TOKEN_SALE.ref).limit(10000)),
-    group === 'opened' ? many(db.from('email_status').select('to_email').not('opened_at', 'is', null).limit(10000)) : Promise.resolve([] as { to_email: string }[]),
+    many((f, t) => db.from('asset_downloads').select('email, kind').eq('asset_id', asset.id).order('id').range(f, t)),
+    many((f, t) => db.from('email_optouts').select('email').range(f, t)),
+    many((f, t) => db.from('email_status').select('to_email').in('status', ['bounced', 'failed', 'complained', 'suppressed']).order('email_id').range(f, t)),
+    many((f, t) => db.from('payments').select('buyer_email, user_id').eq('asset_id', TOKEN_SALE.productId).eq('status', 'success').range(f, t)),
+    many((f, t) => db.from('users').select('id, email, full_name').order('id').range(f, t)),
+    many((f, t) => db.from('leads').select('email, name').order('email').range(f, t)),
+    many((f, t) => db.from('email_log').select('email').eq('kind', 'campaign').eq('ref', TOKEN_SALE.ref).order('email').range(f, t)),
+    group === 'opened' ? many((f, t) => db.from('email_status').select('to_email').not('opened_at', 'is', null).order('email_id').range(f, t)) : Promise.resolve([] as { to_email: string }[]),
   ]);
   const buyerIds = new Set(buyers.map((b) => b.user_id));
   const blocked = new Set([
