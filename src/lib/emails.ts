@@ -510,6 +510,37 @@ export function remarketingDiscount(d: { name?: string | null; email: string }, 
   };
 }
 
+/** To people who took the free 75-repo list: the Tiết Kiệm Token skill on sale. Numbers are the product page's own test, no promised saving. */
+export function tokenSkillOffer(d: { name?: string | null; email: string }, o: { price: number; after: number; until: string; url: string }): Mail {
+  const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
+  return {
+    subject: 'Giá một ly cà phê, cho mỗi lần edit video bằng Claude đỡ tốn hơn',
+    html: layout({
+      preheader: `Skill Tiết Kiệm Token ${vnd(o.price)} đến hết ${o.until}, sau đó ${vnd(o.after)}.`,
+      unsubscribeFor: d.email,
+      body: `
+        ${eyebrow('Skill cho Claude')}
+        ${h1('Edit video bằng Claude đỡ tốn token hơn')}
+        ${p(`Chào ${esc(firstName(d.name))}, bạn đã nhận danh sách 75 repo skill edit video từ mình. Nếu đã thử vài repo với Claude, chắc bạn cũng thấy token hết nhanh hơn mình nghĩ.`)}
+        ${p('Nhiều khi tiền không mất ở phần bạn nhìn thấy. Nó nằm ở những thứ chạy ngầm: Claude đọc lại cả file dài, gọi công cụ nhiều lượt, bộ nhớ đệm hết hạn trong lúc chờ render, và câu trả lời viết dài hơn cần thiết.')}
+        ${box(`<strong style="color:${C.ink};">Một lần thử thực tế của mình</strong><br>
+          Cùng một việc edit video, cùng model Opus 5.5:<br>
+          • Không dùng skill: <strong style="color:${C.ink};">$3,74</strong><br>
+          • Có skill Tiết Kiệm Token: <strong style="color:${C.ink};">$2,56</strong><br>
+          Giảm khoảng <strong style="color:${C.ink};">32%</strong> cho lần chạy đó. Nếu bạn edit video bằng Claude thường xuyên, phần chênh này lặp lại ở mỗi lần chạy.`)}
+        ${p('<strong>Tiết Kiệm Token là gì?</strong> Một skill tiếng Việt cho Claude, phiên bản 4.1, giúp Claude đọc đúng phần cần đọc thay vì đọc lại cả file, tránh để bộ nhớ đệm hết hạn khi chờ render, soi kỹ hơn khi kiểm lỗi, trả lời gọn và gợi ý model phù hợp.')}
+        ${p('Gói tải về gồm file skill và hướng dẫn cài đặt PDF 5 trang. Dùng được với Claude Code, Claude desktop và claude.ai.')}
+        ${box(`<strong style="color:${C.ink};">Chỉ bằng một ly cà phê</strong><br>
+          <strong style="font-size:24px;color:${C.ink};">${vnd(o.price)}</strong> đến hết ngày ${esc(o.until)}.<br>
+          Sau đó skill trở về giá ${vnd(o.after)}.`)}
+        ${button(o.url, 'Xem skill Tiết Kiệm Token')}
+        ${p('Nói thật để bạn cân nhắc: mức tiết kiệm tùy loại việc. Edit video giảm nhiều nhất, việc ngắn như viết một caption thì gần như không đổi, nên không cần gọi skill. Con số trên được quy theo giá API, không phải credit của gói Claude.')}
+        ${p('Còn thắc mắc gì, cứ trả lời email này cho mình nhé.')}
+        ${signature}`,
+    }),
+  };
+}
+
 /** To people who took the free 75-repo list: Minh Tấn's birthday-month offer on the featured course. `until` is the code's real expiry. */
 export function repoBirthdaySale(d: { name?: string | null; email: string }, c: FeaturedCourse, offer: { code: string; price: number; discount: number; until: string }): Mail {
   const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;

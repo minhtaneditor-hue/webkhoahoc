@@ -9,7 +9,8 @@ import { freeEmailUrl } from '@/lib/free-link';
 import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
 import { resendKind, resendTitle } from '@/lib/email-resend';
-import { DEFAULT_STUDENT_PASSWORD, FROM, SITE, assetPurchased, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, repoBirthdaySale, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
+import { assetPricing } from '@/lib/shop';
+import { DEFAULT_STUDENT_PASSWORD, FROM, SITE, assetPurchased, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, repoBirthdaySale, tokenSkillOffer, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -25,6 +26,9 @@ const CAMPAIGN = {
 const REMARKETING = { ref: 'remarketing-giam10-2026-11', label: 'Giảm 10% cho người chưa mua', code: 'GIAM10' };
 
 // Birthday-month offer to people who took the free 75-repo list, sent in small test batches.
+// The Tiết Kiệm Token skill to the same 75-repo list: first people who opened or clicked, then everyone.
+const TOKEN_SALE = { ref: 'token-skill-2026-11', productId: '192e5a88-0af3-4cac-8ba4-76f0bc98c006' };
+
 const REPO_SALE = { ref: 'repo-birthday-50-2026-11', code: 'TANVAO8IH', until: '30/11/2026', asset: '%75 repo%' };
 
 const KIND_LABELS: Record<string, string> = {
@@ -450,6 +454,76 @@ async function repoSale(db: SupabaseClient, resend: Resend, total: number, exclu
   return result;
 }
 
+/** The skill's live price, so the email never says something the product page does not. */
+async function tokenOffer(db: SupabaseClient) {
+  const { data: asset } = await db.from('digital_assets').select('id, price, old_price, sale_ends_on').eq('id', TOKEN_SALE.productId).maybeSingle();
+  if (!asset) return { error: 'Không tìm thấy skill Tiết Kiệm Token.' };
+  const priced = assetPricing(asset);
+  if (!priced.oldPrice || !priced.endsOn) return { error: 'Skill Tiết Kiệm Token không còn trong đợt giảm giá.' };
+  const until = `${priced.endsOn.slice(8, 10)}/${priced.endsOn.slice(5, 7)}/${priced.endsOn.slice(0, 4)}`;
+  return { offer: { price: priced.price, after: priced.oldPrice, until, url: `${SITE}/shop/${asset.id}` } };
+}
+
+/**
+ * POST { action: 'token-sale', group: 'opened' | 'all', test?, dryRun? }
+ * Sends the skill offer to people who took the 75-repo list and have not had it. 'opened' keeps those who opened
+ * a tracked email or clicked the file link. Skips opt-outs, undeliverable addresses and people who bought the skill.
+ * Stops before the 60s limit; calling again continues.
+ */
+async function tokenSale(db: SupabaseClient, resend: Resend, adminEmail: string, group: string, test: boolean, dryRun: boolean) {
+  const made = await tokenOffer(db);
+  if ('error' in made) return { error: made.error };
+  const { offer } = made;
+  if (test) {
+    const mail = tokenSkillOffer({ name: null, email: adminEmail }, offer);
+    const { error } = await resend.emails.send({ from: FROM, to: adminEmail, subject: `[Gửi thử] ${mail.subject}`, html: mail.html });
+    return error ? { error: error.message } : { test: adminEmail };
+  }
+  const { data: asset } = await db.from('digital_assets').select('id').ilike('title', REPO_SALE.asset).maybeSingle();
+  if (!asset) return { error: 'Không tìm thấy sản phẩm 75 repo.' };
+  const many = <T,>(q: PromiseLike<{ data: T[] | null }>) => q.then((r) => r.data || []);
+  const [downloads, optouts, bad, buyers, users, leads, sent, opens] = await Promise.all([
+    many(db.from('asset_downloads').select('email, kind').eq('asset_id', asset.id).limit(10000)),
+    many(db.from('email_optouts').select('email')),
+    many(db.from('email_status').select('to_email').in('status', ['bounced', 'failed', 'complained', 'suppressed']).limit(10000)),
+    many(db.from('payments').select('buyer_email, user_id').eq('asset_id', TOKEN_SALE.productId).eq('status', 'success')),
+    many(db.from('users').select('id, email, full_name')),
+    many(db.from('leads').select('email, name').limit(10000)),
+    many(db.from('email_log').select('email').eq('kind', 'campaign').eq('ref', TOKEN_SALE.ref).limit(10000)),
+    group === 'opened' ? many(db.from('email_status').select('to_email').not('opened_at', 'is', null).limit(10000)) : Promise.resolve([] as { to_email: string }[]),
+  ]);
+  const buyerIds = new Set(buyers.map((b) => b.user_id));
+  const blocked = new Set([
+    ...optouts.map((o) => low(o.email)), ...bad.map((b) => low(b.to_email)), ...buyers.map((b) => low(b.buyer_email)),
+    ...users.filter((u) => buyerIds.has(u.id)).map((u) => low(u.email)), ...sent.map((s) => low(s.email)),
+  ]);
+  const names = new Map<string, string | null>(leads.map((l) => [low(l.email), l.name]));
+  for (const u of users) if (u.full_name) names.set(low(u.email), u.full_name);
+  const engaged = new Set([...opens.map((o) => low(o.to_email)), ...downloads.filter((d) => d.kind === 'free-email').map((d) => low(d.email))]);
+  const pool = [...new Set(downloads.filter((d) => d.kind === 'free').map((d) => low(d.email)))]
+    .filter((e) => e && !blocked.has(e) && !isAdmin(e) && (group !== 'opened' || engaged.has(e)));
+
+  const result = { pool: pool.length, alreadySent: sent.length, sent: 0, rejected: 0, duplicates: 0, failed: 0, remaining: 0 };
+  if (dryRun) return result;
+  const started = Date.now();
+  for (const email of pool) {
+    if (Date.now() - started > 50_000) { result.remaining++; continue; }
+    if (!(await checkEmail(email)).ok) { result.rejected++; continue; }
+    const { error: claim } = await db.from('email_log').insert({ email, kind: 'campaign', ref: TOKEN_SALE.ref });
+    if (claim) { if (claim.code === '23505') result.duplicates++; else result.failed++; continue; }
+    const { error } = await resend.emails.send({ from: FROM, to: email, headers: unsubscribeHeaders(email), ...tokenSkillOffer({ name: names.get(email), email }, offer) });
+    if (error) {
+      console.error(`Campaign ${TOKEN_SALE.ref} to ${email} failed`, error);
+      await db.from('email_log').delete().match({ email, kind: 'campaign', ref: TOKEN_SALE.ref });
+      result.failed++;
+      continue;
+    }
+    result.sent++;
+    await sleep(550); // Resend allows ~2 requests/second
+  }
+  return result;
+}
+
 /** POST { action: 'test' } sends one copy to the admin, unlogged. POST { action: 'send' } sends to people who have not had it. { campaign: 'remarketing' } picks the discount email. */
 export async function POST(req: Request) {
   const auth = await requireAdmin();
@@ -458,7 +532,15 @@ export async function POST(req: Request) {
   if (!process.env.RESEND_API_KEY) return NextResponse.json({ error: 'Thiếu RESEND_API_KEY.' }, { status: 500 });
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const { action, campaign, batch, items, total, exclude, dryRun, onlyOpened, onlyClicked, emailId } = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
+  const { action, campaign, batch, items, total, exclude, dryRun, onlyOpened, onlyClicked, emailId } = body;
+  if (action === 'token-sale') {
+    const { group, test } = body;
+    if (group !== 'opened' && group !== 'all' && test !== true) return NextResponse.json({ error: 'Chọn nhóm opened hoặc all.' }, { status: 400 });
+    const result = await tokenSale(db, resend, adminEmail, group, test === true, dryRun === true);
+    if ('error' in result) return NextResponse.json({ error: result.error }, { status: 500 });
+    return NextResponse.json({ ok: true, ...result });
+  }
   if (action === 'resend') {
     if (typeof emailId !== 'string' || !emailId || emailId.length > 80) return NextResponse.json({ error: 'Thiếu mã thư.' }, { status: 400 });
     const result = await resendTracked(db, resend, emailId);
