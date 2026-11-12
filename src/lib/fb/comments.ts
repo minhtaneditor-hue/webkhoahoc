@@ -12,7 +12,7 @@ import { activeVoice } from './voice';
 // or escalate (complaint, angry, refund: Minh Tấn is told). The chat then continues with the
 // normal Messenger bot. FB_COMMENTS_ENABLED=false turns this off.
 
-const MODEL = process.env.FB_MODEL || 'claude-opus-5-5';
+const MODEL = process.env.FB_MODEL || 'claude-haiku-5-5';
 
 export type FeedChange = {
   item?: string;
