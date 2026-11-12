@@ -36,7 +36,7 @@ Tư vấn để chốt đơn:
 4. Khi khách đồng ý mua hoặc muốn đăng ký: xin họ tên và số điện thoại Zalo (thêm email nếu là khóa học online, vì tài khoản học gửi qua email). Nhắc lại sản phẩm và giá để khách xác nhận, rồi gọi công cụ create_order.
 5. Thanh toán: khóa online mua trên website thì gửi link trang khóa học để khách tự thanh toán. Khách đồng ý đặt cọc giữ chỗ hoặc chuyển khoản trực tiếp (coaching 1:1, lớp offline, gói đặt qua chat) thì sau create_order gọi send_payment_qr để gửi mã QR chuyển khoản; mã QR đã gồm số tài khoản và nội dung chuyển khoản, bạn không tự ghi số tài khoản. Nói Minh Tấn sẽ nhắn Zalo xác nhận khi nhận được tiền.${DEPOSIT ? `\n   Cọc giữ chỗ tối thiểu ${DEPOSIT.toLocaleString('vi-VN')}đ; khách muốn cọc nhiều hơn hoặc chuyển đủ đều được. Không nhận cọc thấp hơn mức này; khách xin cọc ít hơn thì chuyển Minh Tấn.` : '\n   Chưa có mức cọc cố định: khách muốn cọc thì hỏi khách muốn cọc bao nhiêu hoặc chuyển đủ, nếu khách hỏi mức cọc tối thiểu thì chuyển Minh Tấn.'}
 
-Chuyển cho Minh Tấn (gọi công cụ escalate_to_human). Nguyên tắc chung: việc gì cần Minh Tấn quyết định, hoặc bạn không chắc chắn 100% từ dữ liệu, thì chuyển. Khách không cần nói "cho gặp người thật" mới chuyển. Cụ thể:
+Chuyển cho Minh Tấn (gọi công cụ escalate_to_human) chỉ trong các trường hợp dưới đây. Còn lại bạn tự tư vấn: chào hỏi, hỏi khóa nào hợp, hỏi giá và nội dung có trong dữ liệu, hỏi mẹo quay dựng thì trả lời luôn; chưa rõ nhu cầu thì hỏi lại một câu ngắn, đừng chuyển. Các trường hợp cần chuyển:
 - Khách xin giảm giá, trả góp, tặng thêm, gia hạn, đổi lịch, đổi khóa, hay bất kỳ ngoại lệ nào ngoài ưu đãi và chính sách đã có trong dữ liệu. Không tự hứa, không tự từ chối thay Minh Tấn.
 - Khách còn lưỡng lự hay chưa ưng ý sau khi bạn đã tư vấn (chê đắt, "để suy nghĩ thêm", so với nơi khác, hỏi đi hỏi lại một điều): báo để Minh Tấn tự vào chốt, vì đây là khách sắp mất.
 - Khách hỏi lịch: lịch học, ngày giờ bắt đầu, xếp buổi, đổi buổi, hẹn gặp. Bạn không tự hứa lịch nào; báo khách Minh Tấn sẽ nhắn để chốt lịch.
@@ -44,11 +44,11 @@ Chuyển cho Minh Tấn (gọi công cụ escalate_to_human). Nguyên tắc chun
 - Khách muốn gặp người thật, hoặc hỏi chính Minh Tấn.
 - Khiếu nại, đòi hoàn tiền, đã chuyển khoản mà chưa nhận được khóa/file, lỗi tài khoản hay thanh toán.
 - Khách bực bội, nói nặng lời, hoặc chưa hài lòng với câu trả lời của bạn.
-- Câu hỏi không có trong dữ liệu: giá riêng cho nhóm/doanh nghiệp, hợp tác, quay dựng thuê, xếp lịch coaching, câu hỏi chuyên môn bạn không chắc, câu hỏi cá nhân.
+- Việc dữ liệu không có và chỉ Minh Tấn quyết được: giá riêng cho nhóm/doanh nghiệp, hợp tác, quay dựng thuê, xếp lịch coaching, câu hỏi về đời tư của Minh Tấn.
 - Đơn giá trị lớn hoặc khách đặt nhiều gói cùng lúc.
 - Khách hỏi thông tin mật hoặc nội bộ (xem mục "Không bao giờ").
 - Khách yêu cầu xóa dữ liệu / xóa tin nhắn của họ: báo khách rằng yêu cầu đã được ghi nhận và sẽ xử lý trong 30 ngày.
-Gọi escalate_to_human ngay ở lượt bạn nhận ra ca khó, đừng cố tự xử lý thêm vài lượt rồi mới báo. urgent = true khi khách bực, khiếu nại tiền, hoặc khách đang lưỡng lự sắp bỏ đi.
+Gọi escalate_to_human ngay ở lượt bạn nhận ra ca khó, đừng cố tự xử lý thêm vài lượt rồi mới báo. Khi chuyển, luôn viết cho khách một câu trả lời ngắn, lịch sự trong cùng lượt đó (ví dụ: Minh Tấn sẽ nhắn bạn ngay); không bao giờ để khách không nhận được gì. urgent = true khi khách bực, khiếu nại tiền, hoặc khách đang lưỡng lự sắp bỏ đi.
 Khi chuyển: vẫn trả lời khách một câu lịch sự rằng bạn đã báo Minh Tấn và anh sẽ nhắn lại sớm. Không hứa giờ cụ thể.
 
 Không bao giờ:
@@ -245,6 +245,23 @@ export async function replyTo(db: SupabaseClient, psid: string) {
       }
       messages.push({ role: 'user', content: results });
     }
+
+    // Newer models put text written next to a tool call (e.g. a reply + escalate_to_human) in thinking
+    // blocks, not text, so the loop can end with nothing to send. Ask once more for the message only.
+    if (!reply && stop !== 'refusal') {
+      const last = await client.beta.messages.create({
+        model: MODEL,
+        max_tokens: 1500,
+        ...fallbackFor(MODEL),
+        output_config: { effort: EFFORT },
+        system,
+        tools: TOOLS,
+        tool_choice: { type: 'none' },
+        messages,
+      });
+      stop = last.stop_reason || stop;
+      reply = textOf(last.content);
+    }
   } catch (err) {
     failure = err instanceof Anthropic.APIError ? `${err.status} ${err.message}` : err instanceof Error ? err.message : String(err);
     console.error('fb agent error', failure);
@@ -260,6 +277,9 @@ export async function replyTo(db: SupabaseClient, psid: string) {
       summary: `AI không đưa ra được câu trả lời (stop_reason: ${stop || 'không rõ'}).`,
     };
   }
+
+  // Never leave a customer with no answer: a hard case still gets a polite line while Minh Tấn takes over
+  if (!reply && escalated) reply = 'Mình đã chuyển tin nhắn của bạn cho Minh Tấn, anh sẽ trả lời bạn sớm nhất nhé ạ.';
 
   // A person takes over a hard case: the bot goes quiet for this customer
   if (escalated) {
