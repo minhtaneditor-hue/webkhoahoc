@@ -8,14 +8,15 @@ import { FB_PAY_PREFIX } from './pay';
 import { notifyAdmin } from './notify';
 import { activeVoice } from './voice';
 import { SALES_PLAYBOOK } from './sales-playbook';
+import { fallbackFor } from './model';
 
 // The Messenger sales assistant. Answers from the website data plus the knowledge Minh Tấn approved
 // (fb_knowledge), records orders it closes, and hands hard cases to a person. SERVER ONLY.
 // FB_MODEL / FB_EFFORT change the model and how hard it thinks (defaults below).
 
-const MODEL = process.env.FB_MODEL || 'claude-haiku-5-5';
+const MODEL = process.env.FB_MODEL || 'claude-sonnet-5-5';
 const EFFORT = (process.env.FB_EFFORT || 'low') as 'low' | 'medium' | 'high';
-// Learning from Minh Tấn's replies runs rarely, so it gets the next model up (FB_LEARN_MODEL overrides it)
+// Learning from Minh Tấn's replies (FB_LEARN_MODEL overrides it)
 export const LEARN_MODEL = process.env.FB_LEARN_MODEL || 'claude-sonnet-5-5';
 const HISTORY = 30;                                             // messages of the thread the AI reads
 const PAUSE_HOURS = Number(process.env.FB_HUMAN_PAUSE_HOURS) || 12; // bot stays quiet after a handoff or a human reply
@@ -161,19 +162,21 @@ export async function replyTo(db: SupabaseClient, psid: string) {
   const client = new Anthropic();
   let escalated: { reason: string; urgent: boolean; summary: string } | null = null;
   let reply = '';
+  let failure = '';   // technical error from the API: not a hard case, the bot tries again on the next message
+  let stop = '';      // last stop_reason, shown in the alert when the AI gives no answer
 
   try {
     for (let turn = 0; turn < 4; turn++) {
       const res = await client.beta.messages.create({
         model: MODEL,
         max_tokens: 4000,
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default', // a declined request is retried on another model inside the same call
+        ...fallbackFor(MODEL), // Sonnet/Opus: a declined request is retried on another model inside the same call
         output_config: { effort: EFFORT },
         system,
         tools: TOOLS,
         messages,
       });
+      stop = res.stop_reason || '';
       if (res.stop_reason === 'refusal') break;
       reply = textOf(res.content) || reply;
       if (res.stop_reason !== 'tool_use') break;
@@ -242,13 +245,19 @@ export async function replyTo(db: SupabaseClient, psid: string) {
       messages.push({ role: 'user', content: results });
     }
   } catch (err) {
-    console.error('fb agent error', err instanceof Anthropic.APIError ? `${err.status} ${err.message}` : err);
-    escalated = { reason: 'Bot gặp lỗi khi trả lời', urgent: false, summary: 'AI không trả lời được tin nhắn này, bạn vào trả lời giúp.' };
+    failure = err instanceof Anthropic.APIError ? `${err.status} ${err.message}` : err instanceof Error ? err.message : String(err);
+    console.error('fb agent error', failure);
     reply = '';
   }
 
+  if (failure) return technicalFailure(db, psid, convo?.name || psid, failure);
+
   if (!reply && !escalated) {
-    escalated = { reason: 'Bot không có câu trả lời', urgent: false, summary: 'AI không đưa ra được câu trả lời phù hợp.' };
+    escalated = {
+      reason: stop === 'refusal' ? 'AI từ chối trả lời tin này' : 'Bot không có câu trả lời',
+      urgent: false,
+      summary: `AI không đưa ra được câu trả lời (stop_reason: ${stop || 'không rõ'}).`,
+    };
   }
 
   // A person takes over a hard case: the bot goes quiet for this customer
@@ -276,6 +285,45 @@ export async function replyTo(db: SupabaseClient, psid: string) {
       console.error('fb send failed', err);
     }
   }
+}
+
+// ---------------------------------------------------------------- technical errors
+
+const HOLD = 'Mình đã nhận được tin nhắn của bạn, Minh Tấn sẽ trả lời bạn sớm nhất nhé ạ.';
+const ALERT_EVERY_MS = 30 * 60_000;
+let lastAlert = 0; // per server instance: one alert per half hour, not one per message
+
+/**
+ * The API call failed (no credit, limit, outage, bad request). The customer is not a hard case:
+ * they get one holding message, the bot is NOT paused (it retries on their next message),
+ * and Minh Tấn gets the actual error on Telegram so it can be fixed.
+ */
+async function technicalFailure(db: SupabaseClient, psid: string, name: string, error: string) {
+  await db.from('fb_conversations').update({ needs_human: true, handoff_reason: 'Bot lỗi kỹ thuật', status: 'open' }).eq('psid', psid);
+
+  const since = new Date(Date.now() - 6 * 3600_000).toISOString();
+  const { data: held } = await db.from('fb_messages').select('id').eq('psid', psid).eq('role', 'bot').eq('text', HOLD).gte('created_at', since).limit(1).maybeSingle();
+  if (!held) {
+    try {
+      const mids = await sendText(psid, HOLD);
+      await db.from('fb_messages').insert({ psid, role: 'bot', text: HOLD, mid: mids[0] || null });
+    } catch (err) {
+      console.error('fb send failed', err);
+    }
+  }
+
+  if (Date.now() - lastAlert < ALERT_EVERY_MS) return;
+  lastAlert = Date.now();
+  const hint = /credit|balance|billing/i.test(error) ? 'Tài khoản API hết tiền: nạp thêm ở platform.claude.com.'
+    : /^429|rate|limit/i.test(error) ? 'Chạm giới hạn API: nâng hạn mức ở platform.claude.com/usage/limits.'
+    : /^401|api key|authentication/i.test(error) ? 'ANTHROPIC_API_KEY trên Vercel sai hoặc đã bị xóa.'
+    : /^5\d\d|overloaded/i.test(error) ? 'Máy chủ AI đang quá tải, thường tự hết sau ít phút.'
+    : 'Gửi dòng lỗi này cho người sửa code.';
+  await notifyAdmin({
+    title: 'Bot lỗi kỹ thuật (không phải ca khó)',
+    psid,
+    lines: [['Khách', name], ['Lỗi', error.slice(0, 400)], ['Cách xử lý', hint], ['Khách đã nhận', 'Một tin "Minh Tấn sẽ trả lời sớm". Bot không tạm dừng, sẽ thử lại khi khách nhắn tiếp.']],
+  });
 }
 
 // ---------------------------------------------------------------- learning
@@ -319,8 +367,7 @@ export async function learnFromConversations(db: SupabaseClient, days = 14) {
   const res = await client.beta.messages.create({
     model: LEARN_MODEL,
     max_tokens: 16000,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
+    ...fallbackFor(LEARN_MODEL),
     output_config: { effort: 'medium', format: { type: 'json_schema', schema: LEARN_SCHEMA } },
     system: `Bạn giúp trợ lý bán hàng trên Messenger của TẤN VA (Minh Tấn, dạy làm video) học từ cách chính Minh Tấn trả lời khách.
 Đọc các hội thoại. Rút ra những kiến thức dùng lại được cho khách sau: thông tin sản phẩm, chính sách, cách xử lý thắc mắc/từ chối, cách Minh Tấn chốt đơn.

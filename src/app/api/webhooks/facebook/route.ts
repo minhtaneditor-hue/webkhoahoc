@@ -82,10 +82,14 @@ export async function POST(req: Request) {
 
       const ts = ev.timestamp || Date.now();
       const at = new Date(ts).toISOString();
-      const { data: existing } = await db.from('fb_conversations').select('psid, last_customer_at').eq('psid', psid).maybeSingle();
+      const { data: existing } = await db.from('fb_conversations').select('psid, name, last_customer_at').eq('psid', psid).maybeSingle();
       if (!existing) {
         const profile = await getProfile(psid);
         await db.from('fb_conversations').upsert({ psid, name: profile.name, profile_pic: profile.pic }, { onConflict: 'psid', ignoreDuplicates: true });
+      } else if (!existing.name && !echo) {
+        // Facebook refused the name the first time: try again when the customer writes
+        const profile = await getProfile(psid);
+        if (profile.name) await db.from('fb_conversations').update({ name: profile.name, ...(profile.pic ? { profile_pic: profile.pic } : {}) }).eq('psid', psid);
       }
 
       const lastCustomerAt = existing?.last_customer_at ? Date.parse(existing.last_customer_at) : null;
