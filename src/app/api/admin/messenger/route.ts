@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/admin';
 import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
-import { fbConfigured, sendText } from '@/lib/fb/graph';
+import { fbConfigured, pageId, sendText, subscribePage } from '@/lib/fb/graph';
 import { learnFromConversations, replyTo } from '@/lib/fb/agent';
 import { importHistory } from '@/lib/fb/voice';
 
@@ -15,6 +15,7 @@ export const maxDuration = 60;
  *   pause   stop the bot for this customer for `hours` (default 24)
  *   resume  let the bot answer again; it replies at once if the customer is waiting
  *   done    mark the case handled
+ *   subscribe  subscribe the app to the Page's messages + feed webhooks with the server's Page token (`page` = Page id)
  *   import  copy one page of the Page's past Messenger conversations (pass `after` to continue)
  *   learn   turn recent replies by Minh Tấn into knowledge suggestions (`days`, default 14)
  * The caller is checked from the session cookie.
@@ -61,6 +62,15 @@ export async function POST(req: Request) {
     case 'done': {
       await db.from('fb_conversations').update({ status: 'done', needs_human: false, handoff_reason: null }).eq('psid', psid);
       return NextResponse.json({ ok: true });
+    }
+    case 'subscribe': {
+      if (!fbConfigured()) return NextResponse.json({ error: 'Thiếu FB_PAGE_ACCESS_TOKEN.' }, { status: 500 });
+      try {
+        const fields = await subscribePage(String(body.page || process.env.FB_PAGE_ID || await pageId()));
+        return NextResponse.json({ ok: true, fields });
+      } catch (err) {
+        return NextResponse.json({ error: `Facebook từ chối: ${err instanceof Error ? err.message : 'lỗi không rõ'}` }, { status: 502 });
+      }
     }
     case 'import': {
       if (!fbConfigured()) return NextResponse.json({ error: 'Thiếu FB_PAGE_ACCESS_TOKEN.' }, { status: 500 });
