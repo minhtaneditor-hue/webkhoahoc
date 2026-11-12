@@ -4,6 +4,8 @@ import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
 import { fbConfigured, pageId, sendText, subscribePage } from '@/lib/fb/graph';
 import { learnFromConversations, replyTo } from '@/lib/fb/agent';
 import { importHistory } from '@/lib/fb/voice';
+import { botEnabled, lockedOff, setBotEnabled } from '@/lib/fb/switch';
+import { setTelegramWebhook } from '@/lib/fb/telegram';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -18,6 +20,8 @@ export const maxDuration = 60;
  *   subscribe  subscribe the app to the Page's messages + feed webhooks with the server's Page token (`page` = Page id)
  *   import  copy one page of the Page's past Messenger conversations (pass `after` to continue)
  *   learn   turn recent replies by Minh Tấn into knowledge suggestions (`days`, default 14)
+ *   bot     main switch: `on` true/false turns the bot on or off; without `on` it only reports the state
+ *   telegram  connect /api/webhooks/telegram so /bat, /tat, /trangthai work in the Telegram chat
  * The caller is checked from the session cookie.
  */
 export async function POST(req: Request) {
@@ -56,7 +60,7 @@ export async function POST(req: Request) {
     }
     case 'resume': {
       await db.from('fb_conversations').update({ bot_paused_until: null, needs_human: false, handoff_reason: null }).eq('psid', psid);
-      await replyTo(db, psid); // answers only if the last message is the customer's
+      if (await botEnabled(db)) await replyTo(db, psid); // answers only if the last message is the customer's
       return NextResponse.json({ ok: true });
     }
     case 'done': {
@@ -89,6 +93,22 @@ export async function POST(req: Request) {
       } catch (err) {
         console.error('fb learn failed', err);
         return NextResponse.json({ error: 'AI chưa học được, thử lại sau.' }, { status: 502 });
+      }
+    }
+    case 'bot': {
+      try {
+        const on = typeof body.on === 'boolean' ? await setBotEnabled(db, body.on) : await botEnabled(db);
+        return NextResponse.json({ ok: true, on, locked: lockedOff() });
+      } catch (err) {
+        return NextResponse.json({ error: `Chưa lưu được: ${err instanceof Error ? err.message : 'lỗi không rõ'}` }, { status: 500 });
+      }
+    }
+    case 'telegram': {
+      try {
+        await setTelegramWebhook();
+        return NextResponse.json({ ok: true });
+      } catch (err) {
+        return NextResponse.json({ error: err instanceof Error ? err.message : 'Telegram từ chối.' }, { status: 502 });
       }
     }
     default:
