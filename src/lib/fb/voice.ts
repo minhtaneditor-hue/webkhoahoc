@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { fallbackFor } from './model';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { SITE } from '@/lib/emails';
 import { fetchConversations, pageId } from './graph';
@@ -143,8 +144,7 @@ export async function buildVoice(db: SupabaseClient) {
   const res = await new Anthropic().beta.messages.create({
     model: MODEL,
     max_tokens: 8000,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
+    ...fallbackFor(MODEL),
     output_config: { effort: 'low' },
     system: VOICE_RULES,
     messages: [{ role: 'user', content: parts.join('\n\n') }],

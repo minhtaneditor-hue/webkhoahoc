@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { fallbackFor } from './model';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { siteKnowledge } from '@/lib/site-knowledge';
 import { SITE } from '@/lib/emails';
@@ -67,8 +68,7 @@ export async function handleComment(db: SupabaseClient, pageId: string, c: FeedC
     const res = await new Anthropic().beta.messages.create({
       model: MODEL,
       max_tokens: 2000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
+      ...fallbackFor(MODEL),
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
       system: [
         { type: 'text', text: RULES },
