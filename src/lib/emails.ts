@@ -186,6 +186,30 @@ export function welcomeCourse(d: { name?: string | null; email: string; courseTi
   };
 }
 
+/** Admin > Đơn hàng: an order still waiting for its bank transfer. The link reopens the order's own QR page. */
+export function paymentReminder(d: { name?: string | null; title: string; amount: number; orderId: string; link: string }): Mail {
+  const amount = `${d.amount.toLocaleString('vi-VN')}đ`;
+  return {
+    subject: `Đơn hàng ${d.title} đang chờ thanh toán`,
+    html: layout({
+      preheader: `Mã đơn ${d.orderId}, ${amount}. Mở lại trang thanh toán để quét mã QR.`,
+      body: `
+        ${eyebrow('Đơn hàng đang chờ')}
+        ${h1('Đơn của bạn chưa được thanh toán')}
+        ${p(`Chào ${esc(firstName(d.name))}, TẤN VA vẫn giữ đơn <strong>${esc(d.title)}</strong> cho bạn (mã đơn <strong>${esc(d.orderId)}</strong>, số tiền <strong>${amount}</strong>), nhưng chưa nhận được chuyển khoản.`)}
+        ${p('Nếu bạn vẫn muốn mua, chỉ cần 3 bước:')}
+        ${steps([
+          ['Mở trang thanh toán', 'Bấm nút bên dưới. Trang hiện sẵn mã QR, số tài khoản và số tiền của đơn này.'],
+          ['Quét mã QR bằng ứng dụng ngân hàng', 'Giữ nguyên số tiền và nội dung chuyển khoản là mã đơn, hệ thống dựa vào đó để nhận ra đơn của bạn.'],
+          ['Chờ xác nhận', 'Hệ thống thường tự xác nhận sau vài phút, rồi gửi email kèm link tải hoặc mở khóa học cho bạn.'],
+        ])}
+        ${button(d.link, 'Mở trang thanh toán')}
+        ${box('Bạn đã chuyển khoản rồi? Đôi khi ngân hàng báo chậm. Nếu sau 30 phút vẫn chưa nhận được email xác nhận, trả lời email này kèm ảnh chụp giao dịch, mình sẽ kiểm tra giúp bạn.')}
+        ${signature}`,
+    }),
+  };
+}
+
 export function assetPurchased(d: { name?: string | null; title: string; orderId: string; link: string }): Mail {
   return {
     subject: `Đã thanh toán: ${d.title}`,

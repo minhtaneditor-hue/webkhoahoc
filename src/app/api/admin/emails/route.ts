@@ -43,6 +43,7 @@ const KIND_LABELS: Record<string, string> = {
   'lead-2': 'Khách tiềm năng: ngày 2',
   'lead-6': 'Khách tiềm năng: ngày 6',
   retry: 'Gửi lại thư thất bại',
+  'pay-reminder': 'Nhắc thanh toán',
 };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
