@@ -14,9 +14,9 @@ import { fallbackFor } from './model';
 // (fb_knowledge), records orders it closes, and hands hard cases to a person. SERVER ONLY.
 // FB_MODEL / FB_EFFORT change the model and how hard it thinks (defaults below).
 
-const MODEL = process.env.FB_MODEL || 'claude-haiku-5-5';
+const MODEL = process.env.FB_MODEL || 'claude-sonnet-5-5';
 const EFFORT = (process.env.FB_EFFORT || 'low') as 'low' | 'medium' | 'high';
-// Learning from Minh Tấn's replies runs rarely, so it gets the next model up (FB_LEARN_MODEL overrides it)
+// Learning from Minh Tấn's replies (FB_LEARN_MODEL overrides it)
 export const LEARN_MODEL = process.env.FB_LEARN_MODEL || 'claude-sonnet-5-5';
 const HISTORY = 30;                                             // messages of the thread the AI reads
 const PAUSE_HOURS = Number(process.env.FB_HUMAN_PAUSE_HOURS) || 12; // bot stays quiet after a handoff or a human reply
