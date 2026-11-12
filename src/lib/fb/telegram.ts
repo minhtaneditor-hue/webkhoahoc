@@ -37,6 +37,7 @@ export async function setTelegramWebhook() {
   await call('setWebhook', { url: `${SITE}/api/webhooks/telegram`, secret_token: secret(), allowed_updates: ['message'] });
   await call('setMyCommands', {
     commands: [
+      { command: 'tralo', description: 'Bot trả lời hết khách đang chờ' },
       { command: 'tat', description: 'Tắt bot Messenger' },
       { command: 'bat', description: 'Bật bot Messenger' },
       { command: 'trangthai', description: 'Xem bot đang bật hay tắt' },

@@ -120,7 +120,8 @@ async function learnedKnowledge(db: SupabaseClient) {
 type Row = { role: 'customer' | 'bot' | 'admin'; text: string };
 
 function toMessages(rows: Row[]): Anthropic.Beta.BetaMessageParam[] {
-  const msgs: Anthropic.Beta.BetaMessageParam[] = rows.map((r) => ({
+  // the holding message sent after an API error is not an answer: the customer's question is still open
+  const msgs: Anthropic.Beta.BetaMessageParam[] = rows.filter((r) => !(r.role === 'bot' && r.text === HOLD)).map((r) => ({
     role: r.role === 'customer' ? 'user' : 'assistant',
     content: r.role === 'admin' ? `[Minh Tấn] ${r.text}` : r.text,
   }));
@@ -285,6 +286,27 @@ export async function replyTo(db: SupabaseClient, psid: string) {
       console.error('fb send failed', err);
     }
   }
+}
+
+// ---------------------------------------------------------------- answer everyone waiting
+
+/**
+ * Customers whose last message (within Facebook's 24 h window) has no answer yet, paused or not.
+ * Clears their pause and lets the bot answer them all. Used by Admin "Trả lời tất cả khách đang chờ"
+ * and Telegram /tralo. Customers Minh Tấn answered last are left alone.
+ */
+export async function answerWaiting(db: SupabaseClient, limit = 25) {
+  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const { data: convos } = await db.from('fb_conversations').select('psid').gte('last_customer_at', since).order('last_customer_at', { ascending: false }).limit(limit * 2);
+  const waiting: string[] = [];
+  for (const c of convos || []) {
+    const { data: last } = await db.from('fb_messages').select('role, text').eq('psid', c.psid).order('id', { ascending: false }).limit(1).maybeSingle();
+    if (last?.role === 'customer' || (last?.role === 'bot' && last.text === HOLD)) waiting.push(c.psid);
+    if (waiting.length >= limit) break;
+  }
+  if (!waiting.length) return { waiting: 0, run: async () => {} };
+  await db.from('fb_conversations').update({ bot_paused_until: null, needs_human: false, handoff_reason: null }).in('psid', waiting);
+  return { waiting: waiting.length, run: () => Promise.allSettled(waiting.map((psid) => replyTo(db, psid))).then(() => {}) };
 }
 
 // ---------------------------------------------------------------- technical errors
