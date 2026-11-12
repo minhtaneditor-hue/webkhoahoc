@@ -267,6 +267,16 @@ Lấy theo tinh thần của Tấn ở [B38] [B39]:
 
 ---
 
+## 5b. Kiến thức bổ sung khi chấm (từ playlist "365 ngày viết" của Hạ Chi Writer)
+
+Nguồn và tóm tắt: docs/kien-thuc/ha-chi-365-ngay-viet.md. Phần lớn là suy ra từ kỹ năng viết sang video.
+- Thông điệp: kiểm lời thoại có nói với một người xem cụ thể, bằng từ họ hiểu không; chỉ ra từ hoặc ẩn dụ dễ bị hiểu khác nếu có.
+- Thông điệp: nếu cảm xúc người xem dễ nhận được lệch với mục tiêu video (muốn được tin mà nghe như than vãn hoặc khoe), nói rõ trong một câu.
+- Lời nói và nhịp: nếu lời thoại làm bộ vui, làm bộ thông thái hoặc chung chung không có chi tiết thật, gợi ý thay bằng một khoảnh khắc thật của người nói.
+- Giọng góp ý: chỉ nhận xét video, không gán nhãn người như "không có khiếu"; coi đó là kỹ năng luyện được.
+
+---
+
 ## 6. Dạng phiếu chấm AI trả về (để code đọc)
 
 ```json
