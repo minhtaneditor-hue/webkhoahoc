@@ -53,7 +53,7 @@ Meta app > **Messenger > Cài đặt API > Định cấu hình webhook**:
 Khi app còn ở chế độ phát triển, bot chỉ trả lời người có vai trò trong app (dùng để thử). Để trả lời mọi khách: gửi **Xét duyệt ứng dụng** xin quyền `pages_messaging` (và `human_agent` nếu muốn trả lời khách sau 24 giờ từ Admin), rồi chuyển app sang **Live**.
 
 ## Chi phí và tùy chỉnh
-- Mặc định bot dùng Claude Opus 5.5 ở mức suy nghĩ thấp (`FB_EFFORT=low`). Muốn rẻ hơn nhiều: `FB_MODEL=claude-haiku-5-5`. Nên đặt hạn mức chi tiêu trong Anthropic Console.
+- Mặc định bot dùng Claude Haiku 5.5 (model rẻ nhất) ở mức suy nghĩ thấp (`FB_EFFORT=low`). Cần trả lời kỹ hơn thì đặt `FB_MODEL=claude-sonnet-5-5` hoặc `claude-opus-5-5` (đắt hơn nhiều). Nên đặt hạn mức chi tiêu trong Anthropic Console.
 - `FB_BOT_ENABLED=false`: bot chỉ lưu tin nhắn và không tự trả lời (bạn vẫn trả lời từ Admin).
 - Trả lời bình luận (cần chạy `supabase/migrations/033_fb_comments.sql`, quyền `pages_manage_engagement` + `pages_read_user_content` trong token, và đăng ký trường `feed` cho Trang): bình luận mới dưới bài viết/quảng cáo được bot trả lời công khai ngắn có tag tên người bình luận, rồi nhắn riêng để tư vấn tiếp trong Messenger. Spam, tag bạn bè thì bỏ qua; khiếu nại thì báo bạn. Tắt bằng `FB_COMMENTS_ENABLED=false`. Bảng `fb_comments` ghi lại bot đã làm gì với từng bình luận.
 - Giọng của bạn (cần chạy `supabase/migrations/032_fb_voice.sql`): Admin > Facebook Messenger > Kiến thức của bot > **1. Nhập tin nhắn cũ** (đọc hộp thư Fanpage qua Graph API) rồi **2. Tạo hồ sơ giọng**. AI viết hồ sơ cách bạn nói chuyện với khách; số điện thoại, email, số tài khoản, link ngoài bị lược trước khi AI đọc và lược lại trên kết quả. Đọc, sửa rồi bấm **Dùng giọng này** thì bot mới dùng.

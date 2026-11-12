@@ -9,7 +9,7 @@ import { fetchConversations, pageId } from './graph';
 //    Private details are removed before the AI reads the chats and again from what it writes.
 // 3. Minh Tấn reviews it in Admin and activates it; activeVoice() puts it in the bot's prompt.
 
-const MODEL = process.env.FB_MODEL || 'claude-opus-5-5';
+const MODEL = process.env.FB_MODEL || 'claude-haiku-5-5';
 const AUTO_MS = (Number(process.env.FB_AUTO_ECHO_SECONDS) || 20) * 1000;
 
 const own = SITE.replace(/^https?:\/\//, '').replace(/^www\./, '');

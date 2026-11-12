@@ -13,7 +13,7 @@ import { SALES_PLAYBOOK } from './sales-playbook';
 // (fb_knowledge), records orders it closes, and hands hard cases to a person. SERVER ONLY.
 // FB_MODEL / FB_EFFORT change the model and how hard it thinks (defaults below).
 
-const MODEL = process.env.FB_MODEL || 'claude-opus-5-5';
+const MODEL = process.env.FB_MODEL || 'claude-haiku-5-5';
 const EFFORT = (process.env.FB_EFFORT || 'low') as 'low' | 'medium' | 'high';
 const HISTORY = 30;                                             // messages of the thread the AI reads
 const PAUSE_HOURS = Number(process.env.FB_HUMAN_PAUSE_HOURS) || 12; // bot stays quiet after a handoff or a human reply
@@ -319,7 +319,7 @@ export async function learnFromConversations(db: SupabaseClient, days = 14) {
     max_tokens: 16000,
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
-    output_config: { effort: 'medium', format: { type: 'json_schema', schema: LEARN_SCHEMA } },
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: LEARN_SCHEMA } },
     system: `Bạn giúp trợ lý bán hàng trên Messenger của TẤN VA (Minh Tấn, dạy làm video) học từ cách chính Minh Tấn trả lời khách.
 Đọc các hội thoại. Rút ra những kiến thức dùng lại được cho khách sau: thông tin sản phẩm, chính sách, cách xử lý thắc mắc/từ chối, cách Minh Tấn chốt đơn.
 - Chỉ lấy điều Minh Tấn (không phải Bot) đã nói hoặc làm rõ. Bỏ qua chuyện riêng của từng khách, số điện thoại, tên người, lời chào xã giao.
