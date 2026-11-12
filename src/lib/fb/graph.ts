@@ -63,6 +63,33 @@ export async function sendText(psid: string, text: string, opts: { humanAgent?: 
   return mids;
 }
 
+/** Public reply under a comment (needs pages_manage_engagement). Returns the new comment id. */
+export async function replyToComment(commentId: string, message: string) {
+  const data = await post(`/${commentId}/comments`, { message });
+  return data.id as string | undefined;
+}
+
+/**
+ * Private reply: opens a Messenger chat with the person who commented (one per comment, within 7 days).
+ * Returns their Messenger id (PSID) so the chat can continue as a normal conversation.
+ */
+export async function privateReply(commentId: string, text: string) {
+  const data = await post('/me/messages', { recipient: { comment_id: commentId }, message: { text: text.slice(0, 1900) } });
+  return { psid: data.recipient_id as string | undefined, mid: data.message_id as string | undefined };
+}
+
+/** Text of a Page post, to understand what a comment is about. */
+export async function postText(postId: string) {
+  try {
+    const qs = new URLSearchParams({ fields: 'message', access_token: process.env.FB_PAGE_ACCESS_TOKEN || '' });
+    const res = await fetch(`${GRAPH}/${postId}?${qs}`);
+    const d = await res.json();
+    return String(d.message || '').slice(0, 3000);
+  } catch {
+    return '';
+  }
+}
+
 /** Sends an image (e.g. a VietQR code) by URL; returns the Facebook message id. */
 export async function sendImage(psid: string, url: string) {
   const data = await post('/me/messages', {
