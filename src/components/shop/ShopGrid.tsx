@@ -7,6 +7,7 @@ import { ArrowRight, BookOpen, Package, Palette } from 'lucide-react';
 import { formatVND, savingPercent } from '@/lib/supabase-public';
 import { CATEGORY_LABELS, assetPricing, splitDescription, type ShopAsset } from '@/lib/shop';
 import { skipOptimizer } from '@/lib/image';
+import SaleCountdown from '@/components/shop/SaleCountdown';
 
 const iconFor = (category?: string | null) => (category === 'ebook' ? BookOpen : category === 'lut' || category === 'preset' ? Palette : Package);
 
@@ -32,7 +33,7 @@ export default function ShopGrid({ assets }: { assets: ShopAsset[] }) {
       <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((asset) => {
           const free = Number(asset.price) <= 0;
-          const { price, oldPrice } = assetPricing(asset);
+          const { price, oldPrice, endsOn } = assetPricing(asset);
           const Icon = iconFor(asset.category);
           return (
             <li key={asset.id} className="min-w-0">
@@ -52,6 +53,7 @@ export default function ShopGrid({ assets }: { assets: ShopAsset[] }) {
                     <span className="min-w-0">
                       <span className={`block font-display text-2xl font-extrabold tabular-nums ${free ? 'text-gold' : 'text-ink'}`}>{free ? 'Miễn phí' : formatVND(price)}</span>
                       {oldPrice && <span className="block text-sm text-muted-foreground tabular-nums"><s>{formatVND(oldPrice)}</s> <span className="font-semibold text-gold">· Giảm {savingPercent(price, oldPrice)}%</span></span>}
+                      {oldPrice && endsOn && <SaleCountdown endsOn={endsOn} listedPrice={oldPrice} compact />}
                     </span>
                     <span className="inline-flex items-center gap-1 text-sm font-semibold text-ink whitespace-nowrap">Xem chi tiết <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></span>
                   </div>

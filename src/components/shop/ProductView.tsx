@@ -7,6 +7,7 @@ import FaqList from '@/components/FaqList';
 import CopyButton from '@/components/shop/CopyButton';
 import ProductBuy from '@/components/shop/ProductBuy';
 import ProductPreview from '@/components/shop/ProductPreview';
+import SaleCountdown from '@/components/shop/SaleCountdown';
 import { skipOptimizer } from '@/lib/image';
 
 const heading = 'text-2xl md:text-3xl text-ink';
@@ -62,6 +63,7 @@ export default function ProductView({ asset, related }: { asset: ShopAsset; rela
                 Giá niêm yết <s>{formatVND(oldPrice)}</s> <span className="font-semibold text-gold">· Giảm {savingPercent(price, oldPrice)}%{endsOn ? ` đến hết ${shortDate(endsOn)}` : ''}</span>
               </p>
             )}
+            {oldPrice && endsOn && <SaleCountdown endsOn={endsOn} listedPrice={oldPrice} />}
             <div className="mt-5 max-w-sm"><ProductBuy asset={asset} /></div>
           </div>
         </div>
@@ -167,6 +169,7 @@ export default function ProductView({ asset, related }: { asset: ShopAsset; rela
               {free ? 'Miễn phí' : formatVND(price)}
               {oldPrice && <s className="ml-3 text-base font-normal text-stone-400">{formatVND(oldPrice)}</s>}
             </p>
+            {oldPrice && endsOn && <SaleCountdown endsOn={endsOn} listedPrice={oldPrice} light />}
           </div>
           <div className="w-full md:w-72 shrink-0"><ProductBuy asset={asset} light /></div>
         </div>
