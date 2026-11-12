@@ -56,6 +56,8 @@ export default function MessengerPage() {
 
   useEffect(() => {
     void Promise.resolve().then(() => { loadConvos(); loadOrders(); loadKnowledge(); });
+    // customers whose name Facebook did not give at first: look them up again, then refresh the list
+    api({ action: 'names' }).then((d) => { if (d.filled) loadConvos(); }).catch(() => {});
     const t = setInterval(loadConvos, 15_000); // new messages show up without reloading
     return () => clearInterval(t);
   }, [loadConvos, loadOrders, loadKnowledge]);

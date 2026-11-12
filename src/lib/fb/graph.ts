@@ -146,15 +146,24 @@ export async function fetchConversations(after?: string): Promise<{ data: GraphC
   return { data: d.data || [], next: d.paging?.next ? d.paging?.cursors?.after || null : null };
 }
 
-/** Name and avatar. Needs the app's profile access; returns empty fields when Facebook says no. */
+/**
+ * Name and avatar. The profile endpoint needs Meta's "Business Asset User Profile Access";
+ * when Facebook refuses it, the name is read from the Page's conversation participants instead.
+ */
 export async function getProfile(psid: string): Promise<{ name: string | null; pic: string | null }> {
   try {
-    const res = await fetch(`${GRAPH}/${psid}?fields=first_name,last_name,profile_pic&access_token=${encodeURIComponent(process.env.FB_PAGE_ACCESS_TOKEN || '')}`);
-    if (!res.ok) return { name: null, pic: null };
-    const d = await res.json();
+    const d = await get(`/${psid}`, { fields: 'first_name,last_name,profile_pic' });
     const name = [d.last_name, d.first_name].filter(Boolean).join(' ').trim() || null;
-    return { name, pic: d.profile_pic || null };
-  } catch {
+    if (name) return { name, pic: d.profile_pic || null };
+  } catch (err) {
+    console.error('[fb profile]', psid, err instanceof Error ? err.message : err);
+  }
+  try {
+    const d = await get(`/${await pageId()}/conversations`, { platform: 'messenger', user_id: psid, fields: 'participants' });
+    const person = (d.data?.[0]?.participants?.data || []).find((p: { id: string; name?: string }) => p.id === psid);
+    return { name: person?.name || null, pic: null };
+  } catch (err) {
+    console.error('[fb participants]', psid, err instanceof Error ? err.message : err);
     return { name: null, pic: null };
   }
 }

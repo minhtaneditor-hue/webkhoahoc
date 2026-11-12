@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/admin';
 import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
-import { fbConfigured, pageId, sendText, subscribePage } from '@/lib/fb/graph';
+import { fbConfigured, getProfile, pageId, sendText, subscribePage } from '@/lib/fb/graph';
 import { learnFromConversations, replyTo } from '@/lib/fb/agent';
 import { importHistory } from '@/lib/fb/voice';
 import { botEnabled, lockedOff, setBotEnabled } from '@/lib/fb/switch';
@@ -20,6 +20,7 @@ export const maxDuration = 60;
  *   subscribe  subscribe the app to the Page's messages + feed webhooks with the server's Page token (`page` = Page id)
  *   import  copy one page of the Page's past Messenger conversations (pass `after` to continue)
  *   learn   turn recent replies by Minh Tấn into knowledge suggestions (`days`, default 14)
+ *   names   fill in missing customer names (up to 20 per call); returns how many were found
  *   bot     main switch: `on` true/false turns the bot on or off; without `on` it only reports the state
  *   telegram  connect /api/webhooks/telegram so /bat, /tat, /trangthai work in the Telegram chat
  * The caller is checked from the session cookie.
@@ -94,6 +95,18 @@ export async function POST(req: Request) {
         console.error('fb learn failed', err);
         return NextResponse.json({ error: 'AI chưa học được, thử lại sau.' }, { status: 502 });
       }
+    }
+    case 'names': {
+      if (!fbConfigured()) return NextResponse.json({ ok: true, filled: 0, missing: 0 });
+      const { data: rows } = await db.from('fb_conversations').select('psid').is('name', null).order('last_message_at', { ascending: false }).limit(20);
+      let filled = 0;
+      for (const r of rows || []) {
+        const p = await getProfile(r.psid);
+        if (!p.name) continue;
+        await db.from('fb_conversations').update({ name: p.name, ...(p.pic ? { profile_pic: p.pic } : {}) }).eq('psid', r.psid);
+        filled++;
+      }
+      return NextResponse.json({ ok: true, filled, missing: (rows || []).length - filled });
     }
     case 'bot': {
       try {
