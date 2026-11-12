@@ -191,6 +191,7 @@ export type KichBan = {
   loi_keu_goi: string;
   caption: string;
   meo_quay: string[];
+  da_sua?: string[]; // only for scripts made by "Sửa kịch bản": what was changed and why
 };
 
 // Usage limits. Free: total for the account. Members (active Hội viên): per calendar month.

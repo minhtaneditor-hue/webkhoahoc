@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Sparkles, FileText, FileDown, RotateCcw, MessageCircleQuestion, History } from 'lucide-react';
+import { Loader2, Sparkles, FileText, FileDown, RotateCcw, MessageCircleQuestion, History, PenLine, Upload, X } from 'lucide-react';
 import { DANG, DO_DAI, NEN_TANG, dangById, khungById, type KichBan } from '@/lib/viet-kich-ban/templates';
 import { downloadWord, printPdf, type DocBrand } from '@/lib/viet-kich-ban/export';
 import { useSiteSettings } from '@/components/SiteContext';
 import { contactFrom } from '@/lib/site-settings';
 import ToolFeedback from '@/components/ToolFeedback';
+import { readScriptFile } from '@/lib/viet-kich-ban/doc-input';
 
 type Usage = { loggedIn: boolean; unavailable?: boolean; member?: boolean; used?: number; limit?: number; freeTotal?: number; history?: { id: string; tieu_de: string; dang: string; created_at: string }[] };
 type Question = { hoi: string; goi_y: string; tra_loi: string };
@@ -26,6 +27,9 @@ export default function VietKichBanTool() {
   const [hetLuot, setHetLuot] = useState(false);
   const [script, setScript] = useState<KichBan | null>(null);
   const [meta, setMeta] = useState({ dang: '', khung: '' }); // format/framework of the script on screen, for feedback
+  const [mode, setMode] = useState<'viet' | 'sua'>('viet');
+  const [sua, setSua] = useState({ kich_ban: '', pdf: '', fileName: '', yeu_cau: '' }); // "Sửa kịch bản" tab
+  const [reading, setReading] = useState(false);
 
   const loadUsage = () => fetch('/api/viet-kich-ban').then((r) => r.json()).then(setUsage).catch(() => setUsage({ loggedIn: false }));
   useEffect(() => { loadUsage(); }, []);
@@ -63,6 +67,37 @@ export default function VietKichBanTool() {
     setUsage((u) => (u ? { ...u, used: res.data.used as number } : u));
     loadUsage();
     (window as { fbq?: (...a: unknown[]) => void }).fbq?.('trackCustom', 'VietKichBan', { dang: form.dang });
+    scrollTop();
+  };
+
+  // "Sửa kịch bản": a .docx/.txt upload fills the text box; a PDF is kept as base64 and read on the server.
+  const onScriptFile = async (file?: File) => {
+    if (!file) return;
+    setError('');
+    setReading(true);
+    const r = await readScriptFile(file);
+    setReading(false);
+    if ('error' in r) { setError(r.error); return; }
+    if ('text' in r) setSua((s) => ({ ...s, kich_ban: r.text.slice(0, 12000), pdf: '', fileName: file.name }));
+    else setSua((s) => ({ ...s, kich_ban: '', pdf: r.pdf, fileName: file.name }));
+  };
+
+  const edit = async () => {
+    setError('');
+    setState('writing');
+    const res = await post({ step: 'sua', dang: form.dang, do_dai: form.do_dai, nen_tang: form.nen_tang, kich_ban: sua.kich_ban, pdf: sua.pdf || undefined, yeu_cau: sua.yeu_cau });
+    if (!res.ok) {
+      setState('idle');
+      setHetLuot(!!res.data.hetLuot);
+      setError((res.data.error as string) || 'Chưa sửa được, bạn thử lại nhé.');
+      return;
+    }
+    setScript(res.data.content as KichBan);
+    setMeta({ dang: form.dang, khung: 'sua' });
+    setState('done');
+    setUsage((u) => (u ? { ...u, used: res.data.used as number } : u));
+    loadUsage();
+    (window as { fbq?: (...a: unknown[]) => void }).fbq?.('trackCustom', 'SuaKichBan', { dang: form.dang });
     scrollTop();
   };
 
@@ -114,6 +149,88 @@ export default function VietKichBanTool() {
       </p>
 
       {!script && !questions && (
+        <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-1" role="tablist" aria-label="Chọn việc">
+          {([['viet', 'Viết kịch bản mới', Sparkles], ['sua', 'Sửa kịch bản có sẵn', PenLine]] as const).map(([id, label, Icon]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={mode === id}
+              onClick={() => { setMode(id); setError(''); }}
+              className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${mode === id ? 'bg-white text-ink shadow-sm' : 'text-muted-foreground hover:text-ink'}`}
+            >
+              <Icon size={16} aria-hidden="true" /> {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!script && !questions && mode === 'sua' && (
+        <div className="card p-5 md:p-8 space-y-6">
+          <div>
+            <label htmlFor="vkb-sua" className="field-label">1. Kịch bản của bạn</label>
+            <p className="mb-2 text-sm text-muted-foreground">Dán kịch bản vào ô, hoặc tải file Word (.docx), PDF hay .txt lên. AI giữ ý và giọng của bạn, chỉ sửa chỗ yếu: hook, thông điệp, lời kêu gọi, câu nói, chữ trên màn hình.</p>
+            {sua.pdf ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-line p-4">
+                <span className="flex min-w-0 items-center gap-2 text-ink"><FileText size={18} className="shrink-0 text-gold" aria-hidden="true" /><span className="truncate">{sua.fileName}</span></span>
+                <button type="button" onClick={() => setSua((s) => ({ ...s, pdf: '', fileName: '' }))} className="shrink-0 text-muted-foreground hover:text-ink" aria-label="Bỏ file PDF"><X size={18} /></button>
+              </div>
+            ) : (
+              <textarea
+                id="vkb-sua"
+                className="input min-h-56"
+                maxLength={12000}
+                value={sua.kich_ban}
+                onChange={(e) => setSua({ ...sua, kich_ban: e.target.value, fileName: '' })}
+                placeholder="Dán kịch bản hoặc lời nói của video vào đây…"
+              />
+            )}
+            <label className={`mt-3 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-gold-hover hover:underline ${reading ? 'pointer-events-none opacity-60' : ''}`}>
+              {reading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Upload size={16} aria-hidden="true" />}
+              {reading ? 'Đang đọc file…' : 'Tải file lên (.docx, .pdf, .txt)'}
+              <input type="file" accept=".docx,.pdf,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" className="sr-only" onChange={(e) => { onScriptFile(e.target.files?.[0]); e.target.value = ''; }} />
+            </label>
+            {sua.fileName && !sua.pdf && <p className="mt-1 text-xs text-muted-foreground">Đã lấy chữ từ {sua.fileName}. Bạn xem lại và sửa trong ô nếu cần.</p>}
+          </div>
+
+          <div>
+            <label htmlFor="vkb-yeucau" className="field-label">2. Bạn muốn sửa gì? (không bắt buộc)</label>
+            <textarea id="vkb-yeucau" className="input min-h-20" maxLength={1000} value={sua.yeu_cau} onChange={(e) => setSua({ ...sua, yeu_cau: e.target.value })} placeholder="Ví dụ: hook mạnh hơn, rút còn 45 giây, thêm lời kêu gọi nhắn tin…" />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label htmlFor="vkb-sua-dang" className="field-label">Dạng video</label>
+              <select id="vkb-sua-dang" className="input" value={form.dang} onChange={(e) => setForm({ ...form, dang: e.target.value, khung: dangById(e.target.value)!.khung[0] })}>
+                {DANG.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="vkb-sua-dodai" className="field-label">Độ dài mong muốn</label>
+              <select id="vkb-sua-dodai" className="input" value={form.do_dai} onChange={(e) => setForm({ ...form, do_dai: e.target.value })}>
+                {DO_DAI.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="vkb-sua-nentang" className="field-label">Đăng ở đâu</label>
+              <select id="vkb-sua-nentang" className="input" value={form.nen_tang} onChange={(e) => setForm({ ...form, nen_tang: e.target.value })}>
+                {NEN_TANG.map((n) => <option key={n}>{n}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {error && <ErrorBox error={error} hetLuot={hetLuot} />}
+
+          <button type="button" onClick={edit} disabled={busy || reading || (!sua.pdf && sua.kich_ban.trim().length < 30) || left === 0} className="btn btn-gold w-full disabled:opacity-60">
+            {state === 'writing'
+              ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Đang sửa kịch bản, khoảng 30 giây…</>
+              : <><PenLine size={18} aria-hidden="true" /> Sửa kịch bản</>}
+          </button>
+          {left === 0 && !error && <ErrorBox error={usage.member ? 'Bạn đã dùng hết lượt của tháng này.' : 'Bạn đã dùng hết lượt miễn phí.'} hetLuot={!usage.member} />}
+        </div>
+      )}
+
+      {!script && !questions && mode === 'viet' && (
         <div className="card p-5 md:p-8 space-y-6">
           <fieldset>
             <legend className="field-label">1. Bạn muốn làm video gì?</legend>
@@ -255,6 +372,13 @@ function ScriptView({ k, brand, onReset }: { k: KichBan; brand: DocBrand; onRese
         </div>
         <p className="mt-2 text-xs text-muted-foreground">Tải PDF: trong hộp in, chọn “Lưu dưới dạng PDF”.{brand.watermark && <> File của tài khoản miễn phí có watermark website. <Link href="/hoi-vien" className="text-gold-hover underline">Hội viên</Link> tải file không watermark.</>}</p>
       </div>
+
+      {!!k.da_sua?.length && (
+        <div className="card p-5 md:p-8 border-2 border-gold/60">
+          <h3 className="text-lg font-semibold text-ink">Mình đã sửa những gì</h3>
+          <ul className="mt-3 space-y-2 text-stone">{k.da_sua.map((x) => <li key={x} className="flex gap-2"><span aria-hidden="true" className="text-gold">•</span>{x}</li>)}</ul>
+        </div>
+      )}
 
       <div className="card p-5 md:p-8">
         <h3 className="text-lg font-semibold text-ink">3 phương án hook</h3>
