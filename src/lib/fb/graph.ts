@@ -122,7 +122,17 @@ async function get(path: string, params: Record<string, string>) {
 }
 
 export async function pageId(): Promise<string> {
-  return (await get('/me', { fields: 'id' })).id;
+  return process.env.FB_PAGE_ID || (await get('/me', { fields: 'id' })).id;
+}
+
+export const WEBHOOK_FIELDS = ['messages', 'messaging_postbacks', 'message_echoes', 'feed'];
+
+/** Subscribes this app to the Page's webhook fields with the Page token on the server; returns what is subscribed now. */
+export async function subscribePage(page: string) {
+  await post(`/${page}/subscribed_apps`, { subscribed_fields: WEBHOOK_FIELDS.join(',') });
+  const d = await get(`/${page}/subscribed_apps`, {});
+  const mine = (d.data || []).find((a: { id: string }) => a.id === process.env.FB_APP_ID) || d.data?.[0];
+  return (mine?.subscribed_fields || []) as string[];
 }
 
 /** One page of the Page's past Messenger conversations, newest first, with their last 100 messages. */
