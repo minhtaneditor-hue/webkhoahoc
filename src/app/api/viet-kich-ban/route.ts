@@ -109,7 +109,14 @@ Quy tắc:
 - "loi_keu_goi": một lời kêu gọi rõ ràng, một hành động.
 - "caption": caption đăng kèm, 1–3 câu và 3–5 hashtag.
 - "meo_quay": 2–4 mẹo quay ngắn cho riêng video này.
-- "tieu_de": tên ngắn cho kịch bản (để người dùng tìm lại).`;
+- "tieu_de": tên ngắn cho kịch bản (để người dùng tìm lại).
+
+Cách viết cho rõ và thật:
+- Trước khi viết, chốt người xem là ai, một ý chính, và người xem nên cảm thấy gì khi xem xong; mọi đoạn phục vụ ba điều đó.
+- Dùng từ cụ thể, quen với người xem; tránh ẩn dụ hoặc từ trừu tượng dễ bị hiểu khác. Ý nào khó hiểu thì thêm một câu nói lại dễ hơn.
+- Giữ giọng chân thật của người nói: không ép lúc nào cũng vui, hài hước hay thông thái; không thêm cảm xúc người dùng chưa kể.
+- Ưu tiên chi tiết và khoảnh khắc thật trong nội dung người dùng đưa; không có thì để chỗ trống dạng [điền chi tiết].
+- Nội dung đầu vào rời rạc hoặc là lời ghi âm thì gom thành vài ý ngắn trước, rồi mới chia đoạn theo thời gian.`;
 
 const WRITE_SCHEMA = {
   type: 'object',
