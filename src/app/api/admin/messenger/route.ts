@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { isAdmin } from '@/lib/admin';
 import { getSessionUser, getSupabaseAdmin } from '@/lib/supabase-server';
 import { fbConfigured, getProfile, pageId, sendText, subscribePage } from '@/lib/fb/graph';
-import { learnFromConversations, replyTo } from '@/lib/fb/agent';
+import { answerWaiting, learnFromConversations, replyTo } from '@/lib/fb/agent';
 import { importHistory } from '@/lib/fb/voice';
 import { botEnabled, lockedOff, setBotEnabled } from '@/lib/fb/switch';
 import { setTelegramWebhook } from '@/lib/fb/telegram';
@@ -21,6 +21,7 @@ export const maxDuration = 60;
  *   import  copy one page of the Page's past Messenger conversations (pass `after` to continue)
  *   learn   turn recent replies by Minh Tấn into knowledge suggestions (`days`, default 14)
  *   names   fill in missing customer names (up to 20 per call); returns how many were found
+ *   answer_all  un-pause and answer every customer still waiting for a reply (last 24 h)
  *   bot     main switch: `on` true/false turns the bot on or off; without `on` it only reports the state
  *   telegram  connect /api/webhooks/telegram so /bat, /tat, /trangthai work in the Telegram chat
  * The caller is checked from the session cookie.
@@ -100,13 +101,20 @@ export async function POST(req: Request) {
       if (!fbConfigured()) return NextResponse.json({ ok: true, filled: 0, missing: 0 });
       const { data: rows } = await db.from('fb_conversations').select('psid').is('name', null).order('last_message_at', { ascending: false }).limit(20);
       let filled = 0;
+      let error = '';
       for (const r of rows || []) {
         const p = await getProfile(r.psid);
-        if (!p.name) continue;
+        if (!p.name) { error ||= p.error || ''; continue; }
         await db.from('fb_conversations').update({ name: p.name, ...(p.pic ? { profile_pic: p.pic } : {}) }).eq('psid', r.psid);
         filled++;
       }
-      return NextResponse.json({ ok: true, filled, missing: (rows || []).length - filled });
+      return NextResponse.json({ ok: true, filled, missing: (rows || []).length - filled, error });
+    }
+    case 'answer_all': {
+      if (!(await botEnabled(db))) return NextResponse.json({ error: 'Bot đang tắt. Bật bot trước đã.' }, { status: 400 });
+      const job = await answerWaiting(db);
+      after(job.run);
+      return NextResponse.json({ ok: true, waiting: job.waiting });
     }
     case 'bot': {
       try {

@@ -39,6 +39,7 @@ export default function MessengerPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [knowledge, setKnowledge] = useState<Knowledge[]>([]);
   // ?c=<psid> from the alert links; the admin layout renders pages only in the browser
+  const [nameError, setNameError] = useState('');
   const [selected, setSelected] = useState<string | null>(() => (typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('c')));
 
   const loadConvos = useCallback(async () => {
@@ -57,7 +58,7 @@ export default function MessengerPage() {
   useEffect(() => {
     void Promise.resolve().then(() => { loadConvos(); loadOrders(); loadKnowledge(); });
     // customers whose name Facebook did not give at first: look them up again, then refresh the list
-    api({ action: 'names' }).then((d) => { if (d.filled) loadConvos(); }).catch(() => {});
+    api({ action: 'names' }).then((d) => { if (d.filled) loadConvos(); if (d.missing && d.error) setNameError(d.error); }).catch(() => {});
     const t = setInterval(loadConvos, 15_000); // new messages show up without reloading
     return () => clearInterval(t);
   }, [loadConvos, loadOrders, loadKnowledge]);
@@ -71,6 +72,12 @@ export default function MessengerPage() {
   return (
     <div className="space-y-8">
       <PageHeader title="Facebook Messenger" description="AI tư vấn và chốt đơn trên Fanpage. Ca khó được chuyển cho bạn, bot học thêm từ chính câu trả lời của bạn." actions={<BotSwitch />} />
+
+      {nameError && (
+        <p className="text-sm rounded-lg border border-line p-3" role="status">
+          <b>Facebook chưa cho đọc tên khách.</b> Lý do Facebook trả về: {nameError}. Thường cần xin quyền <b>Business Asset User Profile Access</b> (Meta app → App Review) hoặc tạo lại Page token có quyền <code>pages_messaging</code> và <code>pages_read_engagement</code>.
+        </p>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Ca cần bạn xử lý" value={hard} icon={AlertTriangle} hint="Bot đã tạm dừng với những khách này" />
@@ -104,7 +111,7 @@ export default function MessengerPage() {
 function BotSwitch() {
   const [on, setOn] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
-  const [busy, setBusy] = useState<'' | 'bot' | 'telegram'>('');
+  const [busy, setBusy] = useState<'' | 'bot' | 'telegram' | 'answer'>('');
   const [note, setNote] = useState('');
 
   useEffect(() => {
@@ -116,6 +123,13 @@ function BotSwitch() {
     if (on && !confirm('Tắt bot? Khách nhắn tin sẽ không được tự trả lời cho tới khi bạn bật lại.')) return;
     setBusy('bot'); setNote('');
     try { const d = await api({ action: 'bot', on: !on }); setOn(d.on); setLocked(d.locked); }
+    catch (e) { setNote((e as Error).message); }
+    setBusy('');
+  }
+
+  async function answerAll() {
+    setBusy('answer'); setNote('');
+    try { const d = await api({ action: 'answer_all' }); setNote(d.waiting ? `Bot đang trả lời ${d.waiting} khách đang chờ. Danh sách tự cập nhật sau ít giây.` : 'Không có khách nào đang chờ trả lời.'); }
     catch (e) { setNote((e as Error).message); }
     setBusy('');
   }
@@ -134,6 +148,9 @@ function BotSwitch() {
                 className={`btn ${on ? 'btn-outline' : 'btn-gold'}`}>
           {busy === 'bot' || on === null ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : on ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
           {on === null ? 'Đang tải…' : on ? 'Bot đang bật · Tắt bot' : 'Bot đang tắt · Bật bot'}
+        </button>
+        <button onClick={answerAll} disabled={!!busy || !on} className="btn btn-gold">
+          {busy === 'answer' ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Bot size={16} aria-hidden="true" />} Trả lời tất cả khách đang chờ
         </button>
         <button onClick={connectTelegram} disabled={!!busy} className="btn btn-outline">
           {busy === 'telegram' ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Send size={16} aria-hidden="true" />} Kết nối Telegram

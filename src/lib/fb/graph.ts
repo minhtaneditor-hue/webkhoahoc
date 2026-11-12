@@ -150,20 +150,23 @@ export async function fetchConversations(after?: string): Promise<{ data: GraphC
  * Name and avatar. The profile endpoint needs Meta's "Business Asset User Profile Access";
  * when Facebook refuses it, the name is read from the Page's conversation participants instead.
  */
-export async function getProfile(psid: string): Promise<{ name: string | null; pic: string | null }> {
+export async function getProfile(psid: string): Promise<{ name: string | null; pic: string | null; error?: string }> {
+  let why = '';
   try {
     const d = await get(`/${psid}`, { fields: 'first_name,last_name,profile_pic' });
     const name = [d.last_name, d.first_name].filter(Boolean).join(' ').trim() || null;
     if (name) return { name, pic: d.profile_pic || null };
   } catch (err) {
-    console.error('[fb profile]', psid, err instanceof Error ? err.message : err);
+    why = err instanceof Error ? err.message : String(err);
+    console.error('[fb profile]', psid, why);
   }
   try {
     const d = await get(`/${await pageId()}/conversations`, { platform: 'messenger', user_id: psid, fields: 'participants' });
     const person = (d.data?.[0]?.participants?.data || []).find((p: { id: string; name?: string }) => p.id === psid);
-    return { name: person?.name || null, pic: null };
+    return { name: person?.name || null, pic: null, ...(person?.name ? {} : { error: `Hồ sơ: ${why || 'không có tên'} · Hội thoại: không thấy tên` }) };
   } catch (err) {
-    console.error('[fb participants]', psid, err instanceof Error ? err.message : err);
-    return { name: null, pic: null };
+    const also = err instanceof Error ? err.message : String(err);
+    console.error('[fb participants]', psid, also);
+    return { name: null, pic: null, error: `Hồ sơ: ${why || 'không có tên'} · Hội thoại: ${also}` };
   }
 }
