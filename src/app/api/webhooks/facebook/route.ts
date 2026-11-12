@@ -115,6 +115,11 @@ export async function POST(req: Request) {
   }
 
   // Comments on the Page's posts and ads (field "feed"): answered after the response is sent
+  for (const e of (body.entry || []) as { id: string; changes?: { field: string; value: FeedChange & { item?: string } }[] }[]) {
+    for (const ch of e.changes || []) {
+      console.log('[fb change]', JSON.stringify({ field: ch.field, item: ch.value?.item, verb: ch.value?.verb, fromPage: ch.value?.from?.id === e.id, reply: !!ch.value?.parent_id && ch.value?.parent_id !== ch.value?.post_id }));
+    }
+  }
   const comments = (body.entry || []).flatMap((e: { id: string; changes?: { field: string; value: FeedChange }[] }) =>
     (e.changes || []).filter((ch) => ch.field === 'feed' && ch.value?.item === 'comment').map((ch) => ({ pageId: e.id, value: ch.value })));
   if (comments.length && process.env.FB_BOT_ENABLED !== 'false') {

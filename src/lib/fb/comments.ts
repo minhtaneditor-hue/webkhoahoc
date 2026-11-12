@@ -57,7 +57,7 @@ export async function handleComment(db: SupabaseClient, pageId: string, c: FeedC
   const { error: dup } = await db.from('fb_comments').insert({
     comment_id: c.comment_id, post_id: c.post_id || null, from_id: c.from.id, from_name: c.from.name || null, message: text.slice(0, 2000),
   });
-  if (dup) return; // already handled (Facebook retries) or table missing
+  if (dup) { console.log('[fb comment] not stored:', dup.message); return; } // already handled (Facebook retries) or table missing
 
   const done = (patch: Record<string, unknown>) => db.from('fb_comments').update(patch).eq('comment_id', c.comment_id!);
   if (!process.env.ANTHROPIC_API_KEY) return done({ action: 'failed', error: 'Thiếu ANTHROPIC_API_KEY' });
