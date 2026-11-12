@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { getProfile, validSignature } from '@/lib/fb/graph';
 import { replyTo } from '@/lib/fb/agent';
 import { handleComment, type FeedChange } from '@/lib/fb/comments';
+import { botEnabled } from '@/lib/fb/switch';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -117,11 +118,13 @@ export async function POST(req: Request) {
   // Comments on the Page's posts and ads (field "feed"): answered after the response is sent
   const comments = (body.entry || []).flatMap((e: { id: string; changes?: { field: string; value: FeedChange }[] }) =>
     (e.changes || []).filter((ch) => ch.field === 'feed' && ch.value?.item === 'comment').map((ch) => ({ pageId: e.id, value: ch.value })));
-  if (comments.length && process.env.FB_BOT_ENABLED !== 'false') {
+  // Main switch (Admin / Telegram /tat): messages are still stored while it is off
+  const on = comments.length > 0 || toAnswer.size > 0 ? await botEnabled(db) : false;
+  if (comments.length && on) {
     after(() => Promise.allSettled(comments.map((c: { pageId: string; value: FeedChange }) => handleComment(db, c.pageId, c.value))));
   }
 
-  if (toAnswer.size && process.env.FB_BOT_ENABLED !== 'false') {
+  if (toAnswer.size && on) {
     after(async () => {
       await new Promise((r) => setTimeout(r, DEBOUNCE_MS));
       await Promise.allSettled([...toAnswer].map(async ([psid, id]) => {

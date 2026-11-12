@@ -68,7 +68,7 @@ export default function MessengerPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Facebook Messenger" description="AI tư vấn và chốt đơn trên Fanpage. Ca khó được chuyển cho bạn, bot học thêm từ chính câu trả lời của bạn." />
+      <PageHeader title="Facebook Messenger" description="AI tư vấn và chốt đơn trên Fanpage. Ca khó được chuyển cho bạn, bot học thêm từ chính câu trả lời của bạn." actions={<BotSwitch />} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Ca cần bạn xử lý" value={hard} icon={AlertTriangle} hint="Bot đã tạm dừng với những khách này" />
@@ -92,6 +92,53 @@ export default function MessengerPage() {
       {tab === 'chats' && (convos === null ? <LoadingRow /> : <Chats convos={convos} selected={selected} onSelect={setSelected} reload={loadConvos} onTaught={loadKnowledge} />)}
       {tab === 'orders' && <Orders orders={orders} reload={loadOrders} onOpen={(psid) => { setSelected(psid); setTab('chats'); }} />}
       {tab === 'knowledge' && <KnowledgeTab items={knowledge} reload={loadKnowledge} />}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- main switch
+
+/** Turns the whole bot on or off (also /bat, /tat in Telegram). Messages are still saved while it is off. */
+function BotSwitch() {
+  const [on, setOn] = useState<boolean | null>(null);
+  const [locked, setLocked] = useState(false);
+  const [busy, setBusy] = useState<'' | 'bot' | 'telegram'>('');
+  const [note, setNote] = useState('');
+
+  useEffect(() => {
+    api({ action: 'bot' }).then((d) => { setOn(d.on); setLocked(d.locked); }).catch((e) => setNote(e.message));
+  }, []);
+
+  async function flip() {
+    if (on === null) return;
+    if (on && !confirm('Tắt bot? Khách nhắn tin sẽ không được tự trả lời cho tới khi bạn bật lại.')) return;
+    setBusy('bot'); setNote('');
+    try { const d = await api({ action: 'bot', on: !on }); setOn(d.on); setLocked(d.locked); }
+    catch (e) { setNote((e as Error).message); }
+    setBusy('');
+  }
+
+  async function connectTelegram() {
+    setBusy('telegram'); setNote('');
+    try { await api({ action: 'telegram' }); setNote('Đã kết nối. Nhắn /trangthai cho bot Telegram để thử.'); }
+    catch (e) { setNote((e as Error).message); }
+    setBusy('');
+  }
+
+  return (
+    <div className="flex flex-col items-start md:items-end gap-2">
+      <div className="flex flex-wrap gap-2">
+        <button onClick={flip} disabled={on === null || !!busy} aria-pressed={!!on}
+                className={`btn ${on ? 'btn-outline' : 'btn-gold'}`}>
+          {busy === 'bot' || on === null ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : on ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+          {on === null ? 'Đang tải…' : on ? 'Bot đang bật · Tắt bot' : 'Bot đang tắt · Bật bot'}
+        </button>
+        <button onClick={connectTelegram} disabled={!!busy} className="btn btn-outline">
+          {busy === 'telegram' ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Send size={16} aria-hidden="true" />} Kết nối Telegram
+        </button>
+      </div>
+      {locked && <p className="text-sm text-danger">FB_BOT_ENABLED=false trên Vercel đang khóa bot ở trạng thái tắt.</p>}
+      {note && <p className="text-sm text-muted-foreground" role="status">{note}</p>}
     </div>
   );
 }

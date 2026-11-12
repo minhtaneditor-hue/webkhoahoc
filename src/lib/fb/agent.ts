@@ -15,6 +15,8 @@ import { SALES_PLAYBOOK } from './sales-playbook';
 
 const MODEL = process.env.FB_MODEL || 'claude-haiku-5-5';
 const EFFORT = (process.env.FB_EFFORT || 'low') as 'low' | 'medium' | 'high';
+// Learning from Minh Tấn's replies runs rarely, so it gets the next model up (FB_LEARN_MODEL overrides it)
+export const LEARN_MODEL = process.env.FB_LEARN_MODEL || 'claude-sonnet-5-5';
 const HISTORY = 30;                                             // messages of the thread the AI reads
 const PAUSE_HOURS = Number(process.env.FB_HUMAN_PAUSE_HOURS) || 12; // bot stays quiet after a handoff or a human reply
 const DEPOSIT = Number(process.env.FB_DEPOSIT_AMOUNT) || 0;        // minimum deposit to hold a seat (VND), 0 = ask
@@ -315,11 +317,11 @@ export async function learnFromConversations(db: SupabaseClient, days = 14) {
   const { data: known } = await db.from('fb_knowledge').select('question').limit(500);
   const client = new Anthropic();
   const res = await client.beta.messages.create({
-    model: MODEL,
+    model: LEARN_MODEL,
     max_tokens: 16000,
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
-    output_config: { effort: 'low', format: { type: 'json_schema', schema: LEARN_SCHEMA } },
+    output_config: { effort: 'medium', format: { type: 'json_schema', schema: LEARN_SCHEMA } },
     system: `Bạn giúp trợ lý bán hàng trên Messenger của TẤN VA (Minh Tấn, dạy làm video) học từ cách chính Minh Tấn trả lời khách.
 Đọc các hội thoại. Rút ra những kiến thức dùng lại được cho khách sau: thông tin sản phẩm, chính sách, cách xử lý thắc mắc/từ chối, cách Minh Tấn chốt đơn.
 - Chỉ lấy điều Minh Tấn (không phải Bot) đã nói hoặc làm rõ. Bỏ qua chuyện riêng của từng khách, số điện thoại, tên người, lời chào xã giao.
