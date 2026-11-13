@@ -13,7 +13,7 @@ import { activeVoice } from './voice';
 // or escalate (complaint, angry, refund: Minh Tấn is told). The chat then continues with the
 // normal Messenger bot. FB_COMMENTS_ENABLED=false turns this off.
 
-const MODEL = process.env.FB_MODEL || 'claude-sonnet-5-5';
+const MODEL = process.env.FB_MODEL || 'claude-opus-5-5';
 
 export type FeedChange = {
   item?: string;
@@ -67,13 +67,13 @@ export async function handleComment(db: SupabaseClient, pageId: string, c: FeedC
     const [post, site, voice] = await Promise.all([c.post_id ? postText(c.post_id) : '', siteKnowledge(), activeVoice(db).catch(() => '')]);
     const res = await new Anthropic().beta.messages.create({
       model: MODEL,
-      max_tokens: 2000,
+      max_tokens: 1200,
       ...fallbackFor(MODEL),
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
       system: [
         { type: 'text', text: RULES },
         ...(voice ? [{ type: 'text' as const, text: `GIỌNG CỦA MINH TẤN:\n${voice}` }] : []),
-        { type: 'text', text: `DỮ LIỆU WEBSITE:\n${site}`, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: `DỮ LIỆU WEBSITE:\n${site}`, cache_control: { type: 'ephemeral', ttl: '1h' } },
       ],
       messages: [{
         role: 'user',

@@ -53,7 +53,7 @@ Meta app > **Messenger > Cài đặt API > Định cấu hình webhook**:
 Khi app còn ở chế độ phát triển, bot chỉ trả lời người có vai trò trong app (dùng để thử). Để trả lời mọi khách: gửi **Xét duyệt ứng dụng** xin quyền `pages_messaging` (và `human_agent` nếu muốn trả lời khách sau 24 giờ từ Admin), rồi chuyển app sang **Live**.
 
 ## Chi phí và tùy chỉnh
-- Mặc định bot trả lời khách bằng Claude Sonnet 5.5 ở mức suy nghĩ thấp (`FB_EFFORT=low`). Rẻ hơn nhiều: `FB_MODEL=claude-haiku-5-5`; kỹ hơn nữa: `claude-opus-5-5`. Nên đặt hạn mức chi tiêu trong Anthropic Console.
+- Mặc định bot trả lời khách và bình luận bằng Claude Opus 5.5 ở mức suy nghĩ thấp (`FB_EFFORT=low`). Để đỡ tốn: phần hướng dẫn chung (quy tắc, dữ liệu website, kiến thức đã duyệt) được lưu đệm 1 giờ nên mỗi tin chỉ trả 5% giá cho phần đó; bot chỉ đọc 16 tin gần nhất; tóm tắt đặt cọc dùng Haiku (`FB_LIGHT_MODEL`). Log Vercel ghi `[fb tokens]` cho mỗi lần gọi. Rẻ hơn nữa: `FB_MODEL=claude-sonnet-5-5` hoặc `claude-haiku-5-5`. Nên đặt hạn mức chi tiêu trong Anthropic Console.
 - **Bật/tắt bot:** nút **Bot đang bật · Tắt bot** ở đầu trang Admin > Facebook Messenger, hoặc nhắn cho bot Telegram `/tat`, `/bat`, `/trangthai`. Khi tắt, tin nhắn và bình luận vẫn được lưu, bot chỉ không tự trả lời. Lệnh Telegram cần bấm **Kết nối Telegram** một lần (dùng `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID` sẵn có); chỉ chat `TELEGRAM_CHAT_ID` ra lệnh được.
 - `FB_BOT_ENABLED=false`: khóa bot ở trạng thái tắt bất kể nút bấm (bạn vẫn trả lời từ Admin).
 - Học (đề xuất kiến thức hằng tuần, **Học ngay**, **Tạo hồ sơ giọng**) dùng Claude Sonnet 5.5. Đổi bằng `FB_LEARN_MODEL`.
