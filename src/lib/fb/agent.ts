@@ -14,11 +14,17 @@ import { fallbackFor } from './model';
 // (fb_knowledge), records orders it closes, and hands hard cases to a person. SERVER ONLY.
 // FB_MODEL / FB_EFFORT change the model and how hard it thinks (defaults below).
 
-const MODEL = process.env.FB_MODEL || 'claude-sonnet-5-5';
+const MODEL = process.env.FB_MODEL || 'claude-opus-5-5';
 const EFFORT = (process.env.FB_EFFORT || 'low') as 'low' | 'medium' | 'high';
 // Learning from Minh Tấn's replies (FB_LEARN_MODEL overrides it)
 export const LEARN_MODEL = process.env.FB_LEARN_MODEL || 'claude-sonnet-5-5';
-const HISTORY = 30;                                             // messages of the thread the AI reads
+// Token savings (the model is the expensive one, so send it less):
+// - the shared prompt (rules, playbook, voice, website, knowledge) is cached for 1 hour: every customer reads it at 5% of the price
+// - only the last HISTORY messages are sent, each cut to MSG_CHARS
+// - replies are 1-4 sentences, so the output cap is small
+const HISTORY = 16;                                             // messages of the thread the AI reads
+const MSG_CHARS = 1200;                                         // per message sent to the AI
+const MAX_OUT = 3000;
 const PAUSE_HOURS = Number(process.env.FB_HUMAN_PAUSE_HOURS) || 12; // bot stays quiet after a handoff or a human reply
 const DEPOSIT = Number(process.env.FB_DEPOSIT_AMOUNT) || 0;        // minimum deposit to hold a seat (VND), 0 = ask
 
@@ -123,7 +129,7 @@ function toMessages(rows: Row[]): Anthropic.Beta.BetaMessageParam[] {
   // the holding message sent after an API error is not an answer: the customer's question is still open
   const msgs: Anthropic.Beta.BetaMessageParam[] = rows.filter((r) => !(r.role === 'bot' && r.text === HOLD)).map((r) => ({
     role: r.role === 'customer' ? 'user' : 'assistant',
-    content: r.role === 'admin' ? `[Minh Tấn] ${r.text}` : r.text,
+    content: (r.role === 'admin' ? `[Minh Tấn] ${r.text}` : r.text).slice(0, MSG_CHARS),
   }));
   while (msgs[0]?.role === 'assistant') msgs.shift();
   return msgs;
@@ -156,7 +162,7 @@ export async function replyTo(db: SupabaseClient, psid: string) {
     { type: 'text', text: SALES_PLAYBOOK },
     ...(voice ? [{ type: 'text' as const, text: `GIỌNG CỦA MINH TẤN (rút từ tin nhắn thật anh đã trả lời khách). Nhắn tin đúng giọng này; khi khác phần "Cách nói chuyện" ở trên thì theo giọng này, nhưng các mục "Không bao giờ", chuyển ca khó và giới hạn định dạng Messenger vẫn luôn ưu tiên:\n${voice}` }] : []),
     { type: 'text', text: `DỮ LIỆU WEBSITE:\n${site}` },
-    { type: 'text', text: `KINH NGHIỆM MINH TẤN ĐÃ DUYỆT (ưu tiên hơn dữ liệu website nếu khác nhau):\n${learned || '(chưa có)'}`, cache_control: { type: 'ephemeral' } },
+    { type: 'text', text: `KINH NGHIỆM MINH TẤN ĐÃ DUYỆT (ưu tiên hơn dữ liệu website nếu khác nhau):\n${learned || '(chưa có)'}`, cache_control: { type: 'ephemeral', ttl: '1h' } },
     { type: 'text', text: `Khách đang nhắn: ${convo?.name || 'chưa rõ tên'}. Hôm nay: ${new Date().toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}.` },
   ];
 
@@ -170,7 +176,7 @@ export async function replyTo(db: SupabaseClient, psid: string) {
     for (let turn = 0; turn < 4; turn++) {
       const res = await client.beta.messages.create({
         model: MODEL,
-        max_tokens: 4000,
+        max_tokens: MAX_OUT,
         ...fallbackFor(MODEL), // Sonnet/Opus: a declined request is retried on another model inside the same call
         output_config: { effort: EFFORT },
         system,
@@ -178,6 +184,8 @@ export async function replyTo(db: SupabaseClient, psid: string) {
         messages,
       });
       stop = res.stop_reason || '';
+      // cache_read should be most of the input after the first message of the hour
+      console.log('[fb tokens]', JSON.stringify({ model: res.model, in: res.usage.input_tokens, cache_read: res.usage.cache_read_input_tokens, cache_write: res.usage.cache_creation_input_tokens, out: res.usage.output_tokens }));
       if (res.stop_reason === 'refusal') break;
       reply = textOf(res.content) || reply;
       if (res.stop_reason !== 'tool_use') break;
