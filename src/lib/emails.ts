@@ -570,14 +570,15 @@ export function birthdayAccountOffer(d: { name?: string | null; email: string },
   const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
   const now = vnd(offer.price - offer.discount);
   return {
-    subject: `Tháng sinh nhật mình: mã giảm 50% khóa ${c.title}`,
+    subject: `Quà sinh nhật tháng 11: mã giảm 50% khóa ${c.title}`,
     html: layout({
       preheader: `Nhập mã ${offer.code}: còn ${now} thay vì ${vnd(offer.price)}, đến hết ${offer.until}.`,
       unsubscribeFor: d.email,
       body: `
         ${eyebrow('Ưu đãi tháng sinh nhật')}
-        ${h1(`Mã giảm 50% dành cho ${esc(firstName(d.name))}`)}
-        ${p(`Chào ${esc(firstName(d.name))}, cảm ơn bạn đã tạo tài khoản TẤN VA. Tháng 11 này là tháng sinh nhật của mình, nên mình muốn gửi bạn một món quà: <strong>giảm 50% khóa ${esc(c.title)}</strong>.`)}
+        ${h1(`Quà sinh nhật dành cho ${esc(firstName(d.name))}`)}
+        ${p(`Chào ${esc(firstName(d.name))}, mình thấy bạn đã đăng ký tài khoản tại minhtanacademy.com nhưng chưa bắt đầu học.`)}
+        ${p(`Tháng 11 này là tháng sinh nhật của mình, nên mình muốn tặng bạn một món quà để bắt đầu: <strong>mã giảm 50% khóa ${esc(c.title)}</strong>.`)}
         ${p('Khóa học dạy bạn tự quay, tự dựng và bán hàng bằng video, chỉ với chiếc điện thoại của bạn.')}
         ${box(`Mã giảm giá tháng sinh nhật<br>
           <strong style="font-size:24px;letter-spacing:0.08em;color:${C.ink};">${esc(offer.code)}</strong><br>
