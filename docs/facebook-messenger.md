@@ -7,12 +7,12 @@ Bot trả lời tin nhắn Fanpage 24/7, tư vấn theo đúng khóa học / c�
 | Việc | Cách hoạt động |
 |---|---|
 | Tư vấn | Hỏi nhu cầu, gợi ý đúng khóa/gói, trả lời thắc mắc. Chỉ dùng giá và thông tin có trên website + kiến thức bạn đã duyệt, không bịa. |
-| Chốt đơn | Khách đồng ý mua thì bot xin họ tên, số Zalo (và email nếu là khóa online), xác nhận lại sản phẩm + giá, ghi đơn vào tab **Đơn chốt**, gửi link thanh toán và báo bạn ngay. |
+| Chốt đơn | Mã QR / số tài khoản chỉ gửi một lần; khách hỏi lại thì bot nhắc xem tin phía trên, chỉ gửi lại khi khách xin. Khách đồng ý mua thì bot xin họ tên, số Zalo (và email nếu là khóa online), xác nhận lại sản phẩm + giá, ghi đơn vào tab **Đơn chốt**, gửi link thanh toán và báo bạn ngay. |
 | Ca khó | Khiếu nại, hoàn tiền, đã chuyển khoản chưa nhận khóa, khách bực, xin giá riêng, hợp tác, khách muốn gặp người thật… Bot trả lời khách một câu lịch sự, **tạm dừng với khách đó** và gửi thông báo cho bạn qua Telegram và email. |
 | Bạn vào trả lời | Trả lời trong Admin hoặc ngay trong hộp thư Fanpage / Meta Business Suite đều được. Bot tự tạm dừng với khách đó 12 giờ (đổi bằng `FB_HUMAN_PAUSE_HOURS`), bấm **Bật lại bot** để nó tiếp tục. |
 | Học hỏi | 3 cách: (1) bấm **Dạy bot câu này** dưới một tin nhắn để sửa câu trả lời, dùng ngay; (2) tab **Kiến thức** thêm câu hỏi/trả lời; (3) mỗi thứ Hai bot đọc các hội thoại bạn tự trả lời trong tuần và đề xuất kiến thức mới, bạn duyệt rồi mới dùng (hoặc bấm **Học ngay**). |
 
-Khách nhắn liên tiếp nhiều tin ngắn thì bot đợi khoảng 4 giây rồi trả lời gộp một lần. Bot nhắn như người thật: mỗi câu ngắn là một tin riêng (tối đa 4 tin), trước mỗi tin hiện "đang soạn tin…" 1–4 giây tùy độ dài. Tắt độ trễ bằng `FB_HUMAN_DELAY=false`.
+Khách nhắn liên tiếp nhiều tin ngắn thì bot đợi khoảng 4 giây rồi trả lời gộp một lần. Bot nhắn như người thật: mỗi câu ngắn là một tin riêng (tối đa 2 tin mỗi lượt để không dồn dập), trước mỗi tin hiện "đang soạn tin…" 1–4 giây tùy độ dài. Tắt độ trễ bằng `FB_HUMAN_DELAY=false`.
 
 ## Cài đặt (làm một lần)
 

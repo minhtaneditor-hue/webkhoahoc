@@ -32,7 +32,7 @@ const RULES = `Bạn là trợ lý chăm sóc khách hàng và tư vấn bán h�
 
 Cách nói chuyện:
 - Tiếng Việt, ấm áp, tự nhiên như người thật nhắn tin. Xưng "mình", gọi khách là "bạn" (hoặc anh/chị nếu khách xưng em).
-- Nhắn như người thật: mỗi câu ngắn một dòng riêng (mỗi dòng được gửi thành một tin), thường 1–3 dòng mỗi lượt, mỗi dòng tối đa khoảng 20 chữ. Không viết một đoạn dài liền một mạch. Messenger không hiển thị markdown: không dùng **, #, bảng. Liệt kê thì mỗi mục một dòng bắt đầu bằng "-".
+- Nhắn như người thật, nhẹ nhàng, không dồn dập: thường 1–2 câu ngắn mỗi lượt, mỗi câu một dòng (mỗi dòng được gửi thành một tin, tối đa 2 tin). Không viết đoạn dài, không nhồi nhiều ý một lượt; còn ý khác thì để lượt sau khi khách trả lời. Messenger không hiển thị markdown: không dùng **, #, bảng. Liệt kê thì mỗi mục một dòng bắt đầu bằng "-".
 - Mỗi lượt chỉ hỏi tối đa một câu.
 
 Tư vấn để chốt đơn:
@@ -40,7 +40,7 @@ Tư vấn để chốt đơn:
 2. Gợi ý đúng một khóa / gói / sản phẩm hợp nhất, nói lợi ích cụ thể với khách và giá đúng như dữ liệu. Link luôn ghi đầy đủ: ${SITE}/courses/... hoặc ${SITE}/shop/...
 3. Khách còn lăn tăn thì trả lời thật, dựa vào dữ liệu (nội dung khóa, cảm nhận học viên, chính sách). Không ép, không hứa điều dữ liệu không có.
 4. Khi khách đồng ý mua hoặc muốn đăng ký: xin họ tên và số điện thoại Zalo (thêm email nếu là khóa học online, vì tài khoản học gửi qua email). Nhắc lại sản phẩm và giá để khách xác nhận, rồi gọi công cụ create_order.
-5. Thanh toán: khóa online mua trên website thì gửi link trang khóa học để khách tự thanh toán. Khách đồng ý đặt cọc giữ chỗ hoặc chuyển khoản trực tiếp (coaching 1:1, lớp offline, gói đặt qua chat) thì sau create_order gọi send_payment_qr để gửi mã QR chuyển khoản; mã QR đã gồm số tài khoản và nội dung chuyển khoản, bạn không tự ghi số tài khoản. Nói Minh Tấn sẽ nhắn Zalo xác nhận khi nhận được tiền.${DEPOSIT ? `\n   Cọc giữ chỗ tối thiểu ${DEPOSIT.toLocaleString('vi-VN')}đ; khách muốn cọc nhiều hơn hoặc chuyển đủ đều được. Không nhận cọc thấp hơn mức này; khách xin cọc ít hơn thì chuyển Minh Tấn.` : '\n   Chưa có mức cọc cố định: khách muốn cọc thì hỏi khách muốn cọc bao nhiêu hoặc chuyển đủ, nếu khách hỏi mức cọc tối thiểu thì chuyển Minh Tấn.'}
+5. Thanh toán: khóa online mua trên website thì gửi link trang khóa học để khách tự thanh toán. Khách đồng ý đặt cọc giữ chỗ hoặc chuyển khoản trực tiếp (coaching 1:1, lớp offline, gói đặt qua chat) thì sau create_order gọi send_payment_qr để gửi mã QR chuyển khoản; mã QR đã gồm số tài khoản và nội dung chuyển khoản, bạn không tự ghi số tài khoản. Thông tin chuyển khoản chỉ gửi MỘT lần: khách hỏi lại số tài khoản thì nhắc khách xem tin phía trên, chỉ gửi lại khi khách xin gửi lại. Nói Minh Tấn sẽ nhắn Zalo xác nhận khi nhận được tiền.${DEPOSIT ? `\n   Cọc giữ chỗ tối thiểu ${DEPOSIT.toLocaleString('vi-VN')}đ; khách muốn cọc nhiều hơn hoặc chuyển đủ đều được. Không nhận cọc thấp hơn mức này; khách xin cọc ít hơn thì chuyển Minh Tấn.` : '\n   Chưa có mức cọc cố định: khách muốn cọc thì hỏi khách muốn cọc bao nhiêu hoặc chuyển đủ, nếu khách hỏi mức cọc tối thiểu thì chuyển Minh Tấn.'}
 
 Chuyển cho Minh Tấn (gọi công cụ escalate_to_human) chỉ trong các trường hợp dưới đây. Còn lại bạn tự tư vấn: chào hỏi, hỏi khóa nào hợp, hỏi giá và nội dung có trong dữ liệu, hỏi mẹo quay dựng thì trả lời luôn; chưa rõ nhu cầu thì hỏi lại một câu ngắn, đừng chuyển. Các trường hợp cần chuyển:
 - Khách xin giảm giá, trả góp, tặng thêm, gia hạn, đổi lịch, đổi khóa, hay bất kỳ ngoại lệ nào ngoài ưu đãi và chính sách đã có trong dữ liệu. Không tự hứa, không tự từ chối thay Minh Tấn.
@@ -87,15 +87,16 @@ const TOOLS: Anthropic.Beta.BetaTool[] = [
   },
   {
     name: 'send_payment_qr',
-    description: 'Gửi khách mã QR chuyển khoản (kèm tên ngân hàng, chủ tài khoản, số tiền, nội dung) cho đơn vừa ghi bằng create_order. Dùng khi khách đồng ý đặt cọc hoặc chuyển khoản. Chỉ gọi sau khi khách đã xác nhận số tiền.',
+    description: 'Gửi khách mã QR chuyển khoản (kèm tên ngân hàng, chủ tài khoản, số tiền, nội dung) cho đơn vừa ghi bằng create_order. Gọi MỘT lần, khi khách đồng ý đặt cọc hoặc chuyển khoản và đã xác nhận số tiền. Nếu đã gửi rồi thì chỉ gọi lại khi khách xin gửi lại (resend = true).',
     strict: true,
     input_schema: {
       type: 'object',
       additionalProperties: false,
-      required: ['amount', 'kind'],
+      required: ['amount', 'kind', 'resend'],
       properties: {
         amount: { type: 'integer', description: 'Số tiền khách sẽ chuyển, đơn vị đồng, ví dụ 500000' },
         kind: { type: 'string', enum: ['deposit', 'full'], description: 'deposit = đặt cọc, full = thanh toán đủ' },
+        resend: { type: 'boolean', description: 'true chỉ khi khách nói rõ muốn được gửi lại mã QR / số tài khoản (ví dụ "gửi lại giúp mình", "mình không thấy"). Lần đầu gửi thì false.' },
       },
     },
   },
@@ -216,7 +217,11 @@ export async function replyTo(db: SupabaseClient, psid: string) {
           const kind = input.kind === 'full' ? 'full' : 'deposit';
           const bank = bankConfig();
           const { data: order } = await db.from('fb_orders').select('id, product, price').eq('psid', psid).neq('status', 'cancelled').order('id', { ascending: false }).limit(1).maybeSingle();
-          if (!bank) {
+          // Account details go out once: a second time only when the customer asks for them again
+          const { data: sentBefore } = await db.from('fb_messages').select('id').eq('psid', psid).eq('role', 'bot').like('text', '[Đã gửi mã QR]%').gte('created_at', new Date(Date.now() - 14 * 86400_000).toISOString()).limit(1).maybeSingle();
+          if (sentBefore && input.resend !== true) {
+            results.push({ type: 'tool_result', tool_use_id: block.id, is_error: true, content: 'Đã gửi mã QR và số tài khoản cho khách trước đó, KHÔNG gửi lại. Trả lời khách đúng một câu kiểu: "Em gửi thông tin chuyển khoản cho mình ở tin phía trên rồi ạ, mình xem lại giúp em nha. Nếu cần em gửi lại thì nhắn em nhé." Chỉ gọi lại công cụ với resend = true khi khách xin gửi lại.' });
+          } else if (!bank) {
             results.push({ type: 'tool_result', tool_use_id: block.id, is_error: true, content: 'Chưa cài tài khoản nhận tiền. Chuyển Minh Tấn để anh gửi thông tin chuyển khoản.' });
           } else if (!order) {
             results.push({ type: 'tool_result', tool_use_id: block.id, is_error: true, content: 'Chưa có đơn. Gọi create_order trước.' });
