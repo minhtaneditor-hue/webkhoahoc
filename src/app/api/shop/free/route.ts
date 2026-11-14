@@ -82,5 +82,6 @@ export async function GET(req: Request) {
   if (!db || !asset || q.get('t') !== freeEmailToken(asset, email)) return NextResponse.redirect(`${SITE}/shop`);
   const link = await freeFileLink(db, asset).catch(() => null);
   if (link) await logDownload(db, link.asset.id, email, 'free-email');
-  return NextResponse.redirect(link?.url || `${SITE}/shop`);
+  // R2 files come back as a site-relative /api/shop/file link; a redirect needs an absolute URL
+  return NextResponse.redirect(link?.url ? new URL(link.url, SITE) : `${SITE}/shop`);
 }

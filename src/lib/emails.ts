@@ -64,10 +64,12 @@ const progress = (done: number, total: number) => {
   <p style="margin:0 0 20px;font-size:14px;color:${C.muted};"><strong style="color:${C.ink};">${done}/${total} bài</strong> · ${pct}% khóa học</p>`;
 };
 
-const signature = `
-  <p style="margin:28px 0 0;font-size:16px;line-height:1.6;color:${C.text};">Hẹn gặp bạn trong bài học,<br>
+/** Sign-off with Minh Tấn's name; the first line fits the email (course emails: "Hẹn gặp bạn trong bài học,"). */
+const signOff = (line: string) => `
+  <p style="margin:28px 0 0;font-size:16px;line-height:1.6;color:${C.text};">${line}<br>
   <strong style="color:${C.ink};">Minh Tấn</strong><br>
   <span style="font-size:13px;color:${C.muted};">Người sáng lập TẤN VA</span></p>`;
+const signature = signOff('Hẹn gặp bạn trong bài học,');
 
 /** Signed one-click unsubscribe link (reminders and marketing only). */
 export function unsubscribeUrl(email: string) {
@@ -475,7 +477,7 @@ export function freeDownloadEmail(d: { name?: string | null; email: string; titl
         ${h1(`Của bạn đây, ${esc(firstName(d.name))}!`)}
         ${p(`Cảm ơn bạn đã quan tâm. Bấm nút bên dưới để tải <strong>${esc(d.title)}</strong>. Lưu email này lại để tải lại khi cần.`)}
         ${button(d.url, 'Tải về')}
-        ${signature}`,
+        ${signOff('Chúc bạn dùng tài liệu thật hiệu quả,')}`,
     }),
   };
 }
