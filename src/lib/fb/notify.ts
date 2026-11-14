@@ -6,7 +6,7 @@ import { contactFrom } from '@/lib/site-settings';
 // Tells Minh Tấn about a hard case or a new order from Messenger.
 // Telegram (instant, on the phone): TELEGRAM_BOT_TOKEN from @BotFather + TELEGRAM_CHAT_ID (send the bot
 // a message, then open https://api.telegram.org/bot<token>/getUpdates to read chat.id).
-// Email (Resend): FB_NOTIFY_EMAIL, or the contact email in Admin > Nội dung & liên hệ.
+// Email (Resend), only when Telegram is not set up: FB_NOTIFY_EMAIL, or the contact email in Admin > Nội dung & liên hệ.
 
 export type Alert = { title: string; lines: [string, string][]; psid?: string };
 
@@ -25,7 +25,8 @@ export async function notifyAdmin(a: Alert) {
     }));
   }
 
-  if (process.env.RESEND_API_KEY) {
+  // Telegram only (Minh Tấn's choice); email is the fallback when Telegram is not set up, so no alert is lost
+  if (!(token && chat) && process.env.RESEND_API_KEY) {
     const to = process.env.FB_NOTIFY_EMAIL || contactFrom(await getSiteSettings()).email || 'tanva@minhtanacademy.com';
     const rows = a.lines.map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:#78716C;vertical-align:top;white-space:nowrap;">${esc(k)}</td><td style="padding:6px 0;color:#242321;">${esc(v).replace(/\n/g, '<br>')}</td></tr>`).join('');
     jobs.push(new Resend(process.env.RESEND_API_KEY).emails.send({
