@@ -177,7 +177,7 @@ export default function Navbar() {
   return (
     // While the mobile menu is open the header must have no backdrop-filter and no translate:
     // either one would make the header the containing block and trap the fixed menu inside it
-    <header ref={headerRef} className={`sticky top-0 z-[100] transition-[background-color,box-shadow,border-color,translate] duration-500 ease-[cubic-bezier(.22,1,.36,1)] border-b ${isHidden && !isMenuOpen && !isDropdownOpen ? '-translate-y-full' : ''} ${isMenuOpen ? 'bg-ivory border-line' : isScrolled ? 'bg-ivory/95 backdrop-blur-md border-line shadow-[0_8px_24px_-16px_rgba(12,10,9,0.25)]' : 'bg-ivory border-transparent'}`}>
+    <header ref={headerRef} className={`sticky top-0 z-[100] transition-[background-color,box-shadow,border-color,translate] duration-500 ease-[cubic-bezier(.22,1,.36,1)] border-b ${isHidden && !isMenuOpen && !isDropdownOpen ? '-translate-y-full' : ''} ${isMenuOpen ? 'bg-ivory border-line' : isScrolled ? 'bg-ivory/95 backdrop-blur-md border-line shadow-header' : 'bg-ivory border-transparent'}`}>
       <div ref={progressRef} aria-hidden="true" className="absolute left-0 right-0 -bottom-px h-[2px] bg-gradient-to-r from-gold via-gold-light to-gold origin-left scale-x-0" />
       <nav className="container-lux flex items-center justify-between gap-4 h-[72px] whitespace-nowrap" aria-label={en ? 'Main navigation' : 'Điều hướng chính'}>
         <Logo en={en} />

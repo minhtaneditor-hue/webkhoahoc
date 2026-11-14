@@ -64,7 +64,7 @@ export default function AgreementGate({ userId, code, email, children }: { userI
           </div>
           <div className="p-5 md:p-6 border-t border-line space-y-3">
             <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" className="mt-1 w-5 h-5 shrink-0 accent-[#A84E3C]" checked={ticked} onChange={(e) => setTicked(e.target.checked)} />
+              <input type="checkbox" className="mt-1 w-5 h-5 shrink-0 accent-gold" checked={ticked} onChange={(e) => setTicked(e.target.checked)} />
               <span className="text-sm font-semibold">Tôi đã đọc, hiểu và đồng ý với toàn bộ cam kết trên. Tôi chịu hoàn toàn trách nhiệm trước pháp luật nếu để lộ hoặc phát tán nội dung khóa học.</span>
             </label>
             {error && <p role="alert" className="text-sm text-danger">{error}</p>}

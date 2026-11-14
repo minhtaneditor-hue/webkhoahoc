@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Gift, Loader2, CheckCircle2, Mail } from 'lucide-react';
+import { Loader2, CheckCircle2, Mail } from 'lucide-react';
 import { CHECKLIST, CHECKLIST_TITLE } from '@/lib/checklist';
 
 // Free checklist in exchange for an email (and optional Zalo number). The checklist shows
@@ -29,10 +29,9 @@ export default function LeadMagnet({ source = 'home' }: { source?: string }) {
       <div className="container-lux">
         <div className="card p-6 md:p-10 grid gap-8 lg:grid-cols-[1fr_1.1fr] items-start">
           <div>
-            <span className="badge"><Gift size={14} aria-hidden="true" /> Quà tặng miễn phí</span>
-            <h2 id="lead-title" className="mt-4 text-3xl md:text-4xl">{CHECKLIST_TITLE}</h2>
+            <h2 id="lead-title" className="text-3xl md:text-4xl">{CHECKLIST_TITLE}</h2>
             <p className="mt-3 text-muted-foreground leading-relaxed">
-              {CHECKLIST.reduce((n, g) => n + g.items.length, 0)} việc Minh Tấn kiểm tra trước mỗi lần bấm quay: ánh sáng, khung hình, âm thanh và cách nói. In ra hoặc lưu trong điện thoại, quay video nào cũng dùng được.
+              Quà tặng miễn phí: {CHECKLIST.reduce((n, g) => n + g.items.length, 0)} việc Minh Tấn kiểm tra trước mỗi lần bấm quay: ánh sáng, khung hình, âm thanh và cách nói. In ra hoặc lưu trong điện thoại, quay video nào cũng dùng được.
             </p>
           </div>
 

@@ -123,7 +123,7 @@ export default function GuardedYouTube({ videoId, title, watermark, autoPlay = f
 
       {/* Own controls */}
       <div className={`absolute inset-x-0 bottom-0 px-3 pb-2 pt-8 bg-gradient-to-t from-black/80 to-transparent transition-opacity ${playing ? 'opacity-0 group-hover:opacity-100 focus-within:opacity-100' : 'opacity-100'}`}>
-        <input type="range" min={0} max={duration || 0} step={1} value={Math.min(time, duration || 0)} onChange={(e) => seek(Number(e.target.value))} className="w-full accent-[#E8956B] h-1 cursor-pointer" aria-label="Tua video" />
+        <input type="range" min={0} max={duration || 0} step={1} value={Math.min(time, duration || 0)} onChange={(e) => seek(Number(e.target.value))} className="w-full accent-gold-light h-1 cursor-pointer" aria-label="Tua video" />
         <div className="mt-1 flex items-center gap-1 text-white text-xs">
           <button type="button" onClick={toggle} className="w-9 h-9 flex items-center justify-center rounded hover:bg-white/10" aria-label={playing ? 'Tạm dừng' : 'Phát'}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
           <button type="button" onClick={toggleMute} className="w-9 h-9 flex items-center justify-center rounded hover:bg-white/10" aria-label={muted ? 'Bật tiếng' : 'Tắt tiếng'}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
