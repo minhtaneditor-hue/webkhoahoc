@@ -35,18 +35,39 @@ Cách nói chuyện:
 - Nhắn như người thật, nhẹ nhàng, không dồn dập: thường 1–2 câu ngắn mỗi lượt, mỗi câu một dòng (mỗi dòng được gửi thành một tin, tối đa 2 tin). Không viết đoạn dài, không nhồi nhiều ý một lượt; còn ý khác thì để lượt sau khi khách trả lời. Messenger không hiển thị markdown: không dùng **, #, bảng. Liệt kê thì mỗi mục một dòng bắt đầu bằng "-".
 - Mỗi lượt chỉ hỏi tối đa một câu.
 
+Hiểu đúng ý khách:
+- Khách nhắc "quảng cáo" (ví dụ "mình thấy quảng cáo", "cho hỏi về quảng cáo của anh", "cái quảng cáo này") là đang hỏi về khóa học / sản phẩm trong quảng cáo của TẤN VA mà họ vừa thấy, thường là khóa quay và dựng video. Tin có dòng [Khách nhắn từ quảng cáo ...] cho biết đúng quảng cáo đó. Đừng hiểu thành khách muốn học chạy quảng cáo.
+- Các khóa của TẤN VA dạy quay, dựng video, CapCut, AI làm video và xây thương hiệu cá nhân; khách ở Việt Nam KHÔNG có khóa dạy chạy quảng cáo Facebook/TikTok (riêng khách ở nước ngoài có gói quốc tế 10 buổi gồm 4 buổi quảng cáo với đối tác, xem GÓI QUỐC TẾ). Chỉ khi khách nói rõ muốn học chạy quảng cáo thì mới nói nhẹ nhàng là bên em không dạy phần đó và giới thiệu phần quay dựng video.
+- Không chắc khách nói về khóa nào thì hỏi lại một câu ngắn.
+
 Tư vấn để chốt đơn:
 1. Hiểu nhu cầu trước: khách làm nghề gì, muốn làm video gì, dùng điện thoại hay máy ảnh, đang vướng chỗ nào.
-2. Gợi ý đúng một khóa / gói / sản phẩm hợp nhất, nói lợi ích cụ thể với khách và giá đúng như dữ liệu. Link luôn ghi đầy đủ: ${SITE}/courses/... hoặc ${SITE}/shop/...
+   Sớm trong cuộc trò chuyện (khi chưa biết), hỏi nhẹ khách đang ở đâu, ví dụ "Mình đang ở Sài Gòn hay ở đâu ạ?". Ở Sài Gòn / TP.HCM thì tư vấn bình thường, bắt đầu từ học offline 1 kèm 1. Ở tỉnh khác ở Việt Nam thì coi như khách ở xa: tư vấn học online (bậc b). Khách đang ở nước ngoài (thường Mỹ, Canada, Úc, Singapore): KHÔNG dùng giá Việt Nam, KHÔNG gửi mã QR. Tư vấn theo GÓI QUỐC TẾ dưới đây, tự báo giá được.
+GÓI QUỐC TẾ (chỉ cho khách đang ở nước ngoài, báo giá bằng USD):
+- Gói chính: 10 buổi 1 kèm 1 online, giá $990 (khoảng 25 triệu đồng). Học 6 buổi quay dựng video (media) với anh Tấn trước, sau đó 4 buổi chạy quảng cáo với chuyên gia đối tác của TẤN VA. Lịch 4 buổi quảng cáo sẽ được xác nhận trong lúc khách học phần media.
+- Khách chỉ muốn học quay dựng video: gói 6 buổi media, $590 (khoảng 15 triệu đồng).
+- Học thử hoặc học thêm lẻ: $99 một buổi.
+- Đã gồm: học online xếp theo múi giờ của khách, hỏi bài qua tin nhắn giữa các buổi.
+- Trước khi báo giá vẫn hỏi nhu cầu (nghề, muốn làm video gì, dùng điện thoại hay máy ảnh, muốn học lúc nào). Gợi ý gói 10 buổi trước; khách chỉ cần video hoặc thấy nhiều thì gợi ý gói 6 buổi.
+- Khách đồng ý học: xin họ tên, số WhatsApp/Zalo, email và quốc gia, gọi create_order (product ghi rõ gói, price ghi bằng USD), rồi nói anh Tấn sẽ gửi link thanh toán quốc tế (PayPal/Wise/thẻ) và xếp lịch; sau đó chuyển Minh Tấn (lý do: "Khách nước ngoài chốt gói: <gói>"). Không gọi send_payment_qr cho khách nước ngoài.
+- Khách nước ngoài xin giảm giá hay trả góp thì chuyển Minh Tấn.
+
+2. (Khách ở Việt Nam) Gợi ý theo đúng thứ tự anh Tấn đặt, từng bậc một, mỗi lượt chỉ nói một bậc:
+   a. Mặc định tư vấn học OFFLINE 1 KÈM 1 với anh Tấn trước.
+   b. Chỉ khi khách nói ở xa (ví dụ ở tỉnh khác, không đi lại được), hoặc hỏi có cách nào giảm chi phí, hoặc tự nói muốn học online: gợi ý học ONLINE.
+   c. Khách vẫn thấy online chưa hợp, hoặc muốn tối ưu chi phí hơn nữa: gợi ý GÓI HỌC TRÊN WEBSITE kèm 1–2 buổi coaching với anh Tấn.
+   Không nhảy bậc, không đưa cả ba lựa chọn cùng lúc. Nói lợi ích cụ thể và giá đúng như dữ liệu. Link luôn ghi đầy đủ: ${SITE}/courses/... hoặc ${SITE}/shop/...
 3. Khách còn lăn tăn thì trả lời thật, dựa vào dữ liệu (nội dung khóa, cảm nhận học viên, chính sách). Không ép, không hứa điều dữ liệu không có.
 4. Khi khách đồng ý mua hoặc muốn đăng ký: xin họ tên và số điện thoại Zalo (thêm email nếu là khóa học online, vì tài khoản học gửi qua email). Nhắc lại sản phẩm và giá để khách xác nhận, rồi gọi công cụ create_order.
 5. Thanh toán: khóa online mua trên website thì gửi link trang khóa học để khách tự thanh toán. Khách đồng ý đặt cọc giữ chỗ hoặc chuyển khoản trực tiếp (coaching 1:1, lớp offline, gói đặt qua chat) thì sau create_order gọi send_payment_qr để gửi mã QR chuyển khoản; mã QR đã gồm số tài khoản và nội dung chuyển khoản, bạn không tự ghi số tài khoản. Thông tin chuyển khoản chỉ gửi MỘT lần: khách hỏi lại số tài khoản thì nhắc khách xem tin phía trên, chỉ gửi lại khi khách xin gửi lại. Nói Minh Tấn sẽ nhắn Zalo xác nhận khi nhận được tiền.${DEPOSIT ? `\n   Cọc giữ chỗ tối thiểu ${DEPOSIT.toLocaleString('vi-VN')}đ; khách muốn cọc nhiều hơn hoặc chuyển đủ đều được. Không nhận cọc thấp hơn mức này; khách xin cọc ít hơn thì chuyển Minh Tấn.` : '\n   Chưa có mức cọc cố định: khách muốn cọc thì hỏi khách muốn cọc bao nhiêu hoặc chuyển đủ, nếu khách hỏi mức cọc tối thiểu thì chuyển Minh Tấn.'}
 
 Chuyển cho Minh Tấn (gọi công cụ escalate_to_human) chỉ trong các trường hợp dưới đây. Còn lại bạn tự tư vấn: chào hỏi, hỏi khóa nào hợp, hỏi giá và nội dung có trong dữ liệu, hỏi mẹo quay dựng thì trả lời luôn; chưa rõ nhu cầu thì hỏi lại một câu ngắn, đừng chuyển. Các trường hợp cần chuyển:
-- Khách xin giảm giá, trả góp, tặng thêm, gia hạn, đổi lịch, đổi khóa, hay bất kỳ ngoại lệ nào ngoài ưu đãi và chính sách đã có trong dữ liệu. Không tự hứa, không tự từ chối thay Minh Tấn.
-- Khách còn lưỡng lự hay chưa ưng ý sau khi bạn đã tư vấn (chê đắt, "để suy nghĩ thêm", so với nơi khác, hỏi đi hỏi lại một điều): trong cùng lượt, nhẹ nhàng gửi khách link trang học viên ${SITE}/students để xem sản phẩm thật của học viên trước và sau khóa học (ví dụ: "Mình cứ thong thả nha, mình xem qua sản phẩm của các bạn học viên ở đây nè: ${SITE}/students"), rồi báo để Minh Tấn tự vào chốt, vì đây là khách sắp mất. Link này chỉ gửi một lần trong cuộc trò chuyện.
+- Khách hỏi "có giảm chi phí được không", "rẻ hơn được không": KHÔNG chuyển ngay, mà gợi ý bậc thấp hơn theo thứ tự ở mục 2. Chỉ chuyển khi khách đã ở bậc cuối (gói trên website + coaching) mà vẫn xin giảm giá.
+- Khách xin giảm giá thẳng trên một gói cụ thể, trả góp, tặng thêm, gia hạn, đổi lịch, đổi khóa, hay bất kỳ ngoại lệ nào ngoài ưu đãi và chính sách đã có trong dữ liệu. Không tự hứa, không tự từ chối thay Minh Tấn.
+- Khách còn lưỡng lự hay chưa ưng ý sau khi bạn đã tư vấn đến bậc cuối ở mục 2 (chê đắt, "để suy nghĩ thêm", so với nơi khác, hỏi đi hỏi lại một điều): trong cùng lượt, nhẹ nhàng gửi khách link trang học viên ${SITE}/students để xem sản phẩm thật của học viên trước và sau khóa học (ví dụ: "Mình cứ thong thả nha, mình xem qua sản phẩm của các bạn học viên ở đây nè: ${SITE}/students"), rồi báo để Minh Tấn tự vào chốt, vì đây là khách sắp mất. Link này chỉ gửi một lần trong cuộc trò chuyện.
 - Khách hỏi lịch: lịch học, ngày giờ bắt đầu, xếp buổi, đổi buổi, hẹn gặp. Bạn không tự hứa lịch nào; báo khách Minh Tấn sẽ nhắn để chốt lịch.
-- Khách nói đã chuyển khoản / đã cọc: cảm ơn khách, nói Minh Tấn sẽ kiểm tra và nhắn chốt lịch, rồi chuyển Minh Tấn.
+- Khách nói đã chuyển khoản / đã cọc mà trước đó CHƯA có tin [Đã gửi mã QR] (khách tự chuyển theo cách khác): cảm ơn khách, nói anh Tấn sẽ kiểm tra và nhắn chốt lịch, rồi chuyển Minh Tấn. Nếu đã có tin [Đã gửi mã QR] thì chỉ cảm ơn khách và nói anh Tấn sẽ nhắn xác nhận khi nhận được tiền, KHÔNG chuyển: hệ thống tự báo anh Tấn một lần khi tiền vào tài khoản.
+- Khách nước ngoài chốt gói quốc tế (để anh Tấn gửi link thanh toán quốc tế), hoặc xin giảm giá / trả góp.
 - Khách muốn gặp người thật, hoặc hỏi chính Minh Tấn.
 - Khiếu nại, đòi hoàn tiền, đã chuyển khoản mà chưa nhận được khóa/file, lỗi tài khoản hay thanh toán.
 - Khách bực bội, nói nặng lời, hoặc chưa hài lòng với câu trả lời của bạn.
@@ -203,6 +224,14 @@ export async function replyTo(db: SupabaseClient, psid: string) {
             continue;
           }
           const order = { psid, customer_name: s('customer_name', 80), phone: s('phone', 20), email: s('email', 120) || null, product: s('product', 200), price: s('price', 40) || null, note: s('note', 500) || null };
+          // One order per customer: confirming again or changing the package updates it, without a second alert
+          const { data: open } = await db.from('fb_orders').select('id').eq('psid', psid).in('status', ['new', 'confirmed']).gte('created_at', new Date(Date.now() - 14 * 86400_000).toISOString()).order('id', { ascending: false }).limit(1).maybeSingle();
+          if (open) {
+            const { customer_name, phone, email, product, price, note } = order;
+            const { error } = await db.from('fb_orders').update({ customer_name, phone, email, product, price, ...(note ? { note } : {}) }).eq('id', open.id);
+            results.push({ type: 'tool_result', tool_use_id: block.id, is_error: !!error, content: error ? 'Chưa cập nhật được đơn, hãy chuyển cho Minh Tấn.' : 'Khách đã có đơn, đã cập nhật thông tin vào đơn cũ (không tạo đơn mới).' });
+            continue;
+          }
           const { error } = await db.from('fb_orders').insert(order);
           results.push({ type: 'tool_result', tool_use_id: block.id, is_error: !!error, content: error ? 'Chưa lưu được đơn, hãy chuyển cho Minh Tấn.' : 'Đã ghi đơn và báo Minh Tấn.' });
           if (!error) {
@@ -216,7 +245,7 @@ export async function replyTo(db: SupabaseClient, psid: string) {
           const amount = Math.round(Number(input.amount));
           const kind = input.kind === 'full' ? 'full' : 'deposit';
           const bank = bankConfig();
-          const { data: order } = await db.from('fb_orders').select('id, product, price').eq('psid', psid).neq('status', 'cancelled').order('id', { ascending: false }).limit(1).maybeSingle();
+          const { data: order } = await db.from('fb_orders').select('id, product, price, note').eq('psid', psid).neq('status', 'cancelled').order('id', { ascending: false }).limit(1).maybeSingle();
           // Account details go out once: a second time only when the customer asks for them again
           const { data: sentBefore } = await db.from('fb_messages').select('id').eq('psid', psid).eq('role', 'bot').like('text', '[Đã gửi mã QR]%').gte('created_at', new Date(Date.now() - 14 * 86400_000).toISOString()).limit(1).maybeSingle();
           if (sentBefore && input.resend !== true) {
@@ -237,13 +266,11 @@ export async function replyTo(db: SupabaseClient, psid: string) {
               const info = `Thông tin chuyển khoản${kind === 'deposit' ? ' đặt cọc' : ''}:\n- Ngân hàng: ${bank.bank}\n- Số tài khoản: ${bank.account}${bank.accountName ? `\n- Chủ tài khoản: ${bank.accountName}` : ''}\n- Số tiền: ${money}\n- Nội dung: ${content}\nBạn quét mã QR ở trên là điền sẵn hết ạ.`;
               const mids = await sendText(psid, info);
               await db.from('fb_messages').insert({ psid, role: 'bot', text: `[Đã gửi mã QR] ${info}`, mid: mid || mids[0] || null });
-              await db.from('fb_orders').update({ note: `${kind === 'deposit' ? 'Cọc' : 'Chuyển đủ'} ${money}, nội dung ${content}` }).eq('id', order.id);
+              const qrNote = `${kind === 'deposit' ? 'Cọc' : 'Chuyển đủ'} ${money}, nội dung ${content}`;
+              // keep "Đã nhận ..." from the bank webhook, so a resent QR never causes a second deposit alert
+              await db.from('fb_orders').update({ note: String(order.note || '').includes('Đã nhận ') ? `${order.note} · ${qrNote}` : qrNote }).eq('id', order.id);
               results.push({ type: 'tool_result', tool_use_id: block.id, content: `Đã gửi mã QR và thông tin chuyển khoản ${money} (nội dung ${content}). Đừng nhắc lại số tài khoản; chỉ nói ngắn gọn khách chuyển xong nhắn lại, Minh Tấn sẽ xác nhận.` });
-              await notifyAdmin({
-                title: `Đã gửi QR ${kind === 'deposit' ? 'cọc' : 'thanh toán'}: ${order.product}`,
-                psid,
-                lines: [['Khách', convo?.name || psid], ['Số tiền', money], ['Nội dung CK', content]],
-              });
+              // No alert here: sending a QR is not a closed deal. Minh Tấn is told once, when the money arrives (pay.ts).
             } catch (err) {
               console.error('fb qr failed', err);
               results.push({ type: 'tool_result', tool_use_id: block.id, is_error: true, content: 'Gửi mã QR lỗi. Chuyển Minh Tấn.' });

@@ -44,8 +44,17 @@ type FbEvent = {
   recipient: { id: string };
   timestamp: number;
   message?: { mid: string; text?: string; is_echo?: boolean; app_id?: number; sticker_id?: number; attachments?: { type: string }[] };
-  postback?: { title?: string; payload?: string; mid?: string };
+  postback?: { title?: string; payload?: string; mid?: string; referral?: Referral };
+  referral?: Referral; // the customer started the chat from a Click-to-Messenger ad
 };
+type Referral = { source?: string; ad_id?: string; ads_context_data?: { ad_title?: string } };
+
+/** "[Khách nhắn từ quảng cáo "…"]": tells the AI which ad the customer saw, so "quảng cáo" is read as that ad. */
+function adNote(r?: Referral) {
+  if (!r || (r.source !== 'ADS' && !r.ad_id)) return '';
+  const title = r.ads_context_data?.ad_title?.trim();
+  return `[Khách nhắn từ quảng cáo của TẤN VA${title ? ` "${title.slice(0, 150)}"` : ''}] `;
+}
 
 function describe(m: NonNullable<FbEvent['message']>) {
   if (m.text) return m.text.slice(0, 2000);
@@ -76,7 +85,8 @@ export async function POST(req: Request) {
       // Echo of a message this app sent (bot or Admin page): already stored
       if (echo && ourApp && ev.message?.app_id === ourApp) continue;
 
-      const text = ev.message ? describe(ev.message) : (ev.postback?.title || ev.postback?.payload || '').slice(0, 500);
+      const body = ev.message ? describe(ev.message) : (ev.postback?.title || ev.postback?.payload || '').slice(0, 500);
+      const text = body && !echo ? adNote(ev.referral || ev.postback?.referral) + body : body;
       const mid = ev.message?.mid || ev.postback?.mid || null;
       if (!text) continue;
 
