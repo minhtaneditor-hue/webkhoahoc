@@ -35,7 +35,7 @@ const FOLLOWUP_TEXT =
   'hay mình còn cần suy nghĩ thêm về vấn đề nào không ạ? Mình cứ nhắn để em tư vấn thêm cho mình nha 😊';
 
 /**
- * Hourly (vercel.json): Mina reminds customers who went quiet after the Page's last reply.
+ * Hourly (GitHub Actions .github/workflows/fb-followup.yml, Vercel Hobby only allows daily crons): Mina reminds customers who went quiet after the Page's last reply.
  * One reminder per silence, never while a person has the conversation (needs_human / bot paused).
  */
 export async function GET(req: Request) {
