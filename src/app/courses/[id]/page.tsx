@@ -4,6 +4,7 @@ import { getPublicSupabase } from '@/lib/supabase-public';
 import { isComingSoon, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import CourseView from '@/components/courses/CourseView';
 import JsonLd from '@/components/JsonLd';
+import { ORG_ID } from '@/lib/brand-entity';
 import { SITE_URL } from '@/lib/site-url';
 
 export const revalidate = 3600;
@@ -61,7 +62,7 @@ export default async function CoursePage({ params }: Props) {
           description: course.seo_description || course.description || course.title,
           url: `${SITE_URL}/courses/${id}`,
           inLanguage: 'vi',
-          provider: { '@type': 'Organization', name: 'TẤN VA', url: SITE_URL },
+          provider: { '@type': 'Organization', '@id': ORG_ID, name: 'TẤN VA', url: SITE_URL },
           hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'online' },
           // No offer while the price is undisclosed, so search engines don't list it as free
           ...(isComingSoon(course, lessons.length) ? {} : { offers: { '@type': 'Offer', category: 'Paid', price: Number(course.price) || 0, priceCurrency: 'VND', availability: 'https://schema.org/InStock', url: `${SITE_URL}/courses/${id}` } }),

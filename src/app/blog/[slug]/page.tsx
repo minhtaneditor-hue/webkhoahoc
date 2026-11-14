@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ArrowRight, ChevronLeft } from 'lucide-react';
 import JsonLd from '@/components/JsonLd';
+import { ORG_ID, PERSON_ID } from '@/lib/brand-entity';
 import AdContactBanner from '@/components/blog/AdContactBanner';
 import PostCard from '@/components/blog/PostCard';
 import PostContent, { PostSources } from '@/components/blog/PostContent';
@@ -83,8 +84,8 @@ export default async function BlogPostPage({ params }: Props) {
             inLanguage: 'vi',
             url,
             mainEntityOfPage: url,
-            author: { '@type': 'Person', name: 'Minh Tấn', url: `${SITE_URL}/about` },
-            publisher: { '@type': 'Organization', name: 'TẤN VA', url: SITE_URL, logo: { '@type': 'ImageObject', url: `${SITE_URL}/brand/tan-va-mark.png` } },
+            author: { '@type': 'Person', '@id': PERSON_ID, name: 'Minh Tấn', url: `${SITE_URL}/about` },
+            publisher: { '@type': 'Organization', '@id': ORG_ID, name: 'TẤN VA', url: SITE_URL, logo: { '@type': 'ImageObject', url: `${SITE_URL}/brand/tan-va-mark.png` } },
           },
           {
             '@type': 'BreadcrumbList',
