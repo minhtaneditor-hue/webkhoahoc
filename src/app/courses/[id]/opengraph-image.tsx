@@ -21,7 +21,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   return new ImageResponse(
     <ShareCard a={a} eyebrow="Khóa học online"
                title={course?.title || 'Khóa học của Minh Tấn'}
-               subtitle={course && isComingSoon(course, count || 0) ? 'Coming soon · Đặt trước để nhận giá ưu đãi' : `${count ? `${count} bài ngắn · ` : ''}Học trên điện thoại · Có bài học thử miễn phí`}
+               subtitle={course && isComingSoon(course, count || 0) ? 'Updating · Đặt trước để nhận giá ưu đãi' : `${count ? `${count} bài ngắn · ` : ''}Học trên điện thoại · Có bài học thử miễn phí`}
                price={Number(course?.price) || null} oldPrice={Number(course?.old_price) || null} />,
     { ...size, fonts: a.fonts },
   );

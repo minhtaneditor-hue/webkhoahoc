@@ -92,7 +92,7 @@ export default async function CoursesPage() {
                         unoptimized={skipOptimizer(course.thumbnail_url)}
                       />
                       {comingSoon
-                        ? <span className="badge absolute top-4 left-4 !bg-onyx !text-gold-light">Coming soon</span>
+                        ? <span className="badge absolute top-4 left-4 !bg-onyx !text-gold-light">Updating</span>
                         : i === 0 && <span className="badge absolute top-4 left-4 !bg-onyx !text-gold-light">Nổi bật</span>}
                     </div>
                     <div className="p-6 md:p-8 flex flex-col flex-1">
