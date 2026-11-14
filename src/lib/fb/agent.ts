@@ -46,7 +46,7 @@ Chuyển cho Minh Tấn (gọi công cụ escalate_to_human) chỉ trong các tr
 - Khách xin giảm giá, trả góp, tặng thêm, gia hạn, đổi lịch, đổi khóa, hay bất kỳ ngoại lệ nào ngoài ưu đãi và chính sách đã có trong dữ liệu. Không tự hứa, không tự từ chối thay Minh Tấn.
 - Khách còn lưỡng lự hay chưa ưng ý sau khi bạn đã tư vấn (chê đắt, "để suy nghĩ thêm", so với nơi khác, hỏi đi hỏi lại một điều): trong cùng lượt, nhẹ nhàng gửi khách link trang học viên ${SITE}/students để xem sản phẩm thật của học viên trước và sau khóa học (ví dụ: "Mình cứ thong thả nha, mình xem qua sản phẩm của các bạn học viên ở đây nè: ${SITE}/students"), rồi báo để Minh Tấn tự vào chốt, vì đây là khách sắp mất. Link này chỉ gửi một lần trong cuộc trò chuyện.
 - Khách hỏi lịch: lịch học, ngày giờ bắt đầu, xếp buổi, đổi buổi, hẹn gặp. Bạn không tự hứa lịch nào; báo khách Minh Tấn sẽ nhắn để chốt lịch.
-- Khách nói đã chuyển khoản / đã cọc: cảm ơn khách, nói Minh Tấn sẽ kiểm tra và nhắn chốt lịch, rồi chuyển Minh Tấn.
+- Khách nói đã chuyển khoản / đã cọc mà trước đó CHƯA có tin [Đã gửi mã QR] (khách tự chuyển theo cách khác): cảm ơn khách, nói anh Tấn sẽ kiểm tra và nhắn chốt lịch, rồi chuyển Minh Tấn. Nếu đã có tin [Đã gửi mã QR] thì chỉ cảm ơn khách và nói anh Tấn sẽ nhắn xác nhận khi nhận được tiền, KHÔNG chuyển: hệ thống tự báo anh Tấn một lần khi tiền vào tài khoản.
 - Khách muốn gặp người thật, hoặc hỏi chính Minh Tấn.
 - Khiếu nại, đòi hoàn tiền, đã chuyển khoản mà chưa nhận được khóa/file, lỗi tài khoản hay thanh toán.
 - Khách bực bội, nói nặng lời, hoặc chưa hài lòng với câu trả lời của bạn.
@@ -203,6 +203,14 @@ export async function replyTo(db: SupabaseClient, psid: string) {
             continue;
           }
           const order = { psid, customer_name: s('customer_name', 80), phone: s('phone', 20), email: s('email', 120) || null, product: s('product', 200), price: s('price', 40) || null, note: s('note', 500) || null };
+          // One order per customer: confirming again or changing the package updates it, without a second alert
+          const { data: open } = await db.from('fb_orders').select('id').eq('psid', psid).in('status', ['new', 'confirmed']).gte('created_at', new Date(Date.now() - 14 * 86400_000).toISOString()).order('id', { ascending: false }).limit(1).maybeSingle();
+          if (open) {
+            const { customer_name, phone, email, product, price, note } = order;
+            const { error } = await db.from('fb_orders').update({ customer_name, phone, email, product, price, ...(note ? { note } : {}) }).eq('id', open.id);
+            results.push({ type: 'tool_result', tool_use_id: block.id, is_error: !!error, content: error ? 'Chưa cập nhật được đơn, hãy chuyển cho Minh Tấn.' : 'Khách đã có đơn, đã cập nhật thông tin vào đơn cũ (không tạo đơn mới).' });
+            continue;
+          }
           const { error } = await db.from('fb_orders').insert(order);
           results.push({ type: 'tool_result', tool_use_id: block.id, is_error: !!error, content: error ? 'Chưa lưu được đơn, hãy chuyển cho Minh Tấn.' : 'Đã ghi đơn và báo Minh Tấn.' });
           if (!error) {
@@ -216,7 +224,7 @@ export async function replyTo(db: SupabaseClient, psid: string) {
           const amount = Math.round(Number(input.amount));
           const kind = input.kind === 'full' ? 'full' : 'deposit';
           const bank = bankConfig();
-          const { data: order } = await db.from('fb_orders').select('id, product, price').eq('psid', psid).neq('status', 'cancelled').order('id', { ascending: false }).limit(1).maybeSingle();
+          const { data: order } = await db.from('fb_orders').select('id, product, price, note').eq('psid', psid).neq('status', 'cancelled').order('id', { ascending: false }).limit(1).maybeSingle();
           // Account details go out once: a second time only when the customer asks for them again
           const { data: sentBefore } = await db.from('fb_messages').select('id').eq('psid', psid).eq('role', 'bot').like('text', '[Đã gửi mã QR]%').gte('created_at', new Date(Date.now() - 14 * 86400_000).toISOString()).limit(1).maybeSingle();
           if (sentBefore && input.resend !== true) {
@@ -237,13 +245,11 @@ export async function replyTo(db: SupabaseClient, psid: string) {
               const info = `Thông tin chuyển khoản${kind === 'deposit' ? ' đặt cọc' : ''}:\n- Ngân hàng: ${bank.bank}\n- Số tài khoản: ${bank.account}${bank.accountName ? `\n- Chủ tài khoản: ${bank.accountName}` : ''}\n- Số tiền: ${money}\n- Nội dung: ${content}\nBạn quét mã QR ở trên là điền sẵn hết ạ.`;
               const mids = await sendText(psid, info);
               await db.from('fb_messages').insert({ psid, role: 'bot', text: `[Đã gửi mã QR] ${info}`, mid: mid || mids[0] || null });
-              await db.from('fb_orders').update({ note: `${kind === 'deposit' ? 'Cọc' : 'Chuyển đủ'} ${money}, nội dung ${content}` }).eq('id', order.id);
+              const qrNote = `${kind === 'deposit' ? 'Cọc' : 'Chuyển đủ'} ${money}, nội dung ${content}`;
+              // keep "Đã nhận ..." from the bank webhook, so a resent QR never causes a second deposit alert
+              await db.from('fb_orders').update({ note: String(order.note || '').includes('Đã nhận ') ? `${order.note} · ${qrNote}` : qrNote }).eq('id', order.id);
               results.push({ type: 'tool_result', tool_use_id: block.id, content: `Đã gửi mã QR và thông tin chuyển khoản ${money} (nội dung ${content}). Đừng nhắc lại số tài khoản; chỉ nói ngắn gọn khách chuyển xong nhắn lại, Minh Tấn sẽ xác nhận.` });
-              await notifyAdmin({
-                title: `Đã gửi QR ${kind === 'deposit' ? 'cọc' : 'thanh toán'}: ${order.product}`,
-                psid,
-                lines: [['Khách', convo?.name || psid], ['Số tiền', money], ['Nội dung CK', content]],
-              });
+              // No alert here: sending a QR is not a closed deal. Minh Tấn is told once, when the money arrives (pay.ts).
             } catch (err) {
               console.error('fb qr failed', err);
               results.push({ type: 'tool_result', tool_use_id: block.id, is_error: true, content: 'Gửi mã QR lỗi. Chuyển Minh Tấn.' });

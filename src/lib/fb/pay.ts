@@ -23,6 +23,7 @@ export async function fbTransferReceived(db: SupabaseClient, orderId: number, am
   if (!order) return false;
   const money = `${Math.round(amount).toLocaleString('vi-VN')}đ`;
   if (String(order.note || '').includes(`sepay:${txId}`)) return true; // webhook retry
+  const firstPayment = !String(order.note || '').includes('Đã nhận '); // one deposit alert per order
   await db.from('fb_orders').update({
     status: order.status === 'new' ? 'confirmed' : order.status,
     note: `${order.note ? `${order.note} · ` : ''}Đã nhận ${money} (sepay:${txId})`,
@@ -31,6 +32,7 @@ export async function fbTransferReceived(db: SupabaseClient, orderId: number, am
   if (order.psid) {
     await db.from('fb_conversations').update({ needs_human: true, handoff_reason: `Đã cọc ${money}, cần chốt lịch`, status: 'open' }).eq('psid', order.psid);
   }
+  if (!firstPayment) return true; // a later transfer on the same order is recorded in its note, without a new alert
   const summary = order.psid ? await summarize(db, order.psid).catch(() => '') : '';
   await notifyAdmin({
     title: `ĐÃ CỌC ${money}: ${order.product}. Anh lên chốt lịch nhé`,
