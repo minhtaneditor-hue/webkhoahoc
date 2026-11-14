@@ -35,7 +35,7 @@ export async function fbTransferReceived(db: SupabaseClient, orderId: number, am
   if (!firstPayment) return true; // a later transfer on the same order is recorded in its note, without a new alert
   const summary = order.psid ? await summarize(db, order.psid).catch(() => '') : '';
   await notifyAdmin({
-    title: `ĐÃ CỌC ${money}: ${order.product}. Anh lên chốt lịch nhé`,
+    title: `✅ Đã nhận cọc thành công ${money}: ${order.product}. Anh lên chốt lịch nhé`,
     psid: order.psid || undefined,
     lines: [
       ['Khách', order.customer_name],
