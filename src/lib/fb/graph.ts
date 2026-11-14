@@ -41,10 +41,7 @@ async function post(path: string, body: unknown) {
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const e = data?.error || {};
-    throw new Error(`${e.message || `Graph API ${res.status}`}${e.code ? ` (code ${e.code}${e.error_subcode ? `/${e.error_subcode}` : ''})` : ''}`);
-  }
+  if (!res.ok) throw new Error(data?.error?.message || `Graph API ${res.status}`);
   return data;
 }
 
@@ -122,14 +119,6 @@ async function get(path: string, params: Record<string, string>) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error?.message || `Graph API ${res.status}`);
   return data;
-}
-
-/** Who the Page token belongs to, and which webhook fields the Page sends this app (for /kiemtra). */
-export async function tokenInfo() {
-  const me = await get('/me', { fields: 'id,name' });
-  const subs = await get(`/${me.id}/subscribed_apps`, {}).catch(() => ({ data: [] }));
-  const mine = (subs.data || []).find((a: { id: string }) => a.id === process.env.FB_APP_ID) || subs.data?.[0];
-  return { id: me.id as string, name: me.name as string, fields: (mine?.subscribed_fields || []) as string[] };
 }
 
 export async function pageId(): Promise<string> {

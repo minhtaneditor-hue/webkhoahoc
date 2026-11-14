@@ -311,47 +311,9 @@ export async function replyTo(db: SupabaseClient, psid: string) {
       await db.from('fb_messages').insert({ psid, role: 'bot', text: reply, mid: mids[0] || null });
       await db.from('fb_conversations').update({ last_message_at: new Date().toISOString() }).eq('psid', psid);
     } catch (err) {
-      // The AI wrote a reply but Facebook refused to deliver it: the customer sees nothing, so say so loudly
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error('fb send failed', msg);
-      await sendFailed(psid, convo?.name || psid, msg, reply);
+      console.error('fb send failed', err);
     }
   }
-}
-
-let lastSendAlert = 0;
-async function sendFailed(psid: string, name: string, error: string, reply: string) {
-  if (Date.now() - lastSendAlert < 30 * 60_000) return;
-  lastSendAlert = Date.now();
-  const hint = /development mode|role|tester|(#200)|code 200|code 10\b/i.test(error) ? 'App Meta còn ở chế độ thử nghiệm hoặc thiếu quyền pages_messaging: chuyển app sang Live (Meta app → App Review).'
-    : /token|session|code 190/i.test(error) ? 'Page token hết hạn hoặc bị thu hồi: tạo token mới và cập nhật FB_PAGE_ACCESS_TOKEN trên Vercel.'
-    : /window|24|outside|code 10/i.test(error) ? 'Quá 24 giờ từ tin cuối của khách: Facebook không cho gửi tự do.'
-    : 'Gửi dòng lỗi này cho người sửa code.';
-  await notifyAdmin({
-    title: 'Facebook không cho gửi câu trả lời của bot',
-    psid,
-    lines: [['Khách', name], ['Lỗi Facebook', error.slice(0, 400)], ['Cách xử lý', hint], ['Bot định trả lời', reply.slice(0, 300)]],
-  });
-}
-
-/** Health check for Telegram /kiemtra: tries the AI with a tiny request and reads the last 24 h from the database. */
-export async function healthCheck(db: SupabaseClient) {
-  const lines: string[] = [];
-  try {
-    const res = await new Anthropic().messages.create({ model: MODEL, max_tokens: 64, output_config: { effort: 'low' }, messages: [{ role: 'user', content: 'Trả lời đúng một chữ: OK' }] });
-    lines.push(`✅ AI (${res.model}) trả lời được`);
-  } catch (err) {
-    lines.push(`❌ AI lỗi: ${(err instanceof Anthropic.APIError ? `${err.status} ${err.message}` : String(err)).slice(0, 300)}`);
-  }
-  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
-  const [{ count: inCount }, { count: outCount }, { count: paused }] = await Promise.all([
-    db.from('fb_messages').select('id', { count: 'exact', head: true }).eq('role', 'customer').gte('created_at', since),
-    db.from('fb_messages').select('id', { count: 'exact', head: true }).eq('role', 'bot').gte('created_at', since),
-    db.from('fb_conversations').select('psid', { count: 'exact', head: true }).gt('bot_paused_until', new Date().toISOString()),
-  ]);
-  lines.push(`24 giờ qua: khách nhắn ${inCount || 0} tin, bot đã gửi được ${outCount || 0} tin`);
-  lines.push(`Khách đang bị bot tạm dừng: ${paused || 0}`);
-  return lines;
 }
 
 // ---------------------------------------------------------------- answer everyone waiting
