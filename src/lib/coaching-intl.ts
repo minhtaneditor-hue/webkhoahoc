@@ -42,4 +42,5 @@ export const COACHING_PACKAGES_USD = [
 ];
 
 // Included in every package
-export const COACHING_INCLUDED = ['Sessions scheduled in your time zone', 'Questions by message between sessions'];
+// Most students abroad are overseas Vietnamese: sessions are taught in Vietnamese
+export const COACHING_INCLUDED = ['Taught in Vietnamese', 'Sessions scheduled in your time zone', 'Questions by message between sessions'];

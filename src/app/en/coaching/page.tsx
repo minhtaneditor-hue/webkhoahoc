@@ -11,7 +11,7 @@ import { SITE_URL } from '@/lib/site-url';
 import { languageAlternates } from '@/lib/i18n';
 import { COACHING_PACKAGES_USD as packages, COACHING_INCLUDED as included } from '@/lib/coaching-intl';
 
-const DESCRIPTION = 'Learn 1:1 online with Minh Tấn: film and edit video with your phone, then run Facebook and TikTok ads. Free 30-minute audit, single sessions and 6- or 10-session programs, scheduled in your time zone.';
+const DESCRIPTION = 'Learn 1:1 online with Minh Tấn: film and edit video with your phone, then run Facebook and TikTok ads. Taught in Vietnamese. Free 30-minute audit, single sessions and 6- or 10-session programs, scheduled in your time zone.';
 
 export const metadata: Metadata = {
   title: '1:1 Coaching',
