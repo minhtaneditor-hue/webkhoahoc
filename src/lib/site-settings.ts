@@ -69,6 +69,19 @@ export function contactFrom(s: SiteSettings) {
     fanpage: s.contact_fanpage,
     hasZaloGroup: !!s.contact_zalo_group,
     address: s.contact_address,
+    messengerHref: messengerFrom(s.contact_fanpage),
   };
+}
+
+/** Messenger chat link for the Facebook page: m.me/<page id or username>; falls back to the page itself. */
+export function messengerFrom(fanpage: string | undefined) {
+  const fallback = 'https://www.facebook.com/profile.php?id=61583837884143';
+  try {
+    const url = new URL(fanpage || fallback);
+    const id = url.searchParams.get('id') || url.pathname.split('/').filter(Boolean)[0];
+    return id && id !== 'profile.php' ? `https://m.me/${id}` : url.href;
+  } catch {
+    return fanpage || fallback;
+  }
 }
 export type Contact = ReturnType<typeof contactFrom>;

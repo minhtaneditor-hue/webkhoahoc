@@ -10,6 +10,7 @@ import SocialLinks from '@/components/students/SocialLinks';
 import { COUNTRY_BY_CODE, flagUrl } from '@/lib/countries';
 import WorldStudents from '@/components/students/WorldStudents';
 import { skipOptimizer } from '@/lib/image';
+import { languageAlternates } from '@/lib/i18n';
 
 // Student rows edited straight in Supabase show up within an hour (admin saves refresh at once)
 export const revalidate = 3600;
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
   title: 'Học viên',
   openGraph: { title: 'Học viên & sản phẩm | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
   description: 'Sản phẩm thật của học viên TẤN VA, trước và sau khóa học, cùng câu chuyện từ học viên ở Việt Nam và khắp thế giới.',
-  alternates: { canonical: '/students' },
+  alternates: { canonical: '/students', languages: languageAlternates('/students') },
 };
 
 
@@ -71,7 +72,7 @@ export default async function StudentsPage() {
 
       <section className="container-lux pb-20">
         <Reveal as="ul" className="grid gap-6 md:grid-cols-2" from="mask">
-          {students.filter((s) => s.quote || s.story).map((s: any, i: number) => (
+          {students.filter((s) => s.quote || s.story).map((s, i) => (
             <li key={`${s.id}-${i}`} className="card overflow-hidden grid sm:grid-cols-[200px_1fr]">
               <div className="relative aspect-square sm:aspect-auto bg-muted">
                 <Image src={s.avatar_url || '/asset/hoc_vien/tan.jpg'} alt={s.name} fill sizes="(min-width: 640px) 200px, 100vw" className="object-cover" unoptimized={skipOptimizer(s.avatar_url)} />

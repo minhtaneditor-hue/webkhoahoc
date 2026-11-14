@@ -6,11 +6,12 @@ import SectionHeading from '@/components/SectionHeading';
 import JsonLd from '@/components/JsonLd';
 import { ORGANIZATION, PERSON } from '@/lib/brand-entity';
 import { SITE_URL } from '@/lib/site-url';
+import { languageAlternates } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: 'Về Minh Tấn',
   description: 'TẤN VA (Minh Tấn Video Advisor, Minh Tấn Academy) giúp người kinh doanh tự làm video bằng điện thoại để bán hàng và xây thương hiệu.',
-  alternates: { canonical: '/about' },
+  alternates: { canonical: '/about', languages: languageAlternates('/about') },
 };
 
 // Minh Tấn's own story, in his words (edited). Shown right under the hero.
