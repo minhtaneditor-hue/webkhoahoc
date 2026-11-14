@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Mail, Phone, MapPin, ShieldCheck, CreditCard, ArrowUp } from 'lucide-react';
+import { Mail, Phone, MapPin, ShieldCheck, CreditCard, ArrowUp, MessageCircle } from 'lucide-react';
 import { Reveal } from './motion/Motion';
 import { useSiteSettings } from './SiteContext';
 import { contactFrom } from '@/lib/site-settings';
 import { Logo, isAppShellRoute } from './Navbar';
+import { isEnPath } from '@/lib/i18n';
 
 
 const columns = [
@@ -40,6 +41,34 @@ const columns = [
   },
 ];
 
+// English pages: links to the English versions; Vietnamese-only pages are marked (VI)
+const columnsEn = [
+  {
+    title: 'TẤN VA',
+    links: [
+      { name: '1:1 coaching', href: '/en/coaching' },
+      { name: 'Students & their work', href: '/en/students' },
+      { name: 'About Minh Tấn', href: '/en/about' },
+    ],
+  },
+  {
+    title: 'In Vietnamese',
+    links: [
+      { name: 'Online courses (VI)', href: '/courses' },
+      { name: 'Projects (VI)', href: '/work' },
+      { name: 'Blog (VI)', href: '/blog' },
+    ],
+  },
+  {
+    title: 'Policies',
+    links: [
+      { name: 'Terms of service (VI)', href: '/terms' },
+      { name: 'Refund policy (VI)', href: '/refund' },
+      { name: 'Privacy policy (VI)', href: '/privacy' },
+    ],
+  },
+];
+
 const socials = [
   { label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61583837884143', icon: FacebookIcon },
   { label: 'YouTube', href: 'https://www.youtube.com/@minhtanvideoadvisor', icon: YoutubeIcon },
@@ -50,12 +79,19 @@ export default function Footer() {
   const pathname = usePathname();
   const CONTACT = contactFrom(useSiteSettings());
   if (isAppShellRoute(pathname)) return null;
+  const en = isEnPath(pathname);
 
-  const contacts = [
-    { icon: Phone, label: 'Hotline & Zalo', value: CONTACT.phone, href: CONTACT.phoneHref },
-    { icon: Mail, label: 'Email', value: CONTACT.email, href: `mailto:${CONTACT.email}` },
-    { icon: MapPin, label: 'Địa chỉ', value: CONTACT.address },
-  ];
+  const contacts = en
+    ? [
+        { icon: MessageCircle, label: 'Facebook Messenger', value: 'Message us to book', href: CONTACT.messengerHref },
+        { icon: Mail, label: 'Email', value: CONTACT.email, href: `mailto:${CONTACT.email}` },
+        { icon: MapPin, label: 'Based in', value: 'Ho Chi Minh City, Vietnam · teaching online worldwide' },
+      ]
+    : [
+        { icon: Phone, label: 'Hotline & Zalo', value: CONTACT.phone, href: CONTACT.phoneHref },
+        { icon: Mail, label: 'Email', value: CONTACT.email, href: `mailto:${CONTACT.email}` },
+        { icon: MapPin, label: 'Địa chỉ', value: CONTACT.address },
+      ];
 
   return (
     <footer className="surface-dark overflow-hidden">
@@ -75,7 +111,7 @@ export default function Footer() {
             return (
               <li key={label}>
                 {href ? (
-                  <a href={href} className="group flex items-center gap-4 p-5 rounded-[var(--radius-card)] bg-white/[0.04] ring-1 ring-white/10 hover:ring-gold-light/60 hover:bg-white/[0.07] transition">{inner}</a>
+                  <a href={href} {...(href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})} className="group flex items-center gap-4 p-5 rounded-[var(--radius-card)] bg-white/[0.04] ring-1 ring-white/10 hover:ring-gold-light/60 hover:bg-white/[0.07] transition">{inner}</a>
                 ) : (
                   <div className="group flex items-center gap-4 p-5 rounded-[var(--radius-card)] bg-white/[0.04] ring-1 ring-white/10">{inner}</div>
                 )}
@@ -86,10 +122,12 @@ export default function Footer() {
 
         <div className="mt-14 grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-sm">
-            <Logo light />
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.25em] text-gold-light">Từ góc nhìn đến câu chuyện</p>
+            <Logo light en={en} />
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.25em] text-gold-light">{en ? 'From a point of view to a story' : 'Từ góc nhìn đến câu chuyện'}</p>
             <p className="mt-4 text-stone-400 text-[15px] leading-relaxed">
-              Học làm video bài bản từ người làm nghề truyền hình, để mỗi video bạn quay ra đều trở thành tài sản.
+              {en
+                ? 'Learn video properly from a TV professional, so every video you shoot becomes an asset.'
+                : 'Học làm video bài bản từ người làm nghề truyền hình, để mỗi video bạn quay ra đều trở thành tài sản.'}
             </p>
             <div className="mt-6 flex gap-3">
               {socials.map(({ label, href, icon: Icon }) => (
@@ -101,7 +139,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {columns.map((col) => (
+          {(en ? columnsEn : columns).map((col) => (
             <div key={col.title}>
               <h2 className="font-sans text-base font-semibold text-gold-light mb-3">{col.title}</h2>
               <ul className="space-y-1">
@@ -119,16 +157,16 @@ export default function Footer() {
       </div>
 
       <div className="container-lux mt-14 py-8 pb-24 sm:pb-8 sm:pr-40 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between text-sm text-stone-400">
-        <p>© {new Date().getFullYear()} TẤN VA. Bảo lưu mọi quyền.</p>
+        <p>© {new Date().getFullYear()} TẤN VA. {en ? 'All rights reserved.' : 'Bảo lưu mọi quyền.'}</p>
         <div className="flex items-center gap-5 flex-wrap">
-          <span className="flex items-center gap-2"><ShieldCheck size={16} aria-hidden="true" /> Bảo mật SSL</span>
-          <span className="flex items-center gap-2"><CreditCard size={16} aria-hidden="true" /> Thanh toán QR ngân hàng</span>
+          <span className="flex items-center gap-2"><ShieldCheck size={16} aria-hidden="true" /> {en ? 'SSL secured' : 'Bảo mật SSL'}</span>
+          <span className="flex items-center gap-2"><CreditCard size={16} aria-hidden="true" /> {en ? 'Pay by PayPal or Wise' : 'Thanh toán QR ngân hàng'}</span>
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })}
             className="group flex items-center gap-2 h-11 pl-4 pr-3 rounded-full bg-white/[0.06] text-stone-200 hover:bg-gold-light hover:text-onyx transition-colors"
           >
-            Lên đầu trang <ArrowUp size={16} className="transition-transform group-hover:-translate-y-0.5" aria-hidden="true" />
+            {en ? 'Back to top' : 'Lên đầu trang'} <ArrowUp size={16} className="transition-transform group-hover:-translate-y-0.5" aria-hidden="true" />
           </button>
         </div>
       </div>

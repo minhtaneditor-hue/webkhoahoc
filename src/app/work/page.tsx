@@ -2,7 +2,8 @@ import { getPublicSupabase } from '@/lib/supabase-public';
 import JsonLd from '@/components/JsonLd';
 import { ORG_ID, PERSON_ID } from '@/lib/brand-entity';
 import { SITE_URL } from '@/lib/site-url';
-import WorkGallery, { SHOWCASE } from './WorkGallery';
+import WorkGallery from './WorkGallery';
+import { SHOWCASE } from './showcase';
 
 export const revalidate = 3600;
 

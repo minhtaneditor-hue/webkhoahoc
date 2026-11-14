@@ -44,6 +44,7 @@ import { getSiteSettings } from "@/lib/content";
 import { Analytics } from "@vercel/analytics/next";
 import PageViewTracker from "@/components/PageViewTracker";
 import FacebookPixel from "@/components/FacebookPixel";
+import SkipLink from "@/components/SkipLink";
 
 // Admin edits trigger revalidatePath('/', 'layout'); this is the fallback refresh window.
 export const revalidate = 3600;
@@ -57,9 +58,7 @@ export default async function RootLayout({
   return (
     <html lang="vi" className={beVietnam.variable}>
       <body>
-        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[3000] btn btn-dark">
-          Bỏ qua tới nội dung chính
-        </a>
+        <SkipLink />
         <SiteProvider settings={settings}>
           <GlobalTicker />
           <Navbar />

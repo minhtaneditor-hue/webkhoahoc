@@ -5,7 +5,8 @@ import Image from 'next/image';
 import HoverPreview from '@/components/HoverPreview';
 import { Play, X, ExternalLink } from 'lucide-react';
 import { parseMedia, sideThumbnail, WORK_CATEGORIES, type ParsedMedia } from '@/lib/media';
-import { COUNTRY_BY_CODE } from '@/lib/countries';
+import { countryName, workCategoryLabel, type Lang } from '@/lib/i18n';
+import { useLang } from '@/lib/use-lang';
 import { pairsOf, type MediaPair, type StudentWork } from '@/lib/content';
 import { skipOptimizer } from '@/lib/image';
 
@@ -29,15 +30,20 @@ export function sidesOf(w: MediaPair): Side[] {
   ].filter((s): s is Side => !!s);
 }
 
-export function placeOf(w: StudentWork) {
-  const c = w.country ? COUNTRY_BY_CODE[w.country] : null;
+/** Side labels as shown: 'Trước' / 'Sau' are the internal ids. */
+export const sideName = (label: Side['label'], lang: Lang) => (lang === 'en' ? (label === 'Sau' ? 'After' : 'Before') : label);
+
+export function placeOf(w: StudentWork, lang: Lang = 'vi') {
+  const c = countryName(w.country, lang);
   if (!c) return w.city || null;
-  return `${w.city ? `${w.city}, ` : ''}${c.name}`;
+  return `${w.city ? `${w.city}, ` : ''}${c}`;
 }
 
 // Gallery of former students' work. Each card shows Before / After when both exist;
 // clicking opens a dialog that plays both sides next to each other.
 export default function StudentWorks({ works, light = false }: { works: StudentWork[]; light?: boolean }) {
+  const lang = useLang();
+  const en = lang === 'en';
   const [category, setCategory] = useState('all');
   const [open, setOpen] = useState<StudentWork | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -45,7 +51,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
   const categories = useMemo(() => WORK_CATEGORIES.filter((c) => works.some((w) => w.category === c.value)), [works]);
   const shown = category === 'all' ? works : works.filter((w) => w.category === category);
   // One section per industry, in the admin's category order; unknown categories go last.
-  const groups = [...WORK_CATEGORIES, { value: '', label: 'Khác' }]
+  const groups = [...WORK_CATEGORIES, { value: '', label: en ? 'Other' : 'Khác' }]
     .map((c) => ({ ...c, items: shown.filter((w) => (c.value ? w.category === c.value : !WORK_CATEGORIES.some((k) => k.value === w.category))) }))
     .filter((g) => g.items.length > 0);
 
@@ -65,10 +71,10 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
   return (
     <>
       {categories.length > 1 && (
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Lọc theo ngành nghề">
-          <button type="button" className={chip(category === 'all')} aria-pressed={category === 'all'} onClick={() => setCategory('all')}>Tất cả ({works.length})</button>
+        <div className="flex flex-wrap gap-2" role="group" aria-label={en ? 'Filter by industry' : 'Lọc theo ngành nghề'}>
+          <button type="button" className={chip(category === 'all')} aria-pressed={category === 'all'} onClick={() => setCategory('all')}>{en ? 'All' : 'Tất cả'} ({works.length})</button>
           {categories.map((c) => (
-            <button key={c.value} type="button" className={chip(category === c.value)} aria-pressed={category === c.value} onClick={() => setCategory(c.value)}>{c.label}</button>
+            <button key={c.value} type="button" className={chip(category === c.value)} aria-pressed={category === c.value} onClick={() => setCategory(c.value)}>{workCategoryLabel(c, lang)}</button>
           ))}
         </div>
       )}
@@ -77,14 +83,14 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
         <section key={g.value} aria-labelledby={groups.length > 1 ? `nganh-${g.value}` : undefined} className="mt-10 first:mt-8">
           {groups.length > 1 && (
             <h3 id={`nganh-${g.value}`} className={`text-2xl md:text-3xl ${light ? 'text-white' : 'text-ink'}`}>
-              {g.label} <span className={`font-sans text-base font-normal ${light ? 'text-stone-400' : 'text-muted-foreground'}`}>· {g.items.length}</span>
+              {workCategoryLabel(g, lang)} <span className={`font-sans text-base font-normal ${light ? 'text-stone-400' : 'text-muted-foreground'}`}>· {g.items.length}</span>
             </h3>
           )}
           {/* Every card has the same frame: a 4:3 picture split Trước | Sau, then a fixed-height caption */}
           <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {g.items.map((w) => {
               const sides = sidesOf(pairsOf(w)[0] ?? {});
-              const place = placeOf(w);
+              const place = placeOf(w, lang);
               return (
                 <li key={w.id} className="h-full">
                   <button
@@ -92,7 +98,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
                     data-hover-card
                     onClick={() => show(w)}
                     className={`group h-full w-full text-left flex flex-col overflow-hidden rounded-[var(--radius-card)] border transition-shadow hover:shadow-[var(--shadow-lift)] ${light ? 'border-white/10 bg-white/[0.04]' : 'border-line bg-card'}`}
-                    aria-label={`Xem ${w.title} của ${w.student_name}`}
+                    aria-label={en ? `View ${w.title} by ${w.student_name}` : `Xem ${w.title} của ${w.student_name}`}
                   >
                     <div className={`relative aspect-[4/3] grid gap-px bg-black/20 ${sides.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                       {sides.map((s) => (
@@ -108,7 +114,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
                               <span className="w-11 h-11 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center text-white"><Play size={18} className="ml-0.5" /></span>
                             </span>
                           )}
-                          <span className={`absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/65 text-white'}`}>{s.label}</span>
+                          <span className={`absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/65 text-white'}`}>{sideName(s.label, lang)}</span>
                         </div>
                       ))}
                     </div>
@@ -125,7 +131,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
                       {(w.result || pairsOf(w).length > 1) && (
                         <div className="mt-3 flex flex-wrap gap-2 min-w-0">
                           {w.result && <span className="badge max-w-full truncate">{w.result}</span>}
-                          {pairsOf(w).length > 1 && <span className={`badge ${light ? '!bg-white/10 !text-white' : ''}`}>{pairsOf(w).length} cặp Trước/Sau</span>}
+                          {pairsOf(w).length > 1 && <span className={`badge ${light ? '!bg-white/10 !text-white' : ''}`}>{pairsOf(w).length} {en ? 'before/after pairs' : 'cặp Trước/Sau'}</span>}
                         </div>
                       )}
                     </div>
@@ -144,14 +150,14 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
         className="m-auto w-[min(1100px,calc(100vw-32px))] max-h-[calc(100dvh-32px)] rounded-[var(--radius-card)] bg-onyx text-white p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm"
         aria-labelledby="work-dialog-title"
       >
-        {open && <WorkDetail work={open} onClose={close} />}
+        {open && <WorkDetail work={open} onClose={close} lang={lang} />}
       </dialog>
     </>
   );
 }
 
-function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void }) {
-  const place = placeOf(work);
+function WorkDetail({ work, onClose, lang }: { work: StudentWork; onClose: () => void; lang: Lang }) {
+  const place = placeOf(work, lang);
   return (
     <div className="p-5 md:p-8">
       <div className="flex items-start justify-between gap-4">
@@ -159,7 +165,7 @@ function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void 
           <h2 id="work-dialog-title" className="text-white text-[clamp(1.5rem,3vw,2.25rem)] leading-tight">{work.title}</h2>
           <p className="mt-2 text-stone-300">{work.student_name}{work.student_title ? ` · ${work.student_title}` : ''}{place ? ` · ${place}` : ''}</p>
         </div>
-        <button type="button" onClick={onClose} className="w-11 h-11 shrink-0 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center" aria-label="Đóng"><X size={20} aria-hidden="true" /></button>
+        <button type="button" onClick={onClose} className="w-11 h-11 shrink-0 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center" aria-label={lang === 'en' ? 'Close' : 'Đóng'}><X size={20} aria-hidden="true" /></button>
       </div>
 
       {pairsOf(work).map((pair, i) => <PairView key={i} sides={sidesOf(pair)} vertical={(pair.orientation || work.orientation) !== 'horizontal'} />)}
@@ -176,13 +182,14 @@ function WorkDetail({ work, onClose }: { work: StudentWork; onClose: () => void 
 
 /** One Trước / Sau pair side by side (a lone side is centred). */
 export function PairView({ sides, vertical }: { sides: Side[]; vertical: boolean }) {
+  const lang = useLang();
   return (
     <div className={`mt-6 grid gap-4 ${sides.length === 2 ? (vertical ? 'grid-cols-2' : 'md:grid-cols-2') : ''} ${vertical && sides.length === 1 ? 'max-w-sm mx-auto' : ''}`}>
       {sides.map((s) => (
         <figure key={s.label} className="min-w-0">
           {sides.length === 2 && (
             <figcaption className={`mb-2 text-sm font-bold ${s.label === 'Sau' ? 'text-gold-light' : 'text-stone-300'}`}>
-              {s.label === 'Trước' ? 'Trước khi học' : 'Sau khi học'}
+              {lang === 'en' ? (s.label === 'Trước' ? 'Before the course' : 'After the course') : s.label === 'Trước' ? 'Trước khi học' : 'Sau khi học'}
             </figcaption>
           )}
           <SideView side={s} vertical={vertical} />
@@ -194,6 +201,7 @@ export function PairView({ sides, vertical }: { sides: Side[]; vertical: boolean
 
 /** One side: its main clip or picture, then a strip of its extra pictures (click one to show it large). */
 function SideView({ side, vertical }: { side: Side; vertical: boolean }) {
+  const en = useLang() === 'en';
   const [shown, setShown] = useState(0);
   if (!side.more.length) return <Player side={side} vertical={vertical} />;
   const all: Side[] = [side, ...side.more.map((src) => ({ ...side, media: null, thumb: src, more: [] }))];
@@ -201,9 +209,9 @@ function SideView({ side, vertical }: { side: Side; vertical: boolean }) {
   return (
     <div>
       <Player key={shown} side={current} vertical={vertical} />
-      <div className="mt-2 flex gap-2 overflow-x-auto pb-1" role="group" aria-label={`Ảnh ${side.label.toLowerCase()} khi học`}>
+      <div className="mt-2 flex gap-2 overflow-x-auto pb-1" role="group" aria-label={en ? `${sideName(side.label, 'en')} photos` : `Ảnh ${side.label.toLowerCase()} khi học`}>
         {all.map((s, i) => (
-          <button key={i} type="button" onClick={() => setShown(i)} aria-pressed={i === shown} aria-label={`Ảnh ${i + 1} / ${all.length}`}
+          <button key={i} type="button" onClick={() => setShown(i)} aria-pressed={i === shown} aria-label={en ? `Photo ${i + 1} of ${all.length}` : `Ảnh ${i + 1} / ${all.length}`}
             className={`relative shrink-0 w-14 h-14 rounded-md overflow-hidden bg-black ring-2 transition ${i === shown ? 'ring-gold-light' : 'ring-transparent opacity-60 hover:opacity-100'}`}>
             {s.thumb ? (
               <Image src={s.thumb} alt="" fill sizes="56px" unoptimized={skipOptimizer(s.thumb)} className="!rounded-none object-cover" />
@@ -218,6 +226,7 @@ function SideView({ side, vertical }: { side: Side; vertical: boolean }) {
 }
 
 export function Player({ side, vertical }: { side: Side; vertical: boolean }) {
+  const en = useLang() === 'en';
   const { media, thumb } = side;
   // Vertical clips cap their height and their width, so a lone 9:16 clip is not stretched sideways
   const frame = `relative w-full overflow-hidden rounded-[var(--radius-img)] bg-black ${vertical ? 'aspect-[9/16] max-h-[70dvh] max-w-[calc(70dvh*9/16)] mx-auto' : 'aspect-video'}`;
@@ -225,7 +234,7 @@ export function Player({ side, vertical }: { side: Side; vertical: boolean }) {
   if (media?.embedUrl) {
     return (
       <div className={frame}>
-        <iframe src={media.embedUrl} title={`Video ${side.label.toLowerCase()} (${media.label})`} className="absolute inset-0 w-full h-full" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen loading="lazy" />
+        <iframe src={media.embedUrl} title={en ? `${sideName(side.label, 'en')} video (${media.label})` : `Video ${side.label.toLowerCase()} (${media.label})`} className="absolute inset-0 w-full h-full" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen loading="lazy" />
       </div>
     );
   }
@@ -239,7 +248,7 @@ export function Player({ side, vertical }: { side: Side; vertical: boolean }) {
   if (thumb && (!media || media.kind === 'image')) {
     return (
       <div className={frame}>
-        <Image src={thumb} alt={`Ảnh ${side.label.toLowerCase()}`} fill sizes="(min-width: 768px) 50vw, 100vw" unoptimized={skipOptimizer(thumb)} className="!rounded-none object-contain" />
+        <Image src={thumb} alt={en ? `${sideName(side.label, 'en')} photo` : `Ảnh ${side.label.toLowerCase()}`} fill sizes="(min-width: 768px) 50vw, 100vw" unoptimized={skipOptimizer(thumb)} className="!rounded-none object-contain" />
       </div>
     );
   }
@@ -247,7 +256,7 @@ export function Player({ side, vertical }: { side: Side; vertical: boolean }) {
   return (
     <a href={media?.url} target="_blank" rel="noopener noreferrer" className={`${frame} group flex items-center justify-center`}>
       {thumb && <Image src={thumb} alt="" fill sizes="50vw" unoptimized={skipOptimizer(thumb)} className="!rounded-none object-cover opacity-60" />}
-      <span className="relative btn btn-gold">Mở video <ExternalLink size={16} aria-hidden="true" /></span>
+      <span className="relative btn btn-gold">{en ? 'Open video' : 'Mở video'} <ExternalLink size={16} aria-hidden="true" /></span>
     </a>
   );
 }

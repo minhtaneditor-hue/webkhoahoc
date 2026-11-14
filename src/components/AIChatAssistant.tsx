@@ -7,6 +7,7 @@ import { MessageCircle, X, Phone, Mail, Send, ArrowUp, Sparkles } from "lucide-r
 import { useSiteSettings } from "./SiteContext";
 import { contactFrom } from "@/lib/site-settings";
 import { isAppShellRoute } from "./Navbar";
+import { isEnPath } from "@/lib/i18n";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -59,7 +60,8 @@ export default function AIChatAssistant() {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages]);
 
-  if (isAppShellRoute(pathname)) return null;
+  // The advisor answers in Vietnamese about Vietnamese products: hidden on the English pages
+  if (isAppShellRoute(pathname) || isEnPath(pathname)) return null;
 
   async function ask(question: string) {
     const q = question.trim();

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import BrandMark from './BrandMark';
 import { usePathname } from 'next/navigation';
 import { supabase, getCurrentUser } from '@/utils/supabase';
+import type { User } from '@supabase/supabase-js';
 import {
   ChevronDown,
   LayoutDashboard,
@@ -19,6 +20,9 @@ import {
   PenLine,
 } from 'lucide-react';
 import { isAdmin } from '@/lib/admin';
+import { isEnPath, switchLangHref } from '@/lib/i18n';
+import { useSiteSettings } from './SiteContext';
+import { contactFrom } from '@/lib/site-settings';
 
 // Top-level items. Courses and coaching sit under "Khóa học"; ebooks, presets and skills are
 // "Sản phẩm khác" right after "Dự án". The logo links home; Blog stays in the footer.
@@ -35,13 +39,38 @@ const navLinks = [
   { name: 'Sản phẩm khác', href: '/shop' },
 ];
 
+// English pages (/en...): only the pages that have an English version. Courses, shop and blog are Vietnamese only.
+const navLinksEn = [
+  { name: 'Coaching', href: '/en/coaching' },
+  { name: 'Students', href: '/en/students' },
+  { name: 'About', href: '/en/about' },
+];
+
+/** VI / EN switch: goes to the same page in the other language when it exists, else to that language's home. */
+export function LangSwitch({ className = '' }: { className?: string }) {
+  const pathname = usePathname();
+  const en = isEnPath(pathname);
+  return (
+    <Link
+      href={switchLangHref(pathname)}
+      hrefLang={en ? 'vi' : 'en'}
+      lang={en ? 'vi' : 'en'}
+      aria-label={en ? 'Xem bằng tiếng Việt' : 'View in English'}
+      className={`inline-flex items-center min-h-[44px] rounded-full border border-line px-1 text-xs font-bold tracking-wide ${className}`}
+    >
+      <span aria-hidden="true" className={`px-2 py-1 rounded-full ${en ? 'text-muted-foreground' : 'bg-onyx text-white'}`}>VI</span>
+      <span aria-hidden="true" className={`px-2 py-1 rounded-full ${en ? 'bg-onyx text-white' : 'text-muted-foreground'}`}>EN</span>
+    </Link>
+  );
+}
+
 // Routes with their own full-screen chrome
 export const isAppShellRoute = (pathname: string | null) =>
   !!pathname && (pathname.startsWith('/admin') || pathname.startsWith('/learn'));
 
-export function Logo({ light = false }: { light?: boolean }) {
+export function Logo({ light = false, en = false }: { light?: boolean; en?: boolean }) {
   return (
-    <Link href="/" className="group flex items-center gap-2.5 min-h-[44px]" aria-label="TẤN VA — Trang chủ">
+    <Link href={en ? '/en' : '/'} className="group flex items-center gap-2.5 min-h-[44px]" aria-label={en ? 'TẤN VA — Home' : 'TẤN VA — Trang chủ'}>
       <BrandMark size={38} className="transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-110 group-hover:-rotate-[6deg]" />
       <span className="font-sans text-[1.35rem] font-extrabold tracking-tight leading-none">
         <span className={light ? 'text-white' : 'text-ink'}>TẤN</span> <span className={light ? 'text-gold-light' : 'text-gold'}>VA</span>
@@ -52,7 +81,8 @@ export function Logo({ light = false }: { light?: boolean }) {
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const MESSENGER_HREF = contactFrom(useSiteSettings()).messengerHref;
+  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<{ full_name?: string | null; avatar_url?: string | null } | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -139,7 +169,9 @@ export default function Navbar() {
     window.location.assign('/');
   };
 
-  const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname?.startsWith(href));
+  const en = isEnPath(pathname);
+  const links = en ? navLinksEn : navLinks;
+  const isActive = (href: string) => (href === '/' || href === '/en' ? pathname === href : pathname?.startsWith(href));
   const productActive = productLinks.some((l) => isActive(l.href));
 
   return (
@@ -147,12 +179,12 @@ export default function Navbar() {
     // either one would make the header the containing block and trap the fixed menu inside it
     <header ref={headerRef} className={`sticky top-0 z-[100] transition-[background-color,box-shadow,border-color,translate] duration-500 ease-[cubic-bezier(.22,1,.36,1)] border-b ${isHidden && !isMenuOpen && !isDropdownOpen ? '-translate-y-full' : ''} ${isMenuOpen ? 'bg-ivory border-line' : isScrolled ? 'bg-ivory/95 backdrop-blur-md border-line shadow-[0_8px_24px_-16px_rgba(12,10,9,0.25)]' : 'bg-ivory border-transparent'}`}>
       <div ref={progressRef} aria-hidden="true" className="absolute left-0 right-0 -bottom-px h-[2px] bg-gradient-to-r from-gold via-gold-light to-gold origin-left scale-x-0" />
-      <nav className="container-lux flex items-center justify-between gap-4 h-[72px] whitespace-nowrap" aria-label="Điều hướng chính">
-        <Logo />
+      <nav className="container-lux flex items-center justify-between gap-4 h-[72px] whitespace-nowrap" aria-label={en ? 'Main navigation' : 'Điều hướng chính'}>
+        <Logo en={en} />
 
         {/* Desktop */}
         <div className="hidden lg:flex items-center gap-1">
-          <div className="relative" ref={dropdownRef}>
+          {!en && <div className="relative" ref={dropdownRef}>
             <button
               type="button"
               aria-expanded={isDropdownOpen}
@@ -176,9 +208,9 @@ export default function Navbar() {
                 ))}
               </div>
             )}
-          </div>
+          </div>}
 
-          {navLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -191,7 +223,10 @@ export default function Navbar() {
         </div>
 
         <div className="hidden lg:flex items-center gap-2 whitespace-nowrap">
-          {user ? (
+          <LangSwitch />
+          {en ? (
+            <a href={MESSENGER_HREF} target="_blank" rel="noopener noreferrer" className="btn btn-gold !min-h-[44px] text-sm">Book a session <ArrowRight size={16} aria-hidden="true" /></a>
+          ) : user ? (
             <>
               {isAdmin(user.email) && (
                 <Link href="/admin" className="btn btn-outline !min-h-[44px] !px-4 text-sm">
@@ -217,13 +252,15 @@ export default function Navbar() {
           )}
         </div>
 
+        {/* Mobile: language switch stays visible next to the menu button */}
+        <LangSwitch className="lg:hidden ml-auto" />
         {/* Mobile toggle */}
         <button
           className="lg:hidden w-11 h-11 -mr-2 flex items-center justify-center rounded-md text-ink hover:bg-muted"
           onClick={() => setIsMenuOpen((o) => !o)}
           aria-expanded={isMenuOpen}
           aria-controls="mobile-menu"
-          aria-label={isMenuOpen ? 'Đóng menu' : 'Mở menu'}
+          aria-label={en ? (isMenuOpen ? 'Close menu' : 'Open menu') : isMenuOpen ? 'Đóng menu' : 'Mở menu'}
         >
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -233,8 +270,8 @@ export default function Navbar() {
       {isMenuOpen && (
         <div id="mobile-menu" style={{ top: menuTop }} className="lg:hidden fixed inset-x-0 bottom-0 bg-ivory overflow-y-auto border-t border-line animate-fade-up">
           <div className="container-lux py-6 flex flex-col whitespace-normal">
-            <p className="eyebrow mb-1 animate-fade-up">Khóa học</p>
-            {productLinks.map(({ name, desc, href, icon: Icon }, i) => (
+            {!en && <p className="eyebrow mb-1 animate-fade-up">Khóa học</p>}
+            {!en && productLinks.map(({ name, desc, href, icon: Icon }, i) => (
               <Link key={href} href={href} style={{ animationDelay: `${60 + i * 50}ms` }} className="animate-fade-up flex items-center gap-4 py-3">
                 <span className="w-11 h-11 rounded-full bg-gold-soft text-gold flex items-center justify-center shrink-0"><Icon size={20} aria-hidden="true" /></span>
                 <span>
@@ -243,15 +280,17 @@ export default function Navbar() {
                 </span>
               </Link>
             ))}
-            <div className="mt-6">
-              {navLinks.map((link, i) => (
+            <div className={en ? '' : 'mt-6'}>
+              {(en ? [{ name: 'Home', href: '/en' }, ...links] : links).map((link, i) => (
                 <Link key={link.href} href={link.href} style={{ animationDelay: `${220 + i * 60}ms` }} className={`animate-fade-up block py-3 font-display text-3xl font-bold ${isActive(link.href) ? 'text-gold' : 'text-ink'}`}>
                   {link.name}
                 </Link>
               ))}
             </div>
             <div className="mt-8 grid gap-3">
-              {user ? (
+              {en ? (
+                <a href={MESSENGER_HREF} target="_blank" rel="noopener noreferrer" className="btn btn-gold w-full">Book a session on Messenger</a>
+              ) : user ? (
                 <>
                   <Link href="/dashboard#ho-so" className="flex items-center gap-3 min-w-0 py-1">
                     {avatar('w-11 h-11')}

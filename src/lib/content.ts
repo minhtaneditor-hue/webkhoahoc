@@ -123,7 +123,8 @@ export function workCounts(works: StudentWork[]) {
 }
 
 /** Link label for a student's profile in the showcase. */
-export const worksLabel = (n: number) => (n ? `Xem ${n} sản phẩm` : 'Xem kênh của học viên');
+export const worksLabel = (n: number, lang: 'vi' | 'en' = 'vi') =>
+  lang === 'en' ? (n ? `See ${n} ${n === 1 ? 'piece' : 'pieces'} of work` : "See the student's channel") : (n ? `Xem ${n} sản phẩm` : 'Xem kênh của học viên');
 
 export async function getStudentWorks(): Promise<StudentWork[]> {
   const supabase = getPublicSupabase();

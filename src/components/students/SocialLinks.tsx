@@ -1,6 +1,7 @@
 'use client';
 
 import { Globe } from 'lucide-react';
+import { useLang } from '@/lib/use-lang';
 
 // Brand marks drawn inline (lucide has no brand icons). 24x24, currentColor.
 const PATHS: Record<string, string> = {
@@ -14,6 +15,7 @@ const LABELS: Record<string, string> = { facebook: 'Facebook', tiktok: 'TikTok',
 export type Links = Partial<Record<'facebook' | 'tiktok' | 'instagram' | 'youtube' | 'website', string>>;
 
 export default function SocialLinks({ links, name, dark = false }: { links: Links; name: string; dark?: boolean }) {
+  const en = useLang() === 'en';
   const items = (Object.entries(links) as [string, string][]).filter(([, url]) => !!url);
   if (!items.length) return null;
   return (
@@ -25,7 +27,7 @@ export default function SocialLinks({ links, name, dark = false }: { links: Link
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            aria-label={`${LABELS[kind]} của ${name}`}
+            aria-label={en ? `${name} on ${LABELS[kind]}` : `${LABELS[kind]} của ${name}`}
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${dark ? 'bg-white/10 text-white hover:bg-gold-light hover:text-onyx' : 'bg-muted text-ink hover:bg-onyx hover:text-gold-light'}`}
           >
             {PATHS[kind] ? (

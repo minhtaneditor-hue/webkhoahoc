@@ -5,12 +5,14 @@ import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { isAppShellRoute } from "./Navbar";
 import { useSiteSettings } from "./SiteContext";
+import { isEnPath } from "@/lib/i18n";
 
 // Slow announcement marquee: pauses on hover, static under reduced motion (see .marquee-track).
 export default function GlobalTicker() {
   const pathname = usePathname();
   const settings = useSiteSettings();
-  if (isAppShellRoute(pathname)) return null;
+  // Vietnamese announcements only: hidden on the English pages
+  if (isAppShellRoute(pathname) || isEnPath(pathname)) return null;
   // Edited in /admin/settings: one message per line
   const messages = settings.ticker_messages.split(/\r?\n/).map((m) => m.trim()).filter(Boolean);
   if (messages.length === 0) return null;

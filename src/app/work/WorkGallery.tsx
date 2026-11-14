@@ -19,19 +19,19 @@ const CATEGORY_LABELS: Record<string, string> = {
   brand: 'Thương hiệu',
 };
 
-// Shown until the admin adds projects in /admin/work
-export const SHOWCASE = [
-  { id: 'p1', title: '2 Ngày 1 Đêm', category: 'TV', thumbnail_url: '/asset/du_an_tieu_bieu/project_2n1d.webp' },
-  { id: 'p2', title: 'Anh Trai Say Hi — Movie', category: 'cinematic', thumbnail_url: '/asset/du_an_tieu_bieu/project_atsh_movie.jpg' },
-  { id: 'p3', title: 'Anh Trai Say Hi — Las Vegas', category: 'cinematic', thumbnail_url: '/asset/du_an_tieu_bieu/project_atsh_vegas.webp' },
-  { id: 'p4', title: 'Người Hùng Tí Hon', category: 'TV', thumbnail_url: '/asset/du_an_tieu_bieu/project_nhth.jpg' },
-  { id: 'p5', title: 'Mái Ấm Tình Thương', category: 'TV', thumbnail_url: '/asset/du_an_tieu_bieu/project_matn.webp' },
-  { id: 'p6', title: 'Ký Ức Vui Vẻ', category: 'TV', thumbnail_url: '/asset/du_an_tieu_bieu/project_kuvv.png' },
-];
-
 // Projects arrive from the server page, so the list is in the HTML for search engines and AI crawlers.
-export default function WorkGallery({ projects }: { projects: any[] }) {
-  const [selected, setSelected] = useState<any>(null);
+export type Project = {
+  id: string;
+  title: string;
+  category?: string | null;
+  thumbnail_url?: string | null;
+  video_url?: string | null;
+  client_name?: string | null;
+  description?: string | null;
+};
+
+export default function WorkGallery({ projects }: { projects: Project[] }) {
+  const [selected, setSelected] = useState<Project | null>(null);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function WorkGallery({ projects }: { projects: any[] }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [selected]);
 
-  const categories = useMemo(() => ['all', ...Array.from(new Set(projects.map((p) => p.category).filter(Boolean)))], [projects]);
+  const categories = useMemo(() => ['all', ...Array.from(new Set(projects.map((p) => p.category).filter((c): c is string => !!c)))], [projects]);
   const filtered = filter === 'all' ? projects : projects.filter((p) => p.category === filter);
 
   return (

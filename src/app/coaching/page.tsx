@@ -9,12 +9,13 @@ import ConsultBox from '@/components/ConsultBox';
 import JsonLd from '@/components/JsonLd';
 import { ORG_ID, PERSON_ID } from '@/lib/brand-entity';
 import { SITE_URL } from '@/lib/site-url';
+import { languageAlternates } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: 'Coaching',
   openGraph: { title: 'Coaching 1:1 cùng Minh Tấn | TẤN VA', type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
   description: 'Học 1-1 cùng Minh Tấn: chụp ảnh, quay và dựng video bằng điện thoại hoặc bằng AI. Audit miễn phí 30 phút, gói 6 buổi và 10 buổi, học online hoặc offline.',
-  alternates: { canonical: '/coaching' },
+  alternates: { canonical: '/coaching', languages: languageAlternates('/coaching') },
 };
 
 const packages = [

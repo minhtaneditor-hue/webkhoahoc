@@ -22,6 +22,7 @@ import JsonLd from '@/components/JsonLd';
 import { BRAND_ALIASES, ORGANIZATION, ORG_ID, PERSON } from '@/lib/brand-entity';
 import ChamVideoTeaser from '@/components/ChamVideoTeaser';
 import { SITE_URL } from '@/lib/site-url';
+import { languageAlternates } from '@/lib/i18n';
 
 export const revalidate = 3600;
 
@@ -31,7 +32,7 @@ const HOME_DESCRIPTION = 'Học quay, dựng và làm video bán hàng bằng đ
 export const metadata: Metadata = {
   title: { absolute: 'TẤN VA' },
   description: HOME_DESCRIPTION,
-  alternates: { canonical: '/' },
+  alternates: { canonical: '/', languages: languageAlternates('/') },
   openGraph: { title: HOME_TITLE, description: HOME_DESCRIPTION, type: 'website', locale: 'vi_VN', siteName: 'TẤN VA' },
 };
 
