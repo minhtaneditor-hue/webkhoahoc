@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { siteKnowledge } from '@/lib/site-knowledge';
 import { SITE } from '@/lib/emails';
-import { sendImage, sendText, typing } from './graph';
+import { sendImage, sendLikeHuman, sendText, typing } from './graph';
 import { bankConfig, vietQrUrl } from '@/lib/payments';
 import { FB_PAY_PREFIX } from './pay';
 import { notifyAdmin } from './notify';
@@ -32,7 +32,7 @@ const RULES = `Bạn là trợ lý chăm sóc khách hàng và tư vấn bán h�
 
 Cách nói chuyện:
 - Tiếng Việt, ấm áp, tự nhiên như người thật nhắn tin. Xưng "mình", gọi khách là "bạn" (hoặc anh/chị nếu khách xưng em).
-- Ngắn: 1–4 câu mỗi lượt. Messenger không hiển thị markdown: không dùng **, #, bảng. Liệt kê thì xuống dòng với dấu "-".
+- Nhắn như người thật: mỗi câu ngắn một dòng riêng (mỗi dòng được gửi thành một tin), thường 1–3 dòng mỗi lượt, mỗi dòng tối đa khoảng 20 chữ. Không viết một đoạn dài liền một mạch. Messenger không hiển thị markdown: không dùng **, #, bảng. Liệt kê thì mỗi mục một dòng bắt đầu bằng "-".
 - Mỗi lượt chỉ hỏi tối đa một câu.
 
 Tư vấn để chốt đơn:
@@ -307,7 +307,7 @@ export async function replyTo(db: SupabaseClient, psid: string) {
 
   if (reply) {
     try {
-      const mids = await sendText(psid, reply);
+      const mids = await sendLikeHuman(psid, reply); // short bubbles with "typing…" pauses, like a person
       await db.from('fb_messages').insert({ psid, role: 'bot', text: reply, mid: mids[0] || null });
       await db.from('fb_conversations').update({ last_message_at: new Date().toISOString() }).eq('psid', psid);
     } catch (err) {

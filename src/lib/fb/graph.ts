@@ -108,6 +108,44 @@ export async function typing(psid: string) {
   await post('/me/messages', { recipient: { id: psid }, sender_action: 'typing_on' }).catch(() => {});
 }
 
+/**
+ * Splits a reply into chat bubbles the way a person texts: one short line per message.
+ * List lines ("- ...") stay together in one bubble; at most MAX_BUBBLES bubbles, the rest joins the last one.
+ */
+const MAX_BUBBLES = 4;
+export function toBubbles(text: string): string[] {
+  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const out: string[] = [];
+  for (const line of lines) {
+    const prev = out[out.length - 1];
+    if (prev !== undefined && /^[-•]/.test(line)) out[out.length - 1] = `${prev}\n${line}`;
+    else out.push(line);
+  }
+  if (out.length > MAX_BUBBLES) out.splice(MAX_BUBBLES - 1, out.length, out.slice(MAX_BUBBLES - 1).join('\n'));
+  return out.length ? out : [text.trim()];
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Sends a reply like a person typing: "typing…" first, a pause that grows with the length of the line
+ * (1.2–4 s), then the line, one bubble at a time. FB_HUMAN_DELAY=false sends everything at once.
+ * The whole wait is capped at ~12 s to keep the serverless function short.
+ */
+export async function sendLikeHuman(psid: string, text: string) {
+  if (process.env.FB_HUMAN_DELAY === 'false') return sendText(psid, text);
+  const mids: string[] = [];
+  let budget = 12_000;
+  for (const bubble of toBubbles(text)) {
+    await typing(psid);
+    const wait = Math.min(Math.max(1200, 600 + bubble.length * 35), 4000, budget);
+    budget -= wait;
+    if (wait > 0) await sleep(wait);
+    mids.push(...(await sendText(psid, bubble)));
+  }
+  return mids;
+}
+
 export type GraphMessage = { id: string; message?: string; created_time: string; from?: { id: string; name?: string } };
 export type GraphConversation = {
   id: string;

@@ -12,7 +12,7 @@ Bot trả lời tin nhắn Fanpage 24/7, tư vấn theo đúng khóa học / c�
 | Bạn vào trả lời | Trả lời trong Admin hoặc ngay trong hộp thư Fanpage / Meta Business Suite đều được. Bot tự tạm dừng với khách đó 12 giờ (đổi bằng `FB_HUMAN_PAUSE_HOURS`), bấm **Bật lại bot** để nó tiếp tục. |
 | Học hỏi | 3 cách: (1) bấm **Dạy bot câu này** dưới một tin nhắn để sửa câu trả lời, dùng ngay; (2) tab **Kiến thức** thêm câu hỏi/trả lời; (3) mỗi thứ Hai bot đọc các hội thoại bạn tự trả lời trong tuần và đề xuất kiến thức mới, bạn duyệt rồi mới dùng (hoặc bấm **Học ngay**). |
 
-Khách nhắn liên tiếp nhiều tin ngắn thì bot đợi khoảng 4 giây rồi trả lời gộp một lần.
+Khách nhắn liên tiếp nhiều tin ngắn thì bot đợi khoảng 4 giây rồi trả lời gộp một lần. Bot nhắn như người thật: mỗi câu ngắn là một tin riêng (tối đa 4 tin), trước mỗi tin hiện "đang soạn tin…" 1–4 giây tùy độ dài. Tắt độ trễ bằng `FB_HUMAN_DELAY=false`.
 
 ## Cài đặt (làm một lần)
 
