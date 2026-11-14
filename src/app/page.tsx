@@ -113,8 +113,8 @@ export default async function Home() {
             <ShowreelVideo youtubeId={SHOWREEL.youtubeId || undefined} youtubeStart={SHOWREEL.youtubeStart} poster={SHOWREEL.poster || undefined} />
           )}
           {/* Scrims: darker toward the bottom-left where the title sits */}
-          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_bottom,rgb(28_25_23/.25)_0%,rgb(28_25_23/0)_30%,rgb(28_25_23/.55)_60%,rgb(28_25_23/.92)_100%)]" aria-hidden="true" />
-          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgb(28_25_23/.6),transparent_65%)]" aria-hidden="true" />
+          <div className="absolute inset-0 pointer-events-none scrim-hero-v" aria-hidden="true" />
+          <div className="absolute inset-0 pointer-events-none scrim-hero-h" aria-hidden="true" />
           <Reveal className="relative w-full px-6 md:px-12 pb-8 md:pb-10 max-w-2xl" stagger={0.1}>
             <h1 id="hero-title" className="text-white text-[clamp(2.5rem,5vw,4rem)] leading-[1.15] tracking-[-0.02em]">{settings.hero_title}</h1>
             <p className="mt-4 text-lg md:text-xl text-stone-200 leading-snug max-w-xl">
@@ -259,7 +259,7 @@ export default async function Home() {
       <section className="container-lux pb-16 md:pb-20">
         <div className="flex items-end justify-between gap-4">
           <h2 className="text-2xl md:text-3xl">Đã tham gia hậu kỳ</h2>
-          <Link href="/work" className="link-underline text-sm font-semibold text-gold whitespace-nowrap">Xem tất cả dự án →</Link>
+          <Link href="/work" className="link-underline text-sm font-semibold text-gold whitespace-nowrap">Xem tất cả dự án</Link>
         </div>
         <Reveal as="ul" className="mt-6 grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4" stagger={0.05}>
           {projects.map((p) => (

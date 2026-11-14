@@ -42,7 +42,7 @@ export default function ProductView({ asset, related }: { asset: ShopAsset; rela
 
         <div className="mt-4 grid gap-8 lg:gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-start">
           {/* The product comes first on a phone: people see the result before they read */}
-          <div className={`relative lg:order-last overflow-hidden bg-muted rounded-[var(--radius-card)] border border-line shadow-[0_24px_60px_-28px_rgba(36,35,33,0.45)] ${asset.preview_url ? 'aspect-video' : 'aspect-[4/3]'}`}>
+          <div className={`relative lg:order-last overflow-hidden bg-muted rounded-[var(--radius-card)] border border-line shadow-product ${asset.preview_url ? 'aspect-video' : 'aspect-[4/3]'}`}>
             {asset.preview_url
               ? <ProductPreview url={asset.preview_url} poster={asset.thumbnail_url} title={asset.title} />
               : <Picture src={asset.thumbnail_url} sizes="(min-width: 1024px) 55vw, 100vw" Icon={Icon} />}
@@ -138,7 +138,7 @@ export default function ProductView({ asset, related }: { asset: ShopAsset; rela
         <section className="container-lux pb-14 md:pb-20">
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <h2 className={heading}>Sản phẩm khác</h2>
-            <Link href="/shop" className="link-underline text-sm font-semibold text-gold">Xem tất cả →</Link>
+            <Link href="/shop" className="link-underline text-sm font-semibold text-gold">Xem tất cả sản phẩm</Link>
           </div>
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((r) => (

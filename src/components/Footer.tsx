@@ -87,7 +87,7 @@ export default function Footer() {
         <div className="mt-14 grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-sm">
             <Logo light />
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.25em] text-gold-light">Từ góc nhìn đến câu chuyện</p>
+            <p className="mt-4 text-sm font-semibold text-gold-light">Từ góc nhìn đến câu chuyện</p>
             <p className="mt-4 text-stone-400 text-[15px] leading-relaxed">
               Học làm video bài bản từ người làm nghề truyền hình, để mỗi video bạn quay ra đều trở thành tài sản.
             </p>

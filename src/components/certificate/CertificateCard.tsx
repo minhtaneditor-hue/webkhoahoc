@@ -49,11 +49,11 @@ export default function CertificateCard({ data }: { data: CertificateData }) {
   const nameSize = data.name.length > 34 ? 'text-[4.1cqw]' : data.name.length > 22 ? 'text-[5.2cqw]' : 'text-[6.8cqw]';
   return (
     <div className="certificate-frame mx-auto w-full max-w-5xl">
-      <article className="certificate relative w-full aspect-[297/210] overflow-hidden bg-[#FBF7F1] text-ink shadow-[0_24px_60px_-20px_rgba(36,35,33,0.45)] flex [container-type:inline-size]">
+      <article className="certificate relative w-full aspect-[297/210] overflow-hidden bg-paper text-ink shadow-certificate flex [container-type:inline-size]">
         {/* Dark band: who issued it, and the certificate number */}
         <div
-          className="relative w-[27%] shrink-0 overflow-hidden flex flex-col justify-between p-[3.2cqw] text-[#F5F0E9]"
-          style={{ background: 'radial-gradient(circle at 25% 15%, #7A2B2F 0%, #5A1F25 38%, #242321 100%)' }}
+          className="relative w-[27%] shrink-0 overflow-hidden flex flex-col justify-between p-[3.2cqw] text-ivory"
+          style={{ background: 'radial-gradient(circle at 25% 15%, var(--color-wine) 0%, var(--color-burgundy) 38%, var(--color-onyx) 100%)' }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- plain img so the PDF always includes it */}
           <img src="/brand/tan-va-mark.png" alt="" className="absolute -left-[9cqw] -bottom-[4cqw] w-[38cqw] max-w-none opacity-[0.1] !rounded-none" />
@@ -107,7 +107,7 @@ export default function CertificateCard({ data }: { data: CertificateData }) {
         </div>
 
         {/* Seal sits across the fold between the band and the sheet */}
-        <div className="absolute left-[27%] top-[60%] w-[11.5cqw] h-[11.5cqw] -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_0.5cqw_1cqw_rgba(36,35,33,0.35)]">
+        <div className="absolute left-[27%] top-[60%] w-[11.5cqw] h-[11.5cqw] -translate-x-1/2 -translate-y-1/2 drop-shadow-seal">
           <Seal />
         </div>
       </article>
