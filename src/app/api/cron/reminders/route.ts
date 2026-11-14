@@ -4,8 +4,9 @@ import { getSupabaseAdmin } from '@/lib/supabase-server';
 import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
 import { isAdmin } from '@/lib/admin';
+import { checkPromo } from '@/lib/promo';
 import {
-  FROM, unsubscribeHeaders, onboardDay2, onboardDay5, onboardDay10, inactiveStudent,
+  FROM, unsubscribeHeaders, onboardDay2, onboardDay5, onboardDay10, inactiveStudent, activateAccount,
   courseCompleted, accessExpiring, signupNudge, leadDay2, leadDay6, getFeaturedCourse,
 } from '@/lib/emails';
 
@@ -14,6 +15,11 @@ export const maxDuration = 60;
 
 const DAY = 86_400_000;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/**
+ * Welcome discount in the 24-hour signup email: the 50% code in Admin > Mã giảm giá (ends 30/11/2026).
+ * The email reads the percent and expiry from the code itself and leaves the code out whenever checkout would reject it.
+ */
+const SIGNUP_CODE = 'TANVAO8IH';
 
 /**
  * Daily email sequences (vercel.json cron). Each email goes out once (email_log, migration 016),
@@ -22,8 +28,10 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * flooded with the sequence when it is first switched on.
  *
  *   Students:  day 2 habit · day 5 first homework + audit · day 10 progress
- *              inactive 5+ days (every 14 days, max 3) · course completed · access expiring in 7 days
- *   Signed up, no course:  day 1 free-trial nudge
+ *              never signed in 7 days after enrolment: activate account (once)
+ *              started, then inactive 7+ days: keep learning (every 14 days, max 3)
+ *              course completed · access expiring in 7 days
+ *   Signed up, no course:  after 24 hours, course intro + welcome code (TANVAO8IH, 50%)
  *   Checklist leads:       day 2 tips · day 6 course offer
  */
 export async function GET(req: Request) {
@@ -102,7 +110,14 @@ export async function GET(req: Request) {
     if (enrolled >= 5 && enrolled < 7) { await send(s.email, 'onboard-5', e.course_id, onboardDay5(s, contact)); continue; }
     if (enrolled >= 10 && enrolled < 13) { await send(s.email, 'onboard-10', e.course_id, onboardDay10(s)); continue; }
 
-    if (enrolled >= 7 && lastActive >= 5) {
+    // Never signed in and never opened a lesson: the account itself needs activating
+    const started = !!user.last_active_at || mine.length > 0;
+    if (!started) {
+      if (enrolled >= 7) await send(s.email, 'activate', e.course_id, activateAccount(s));
+      continue;
+    }
+
+    if (enrolled >= 7 && lastActive >= 7) {
       const earlier = (log || []).filter((l) => l.email === s.email.toLowerCase() && l.kind === 'inactive' && l.ref.startsWith(e.course_id));
       if (earlier.length < 3) await send(s.email, 'inactive', `${e.course_id}:${Math.floor(enrolled / 14)}`, inactiveStudent(s));
     }
@@ -110,10 +125,21 @@ export async function GET(req: Request) {
 
   // ------------------------------------------------------------ signed up, no course yet
   const enrolledUsers = new Set(userIds);
+  let offer: { code: string; price: number; discount: number; oldPrice: number | null; until: string | null } | null = null;
+  if (featured) {
+    const { data: c } = await db.from('courses').select('price, old_price').eq('id', featured.id).maybeSingle();
+    const price = Number(c?.price) || 0;
+    const promo = price ? await checkPromo(db, SIGNUP_CODE, { courseId: featured.id, price }) : null;
+    if (promo?.ok) {
+      const { data: row } = await db.from('promo_codes').select('expires_at').eq('code', promo.code).maybeSingle();
+      const until = row?.expires_at ? new Date(row.expires_at).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : null;
+      offer = { code: promo.code, price, discount: promo.discount, oldPrice: Number(c?.old_price) || null, until };
+    }
+  }
   const { data: signups } = await db.from('users').select('id, email, full_name, created_at')
     .gte('created_at', new Date(now - 3 * DAY).toISOString()).lt('created_at', new Date(now - DAY).toISOString());
   for (const u of signups || []) {
-    if (featured && u.email && !enrolledUsers.has(u.id)) await send(u.email, 'signup-1', '', signupNudge({ name: u.full_name, email: u.email }, featured));
+    if (featured && u.email && !enrolledUsers.has(u.id)) await send(u.email, 'signup-1', '', signupNudge({ name: u.full_name, email: u.email }, featured, offer));
   }
 
   // ------------------------------------------------------------ checklist leads

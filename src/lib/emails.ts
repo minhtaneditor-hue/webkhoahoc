@@ -339,21 +339,48 @@ export function onboardDay10(s: Student): Mail {
   };
 }
 
-/** No activity for a while (repeats at most every 14 days, max 3 times). */
+/** Started the course, then no activity for 7+ days (repeats at most every 14 days, max 3 times). */
 export function inactiveStudent(s: Student): Mail {
+  const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
   return {
-    subject: `${firstName(s.name)} ơi, bài học vẫn đang đợi bạn`,
+    subject: `${firstName(s.name)} ơi, bạn đã đi được ${pct}% rồi, học tiếp nhé`,
     html: layout({
-      preheader: s.nextLessonTitle ? `Bài tiếp theo: ${s.nextLessonTitle}` : 'Quay lại học 1 bài thôi là đủ.',
+      preheader: s.nextLessonTitle ? `Bài tiếp theo chỉ vài phút: ${s.nextLessonTitle}` : 'Chỉ cần 1 bài hôm nay là bạn lại vào nhịp.',
       unsubscribeFor: s.email,
       body: `
-        ${eyebrow('Nhắc học')}
-        ${h1('Mình quay lại học tiếp nhé?')}
-        ${p(`Chào ${esc(firstName(s.name))}, mấy hôm nay bạn chưa vào học khóa <strong>${esc(s.courseTitle)}</strong>. Bận là chuyện bình thường. Bạn không cần học bù, chỉ cần học tiếp 1 bài hôm nay, mỗi bài chỉ vài phút.`)}
+        ${eyebrow('Học tiếp')}
+        ${h1('Một tuần rồi, mình quay lại học tiếp nhé?')}
+        ${p(`Chào ${esc(firstName(s.name))}, đã một tuần bạn chưa vào học khóa <strong>${esc(s.courseTitle)}</strong>. Bận là chuyện bình thường, ai học online cũng có lúc chững lại.`)}
+        ${p('Điều quan trọng: bạn không cần học bù. Chỉ cần mở đúng bài đang dở và học thêm <strong>1 bài hôm nay</strong>. Mỗi bài chỉ vài phút, học xong là bạn lại vào nhịp.')}
         ${progress(s.done, s.total)}
         ${nextUp(s)}
-        ${button(lessonLink(s.courseId, s.nextLessonId), 'Học tiếp bài của tôi')}
-        ${p(`<span style="font-size:14px;color:${C.muted};">Đang vướng chỗ nào? Trả lời email này, Minh Tấn sẽ hỗ trợ.</span>`)}
+        ${button(lessonLink(s.courseId, s.nextLessonId), 'Học tiếp bài đang dở')}
+        ${box(`<strong style="color:${C.ink};">Đừng quên quà khi học xong</strong><br>Hoàn thành toàn bộ bài, bạn nhận chứng chỉ và 1 buổi Audit 1-1 để Minh Tấn xem lại video của bạn.`)}
+        ${p(`<span style="font-size:14px;color:${C.muted};">Đang vướng ở bài nào? Trả lời email này, Minh Tấn sẽ hỗ trợ bạn.</span>`)}
+        ${signature}`,
+    }),
+  };
+}
+
+/** Has a course but never signed in or opened a lesson, 7+ days after enrolment. */
+export function activateAccount(s: Student): Mail {
+  return {
+    subject: `${firstName(s.name)} ơi, khóa học của bạn đã mở nhưng bạn chưa vào học`,
+    html: layout({
+      preheader: `Khóa ${s.courseTitle} đã sẵn sàng. Đăng nhập 1 lần là bắt đầu được.`,
+      unsubscribeFor: s.email,
+      body: `
+        ${eyebrow('Kích hoạt tài khoản')}
+        ${h1('Khóa học của bạn đã sẵn sàng')}
+        ${p(`Chào ${esc(firstName(s.name))}, khóa <strong>${esc(s.courseTitle)}</strong> đã được mở cho tài khoản <strong>${esc(s.email)}</strong> từ một tuần trước, nhưng bạn chưa đăng nhập lần nào.`)}
+        ${p('Chỉ mất 1 phút để bắt đầu:')}
+        ${steps([
+          ['Đăng nhập', `Vào trang đăng nhập bằng email ${esc(s.email)} và mật khẩu trong email chào mừng.`],
+          ['Quên mật khẩu?', 'Bấm “Quên mật khẩu” ở trang đăng nhập, hệ thống gửi link đặt mật khẩu mới vào email này.'],
+          ['Học bài đầu tiên', `Bài đầu chỉ vài phút. Học xong bấm “Hoàn thành” để bắt đầu tính tiến độ.`],
+        ])}
+        ${button(`${SITE}/auth?redirect=${encodeURIComponent(`/learn/${s.courseId}`)}`, 'Đăng nhập và học ngay')}
+        ${p(`<span style="font-size:14px;color:${C.muted};">Không đăng nhập được? Trả lời email này hoặc nhắn Zalo, Minh Tấn sẽ mở giúp bạn.</span>`)}
         ${signature}`,
     }),
   };
@@ -400,19 +427,33 @@ export function accessExpiring(s: Student & { expiryDate: string }): Mail {
 
 
 /** Signed up 1 day ago but no course yet. */
-export function signupNudge(d: { name?: string | null; email: string }, c: FeaturedCourse): Mail {
+/**
+ * Signed up, no course after 24 hours: introduces the featured course and, when the promo code
+ * is valid at checkout, gives it (the cron checks the code before passing `offer`).
+ */
+export function signupNudge(d: { name?: string | null; email: string }, c: FeaturedCourse, offer?: { code: string; price: number; discount: number; oldPrice?: number | null; until?: string | null } | null): Mail {
+  const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
+  const pct = offer ? Math.round((offer.discount / offer.price) * 100) : 0;
   return {
-    subject: `${c.freeLessons.length} bài học thử miễn phí đang chờ bạn`,
+    subject: offer ? `Quà chào mừng: giảm ${pct}% khóa ${c.title}, chỉ còn ${vnd(offer.price - offer.discount)}` : `${c.freeLessons.length} bài học thử miễn phí đang chờ bạn`,
     html: layout({
-      preheader: `Khóa ${c.title}: xem thử trước, thấy hợp rồi mới quyết định.`,
+      preheader: offer
+        ? `Mã ${offer.code} giảm ${pct}%: học phí còn ${vnd(offer.price - offer.discount)}. Xem thử ${c.freeLessons.length} bài miễn phí trước.`
+        : `Khóa ${c.title}: xem thử trước, thấy hợp rồi mới quyết định.`,
       unsubscribeFor: d.email,
       body: `
-        ${eyebrow('Học thử miễn phí')}
-        ${h1(`Chào ${esc(firstName(d.name))}, bạn đã xem bài học thử chưa?`)}
-        ${p(`Cảm ơn bạn đã tạo tài khoản TẤN VA. Khóa <strong>${esc(c.title)}</strong> có ${c.freeLessons.length} bài học thử miễn phí để bạn xem cách Minh Tấn dạy trước khi quyết định:`)}
-        ${freeList(c)}
-        <div style="height:16px;"></div>
-        ${button(courseUrl(c), 'Xem bài học thử')}
+        ${eyebrow(offer ? 'Quà chào mừng' : 'Học thử miễn phí')}
+        ${h1(`Chào ${esc(firstName(d.name))}, cảm ơn bạn đã tham gia TẤN VA`)}
+        ${p(`Bạn tạo tài khoản hôm qua nhưng chưa chọn khóa học nào. Nếu bạn muốn quay và edit video bằng điện thoại để bán hàng, xây kênh hay nhận job, khóa <strong>${esc(c.title)}</strong> là nơi nên bắt đầu.`)}
+        ${c.chapters.length ? `${p(`<strong style="color:${C.ink};">${c.lessonCount} bài, đi từ con số 0 đến kiếm tiền:</strong>`)}
+        ${steps(c.chapters.slice(0, 4).map((t) => [esc(t), ''] as [string, string]))}` : ''}
+        ${c.freeLessons.length ? `${p(`Chưa chắc hợp với mình? Xem trước ${c.freeLessons.length} bài học thử miễn phí:`)}${freeList(c)}<div style="height:16px;"></div>` : ''}
+        ${offer ? `${box(`Mã giảm ${pct}% dành riêng cho bạn<br>
+          <span style="display:inline-block;margin:6px 0 10px;padding:8px 16px;border:2px dashed ${C.gold};border-radius:10px;background:#ffffff;font-family:'Courier New',monospace;font-size:24px;font-weight:800;letter-spacing:0.1em;color:${C.ink};-webkit-user-select:all;user-select:all;">${esc(offer.code)}</span><br>
+          ${offer.oldPrice && offer.oldPrice > offer.price ? `Giá gốc <span style="text-decoration:line-through;">${vnd(offer.oldPrice)}</span>, đang ưu đãi ${vnd(offer.price)}.<br>` : ''}Nhập mã, học phí chỉ còn <strong style="color:${C.ink};">${vnd(offer.price - offer.discount)}</strong>. Bấm nút bên dưới, mã <strong style="color:${C.ink};">tự áp dụng sẵn</strong>, bạn không cần gõ.${offer.until ? `<br><strong style="color:${C.gold};">Mã dùng được đến hết ngày ${esc(offer.until)}.</strong>` : ''}`)}
+        ${button(`${courseUrl(c)}?ma=${encodeURIComponent(offer.code)}#dang-ky`, `Đăng ký với giá ${vnd(offer.price - offer.discount)}`)}
+        ${p(`<span style="font-size:14px;color:${C.muted};">Nút không mở được? Vào trang khóa học và dán mã <strong>${esc(offer.code)}</strong> vào ô Mã giảm giá.</span>`)}` : button(courseUrl(c), 'Xem bài học thử')}
+        ${p('Còn phân vân điều gì? Trả lời email này, Minh Tấn đọc và trả lời từng người.')}
         ${signature}`,
     }),
   };

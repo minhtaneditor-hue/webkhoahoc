@@ -7,13 +7,15 @@ import { Users, Search, Plus, KeyRound, Trash2, X, Download, UserCheck, UserPlus
 import { PageHeader, LoadingRow, EmptyState, Modal, Field, StatusBadge, StatCard, thClass, tdClass } from '@/components/admin/AdminUI';
 
 type Notice = { type: 'success' | 'error'; text: string } | null;
-type Tab = 'all' | 'learning' | 'lead' | 'inactive';
+type Tab = 'all' | 'enrolled' | 'unenrolled' | 'learning' | 'lead' | 'inactive';
 
 const DAY = 24 * 60 * 60 * 1000;
 const INACTIVE_DAYS = 14;
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'all', label: 'Tất cả' },
+  { key: 'enrolled', label: 'Đã đăng ký khóa' },
+  { key: 'unenrolled', label: 'Chưa đăng ký khóa' },
   { key: 'learning', label: 'Đang học' },
   { key: 'lead', label: 'Chưa mua' },
   { key: 'inactive', label: `Không hoạt động ${INACTIVE_DAYS} ngày` },
@@ -99,6 +101,7 @@ export default function StudentsManagement() {
       spent: paid.reduce((s, p) => s + Number(p.amount), 0),
       orders: payments.filter((p) => p.user_id === u.id),
       lastActive,
+      isEnrolled: enrollments.length > 0,
       isLearning: enrollments.some((e: any) => e.status === 'active'),
       isInactive: !lastActive || now - new Date(lastActive).getTime() > INACTIVE_DAYS * DAY,
     };
@@ -111,12 +114,15 @@ export default function StudentsManagement() {
     inactive: rows.filter((r) => r.isLearning && r.isInactive).length,
   }), [rows, now]);
 
+  const inTab = useCallback((u: (typeof rows)[number], t: Tab) =>
+    t === 'all' || (t === 'enrolled' && u.isEnrolled) || (t === 'unenrolled' && !u.isEnrolled) ||
+    (t === 'learning' && u.isLearning) || (t === 'lead' && !u.isLearning) || (t === 'inactive' && u.isInactive), []);
+  const tabCounts = useMemo(() => Object.fromEntries(TABS.map((t) => [t.key, rows.filter((u) => inTab(u, t.key)).length])) as Record<Tab, number>, [rows, inTab]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter((u) =>
-      (tab === 'all' || (tab === 'learning' && u.isLearning) || (tab === 'lead' && !u.isLearning) || (tab === 'inactive' && u.isInactive)) &&
-      (!q || u.email?.toLowerCase().includes(q) || u.full_name?.toLowerCase().includes(q)));
-  }, [rows, query, tab]);
+    return rows.filter((u) => inTab(u, tab) && (!q || u.email?.toLowerCase().includes(q) || u.full_name?.toLowerCase().includes(q)));
+  }, [rows, query, tab, inTab]);
 
   // Opens a course without payment; /api/admin/grant creates the account when the email is new
   const openGrant = (u?: any) => {
@@ -253,7 +259,7 @@ export default function StudentsManagement() {
           {TABS.map((t) => (
             <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
                     className={`shrink-0 min-h-[44px] px-4 rounded-md text-sm font-semibold border transition-colors ${tab === t.key ? 'bg-onyx text-white border-onyx' : 'bg-card border-line-strong text-stone hover:border-ink'}`}>
-              {t.label}
+              {t.label}{!loading && <span className={`ml-1.5 tabular-nums ${tab === t.key ? 'text-white/70' : 'text-muted-foreground'}`}>{tabCounts[t.key]}</span>}
             </button>
           ))}
         </div>
