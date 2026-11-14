@@ -112,7 +112,7 @@ export async function typing(psid: string) {
  * Splits a reply into chat bubbles the way a person texts: one short line per message.
  * List lines ("- ...") stay together in one bubble; at most MAX_BUBBLES bubbles, the rest joins the last one.
  */
-const MAX_BUBBLES = 4;
+const MAX_BUBBLES = 2; // more than two messages in a row feels pushy
 export function toBubbles(text: string): string[] {
   const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
   const out: string[] = [];
