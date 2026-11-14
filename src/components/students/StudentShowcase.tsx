@@ -170,7 +170,7 @@ export default function StudentShowcase({ works, videos, avatars = {} }: { works
                         <div key={s.label} className="relative overflow-hidden bg-onyx">
                           {s.thumb && <Image src={s.thumb} alt="" fill sizes="(min-width: 1024px) 17vw, (min-width: 640px) 25vw, 50vw" unoptimized={skipOptimizer(s.thumb)} className="!rounded-none object-cover transition-transform duration-700 group-hover:scale-[1.04]" />}
                           <HoverPreview url={s.media?.url} />
-                          <span className={`absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/65 text-white'}`}>{sideName(s.label, lang)}</span>
+                          <span className={`absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-xs font-bold ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/65 text-white'}`}>{sideName(s.label, lang)}</span>
                         </div>
                       ))}
                     </div>

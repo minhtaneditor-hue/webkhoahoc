@@ -50,9 +50,14 @@ export default async function LegalPage({
           </div>
           <a href={`mailto:${CONTACT.email}`} className="btn btn-dark shrink-0">Gửi email hỗ trợ</a>
         </aside>
-        <p className="mt-8 text-sm text-muted-foreground">
-          Xem thêm: <Link href="/terms" className="underline">Điều khoản dịch vụ</Link> · <Link href="/refund" className="underline">Chính sách hoàn tiền</Link> · <Link href="/privacy" className="underline">Chính sách bảo mật</Link>
-        </p>
+        <nav aria-label="Chính sách khác" className="mt-8 text-sm text-muted-foreground">
+          <p>Xem thêm:</p>
+          <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+            <li><Link href="/terms" className="underline">Điều khoản dịch vụ</Link></li>
+            <li><Link href="/refund" className="underline">Chính sách hoàn tiền</Link></li>
+            <li><Link href="/privacy" className="underline">Chính sách bảo mật</Link></li>
+          </ul>
+        </nav>
       </article>
     </main>
   );

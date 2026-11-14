@@ -22,7 +22,7 @@ export default function FeedbackMarquee({ images, lang = 'vi' }: { images: Feedb
                   height={img.height}
                   sizes="420px"
                   unoptimized={skipOptimizer(img.src)}
-                  className="h-28 md:h-36 w-auto bg-white shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)]"
+                  className="h-28 md:h-36 w-auto bg-white shadow-photo"
                 />
               </li>
             ))}

@@ -123,7 +123,7 @@ export default function Footer() {
         <div className="mt-14 grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-sm">
             <Logo light en={en} />
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.25em] text-gold-light">{en ? 'From a point of view to a story' : 'Từ góc nhìn đến câu chuyện'}</p>
+            <p className="mt-4 text-sm font-semibold text-gold-light">{en ? 'From a point of view to a story' : 'Từ góc nhìn đến câu chuyện'}</p>
             <p className="mt-4 text-stone-400 text-[15px] leading-relaxed">
               {en
                 ? 'Learn video properly from a TV professional, so every video you shoot becomes an asset.'

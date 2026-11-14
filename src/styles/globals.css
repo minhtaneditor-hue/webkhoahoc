@@ -1,3 +1,8 @@
+/* Hallmark · checked: 2026-11-14 · genre: editorial (inferred)
+ * floor: 3 FAIL left on purpose (10a lesson watermark, 28a feedback player, 54 CourseView "Updating") · fixed: 7a, 7b, 34, 48, 54, 63, 67 · structural: 2 printed (9, 58)
+ * built: the project · redesign: polish · v2.0.0 */
+/* Hallmark · waive 26b · .btn presses down 1px on :active inside its @utility block · every button on the page is a .btn and gets the press */
+/* Hallmark · waive 28b · videos open on a click, with controls · feedback clips and hover previews start only when the visitor asks for them */
 @import "tailwindcss";
 
 /* =====================================================================
@@ -19,7 +24,14 @@
   --color-gold-soft: #F1E2D2;      /* Sand Beige, lightened: tinted backgrounds, badges */
   --color-terracotta: #C67654;
   --color-sand: #DDC3A7;
-  --color-card: #FFFFFF;
+  --color-card: #FFFEFD;           /* near white, clearly lighter than the Ivory page (owner's call, 2026-11-14) */
+  --color-burgundy-deep: #3A1A1E;  /* darkest stop of the ember sweeps */
+  --color-rust: #7A3029;           /* mid stop of the blog banner sweep */
+  --color-wine: #7A2B2F;           /* certificate side band */
+  --color-paper: #FBF7F1;          /* certificate paper */
+  --color-ember-start: #B35A3F;    /* first stop of the CTA gradient */
+  --color-ember-end: #7A2E2E;      /* last stop of the CTA gradient */
+  --color-scrim: rgb(28 25 23);    /* photo scrims: Charcoal at varying strength */
   --color-muted: #EDE4D9;
   --color-muted-foreground: #6A5A53; /* 5.9:1 on Ivory */
   --color-line: #E6DCD0;
@@ -53,6 +65,12 @@
   --shadow-soft: none;
   --shadow-card: none;
   --shadow-lift: 0 24px 48px -12px rgba(90, 31, 37, 0.28);
+  --shadow-header: 0 8px 24px -16px rgba(12, 10, 9, 0.25);   /* sticky nav once scrolled */
+  --shadow-photo: 0 10px 30px -12px rgba(0, 0, 0, 0.5);      /* feedback screenshots in the marquee */
+  --shadow-product: 0 24px 60px -28px rgba(36, 35, 33, 0.45); /* product cover on the shop page */
+  --shadow-certificate: 0 24px 60px -20px rgba(36, 35, 33, 0.45); /* certificate card on screen */
+  --shadow-note: 0 12px 30px -14px rgba(90, 31, 37, 0.6);    /* "và còn nhiều học viên" pill */
+  --drop-shadow-seal: 0 0.5cqw 1cqw rgba(36, 35, 33, 0.35);  /* certificate seal */
 
   /* Motion: subtle and never instant */
   --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
@@ -63,6 +81,7 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
   }
 
   body {
@@ -72,7 +91,7 @@
     font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
     min-height: 100vh;
   }
 
@@ -189,10 +208,10 @@
   &:hover::after { transform: translateX(120%); }
   /* Cinematic Ember: terracotta into brick red into burgundy */
   background-color: var(--color-gold);
-  background-image: linear-gradient(135deg, #B35A3F 0%, #A84E3C 45%, #7A2E2E 100%);
+  background-image: linear-gradient(135deg, var(--color-ember-start) 0%, var(--color-gold) 45%, var(--color-ember-end) 100%);
   color: #fff;
   box-shadow: var(--shadow-soft);
-  &:hover { background-color: var(--color-gold-hover); background-image: linear-gradient(135deg, #A84E3C 0%, #5A1F25 100%); box-shadow: var(--shadow-card); }
+  &:hover { background-color: var(--color-gold-hover); background-image: linear-gradient(135deg, var(--color-gold) 0%, var(--color-burgundy) 100%); box-shadow: var(--shadow-card); }
 }
 
 @utility btn-dark {
@@ -386,12 +405,12 @@
 /* "Và còn nhiều học viên…" pill: ember light sweeping across, a gentle float and a pulsing dot */
 @keyframes more-note-sweep { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @keyframes more-note-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-@keyframes more-note-ping { 0% { box-shadow: 0 0 0 0 rgba(232, 149, 107, 0.7); } 100% { box-shadow: 0 0 0 10px rgba(232, 149, 107, 0); } }
+@keyframes more-note-ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-gold-light) 70%, transparent); } 100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--color-gold-light) 0%, transparent); } }
 .more-note {
   background-color: var(--color-onyx);
-  background-image: linear-gradient(110deg, #3A1A1E 0%, #5A1F25 35%, #A84E3C 50%, #5A1F25 65%, #3A1A1E 100%);
+  background-image: linear-gradient(110deg, var(--color-burgundy-deep) 0%, var(--color-burgundy) 35%, var(--color-gold) 50%, var(--color-burgundy) 65%, var(--color-burgundy-deep) 100%);
   background-size: 250% 100%;
-  box-shadow: 0 12px 30px -14px rgba(90, 31, 37, 0.6);
+  box-shadow: var(--shadow-note);
   animation: more-note-sweep 6s linear infinite, more-note-float 4s ease-in-out infinite;
 }
 .more-note-dot { width: 8px; height: 8px; border-radius: 9999px; background: var(--color-gold-light); flex-shrink: 0; animation: more-note-ping 1.8s ease-out infinite; }
@@ -400,7 +419,7 @@
 /* Advertising banner on the blog: ember light sweeping across, editing clips glowing in turn, a playhead crossing them */
 .ad-banner {
   background-color: var(--color-onyx);
-  background-image: linear-gradient(110deg, #242321 0%, #3A1A1E 35%, #7A3029 50%, #3A1A1E 65%, #242321 100%);
+  background-image: linear-gradient(110deg, var(--color-onyx) 0%, var(--color-burgundy-deep) 35%, var(--color-rust) 50%, var(--color-burgundy-deep) 65%, var(--color-onyx) 100%);
   background-size: 250% 100%;
   animation: more-note-sweep 8s linear infinite;
 }
@@ -414,16 +433,31 @@
 /* Paid lesson text never prints: the page shows a notice instead (see ProtectedText) */
 @media print {
   .protected-text > :not(.print-only) { display: none !important; }
-  .protected-text .print-only { display: block !important; color: #000; }
+  .protected-text .print-only { display: block !important; color: var(--color-ink); }
 }
 
 /* Certificate page prints the certificate alone: one full-bleed A4 landscape page, colours kept */
 @media print {
   @page { size: A4 landscape; margin: 0; }
-  html:has(.certificate), body:has(.certificate) { height: 210mm; overflow: hidden; background: #FBF7F1; }
+  html:has(.certificate), body:has(.certificate) { height: 210mm; overflow: clip; background: var(--color-paper); }
   /* Everything else leaves the layout, or its height would spill onto extra blank pages */
   body:has(.certificate) *:not(:has(.certificate)):not(.certificate):not(.certificate *) { display: none !important; }
   body:has(.certificate) :has(.certificate) { padding: 0; margin: 0; min-height: 0; }
   body:has(.certificate) .certificate, body:has(.certificate) .certificate * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   body:has(.certificate) .certificate { position: fixed; top: 0; left: 0; width: 297mm; height: 210mm; aspect-ratio: auto; box-shadow: none; }
 }
+
+/* Homepage hero scrims: darker toward the bottom-left where the title sits */
+@utility scrim-hero-v {
+  background-image: linear-gradient(to bottom,
+    color-mix(in srgb, var(--color-scrim) 25%, transparent) 0%,
+    color-mix(in srgb, var(--color-scrim) 0%, transparent) 30%,
+    color-mix(in srgb, var(--color-scrim) 55%, transparent) 60%,
+    color-mix(in srgb, var(--color-scrim) 92%, transparent) 100%);
+}
+@utility scrim-hero-h {
+  background-image: linear-gradient(to right, color-mix(in srgb, var(--color-scrim) 60%, transparent), transparent 65%);
+}
+
+/* Both scroll roots clip sideways overflow; clip, not hidden, so the sticky nav keeps working */
+html, body { overflow-x: clip; }

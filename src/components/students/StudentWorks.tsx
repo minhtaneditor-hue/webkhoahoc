@@ -114,7 +114,7 @@ export default function StudentWorks({ works, light = false }: { works: StudentW
                               <span className="w-11 h-11 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center text-white"><Play size={18} className="ml-0.5" /></span>
                             </span>
                           )}
-                          <span className={`absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/65 text-white'}`}>{sideName(s.label, lang)}</span>
+                          <span className={`absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-xs font-bold ${s.label === 'Sau' ? 'bg-gold-light text-onyx' : 'bg-black/65 text-white'}`}>{sideName(s.label, lang)}</span>
                         </div>
                       ))}
                     </div>
