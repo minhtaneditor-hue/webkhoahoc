@@ -56,10 +56,10 @@ export function LangSwitch({ className = '' }: { className?: string }) {
       hrefLang={en ? 'vi' : 'en'}
       lang={en ? 'vi' : 'en'}
       aria-label={en ? 'Xem bằng tiếng Việt' : 'View in English'}
-      className={`inline-flex items-center min-h-[44px] rounded-full border border-line px-1 text-xs font-bold tracking-wide ${className}`}
+      className={`inline-flex items-center gap-0.5 h-11 rounded-full border border-line bg-card p-1 text-xs font-bold tracking-wide transition-colors hover:border-line-strong ${className}`}
     >
-      <span aria-hidden="true" className={`px-2 py-1 rounded-full ${en ? 'text-muted-foreground' : 'bg-onyx text-white'}`}>VI</span>
-      <span aria-hidden="true" className={`px-2 py-1 rounded-full ${en ? 'bg-onyx text-white' : 'text-muted-foreground'}`}>EN</span>
+      <span aria-hidden="true" className={`w-9 h-full rounded-full flex items-center justify-center ${en ? 'text-muted-foreground' : 'bg-onyx text-white'}`}>VI</span>
+      <span aria-hidden="true" className={`w-9 h-full rounded-full flex items-center justify-center ${en ? 'bg-onyx text-white' : 'text-muted-foreground'}`}>EN</span>
     </Link>
   );
 }
@@ -70,7 +70,7 @@ export const isAppShellRoute = (pathname: string | null) =>
 
 export function Logo({ light = false, en = false }: { light?: boolean; en?: boolean }) {
   return (
-    <Link href={en ? '/en' : '/'} className="group flex items-center gap-2.5 min-h-[44px]" aria-label={en ? 'TẤN VA — Home' : 'TẤN VA — Trang chủ'}>
+    <Link href={en ? '/en' : '/'} className="group shrink-0 flex items-center gap-2.5 min-h-[44px]" aria-label={en ? 'TẤN VA — Home' : 'TẤN VA — Trang chủ'}>
       <BrandMark size={38} className="transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-110 group-hover:-rotate-[6deg]" />
       <span className="font-sans text-[1.35rem] font-extrabold tracking-tight leading-none">
         <span className={light ? 'text-white' : 'text-ink'}>TẤN</span> <span className={light ? 'text-gold-light' : 'text-gold'}>VA</span>
@@ -183,14 +183,14 @@ export default function Navbar() {
         <Logo en={en} />
 
         {/* Desktop */}
-        <div className="hidden lg:flex items-center gap-1">
+        <div className="hidden lg:flex flex-1 justify-center items-center gap-0.5 xl:gap-1">
           {!en && <div className="relative" ref={dropdownRef}>
             <button
               type="button"
               aria-expanded={isDropdownOpen}
               aria-haspopup="true"
               onClick={() => setIsDropdownOpen((o) => !o)}
-              className={`px-4 py-2.5 rounded-md text-[15px] font-medium transition-colors flex items-center gap-1.5 ${productActive ? 'text-ink' : 'text-muted-foreground hover:text-ink'}`}
+              className={`px-3 xl:px-4 py-2.5 rounded-md text-[15px] font-medium transition-colors flex items-center gap-1.5 ${productActive ? 'text-ink' : 'text-muted-foreground hover:text-ink'}`}
             >
               <span className="link-underline" data-active={productActive || undefined}>Khóa học</span>
               <ChevronDown size={16} aria-hidden="true" className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -215,39 +215,43 @@ export default function Navbar() {
               key={link.href}
               href={link.href}
               aria-current={isActive(link.href) ? 'page' : undefined}
-              className={`group px-4 py-2.5 rounded-md text-[15px] font-medium transition-colors ${isActive(link.href) ? 'text-ink' : 'text-muted-foreground hover:text-ink'}`}
+              className={`group px-3 xl:px-4 py-2.5 rounded-md text-[15px] font-medium transition-colors ${isActive(link.href) ? 'text-ink' : 'text-muted-foreground hover:text-ink'}`}
             >
               <span className="link-underline" data-active={isActive(link.href) || undefined}>{link.name}</span>
             </Link>
           ))}
         </div>
 
-        <div className="hidden lg:flex items-center gap-2 whitespace-nowrap">
+        <div className="hidden lg:flex shrink-0 items-center gap-2 whitespace-nowrap">
           <LangSwitch />
+          <span aria-hidden="true" className="w-px h-6 bg-line mx-1" />
           {en ? (
-            <a href={MESSENGER_HREF} target="_blank" rel="noopener noreferrer" className="btn btn-gold !min-h-[44px] text-sm">Book a session <ArrowRight size={16} aria-hidden="true" /></a>
+            <a href={MESSENGER_HREF} target="_blank" rel="noopener noreferrer" className="btn btn-gold !min-h-0 h-11 !rounded-full text-sm">Book a session <ArrowRight size={16} aria-hidden="true" /></a>
           ) : user ? (
             <>
               {isAdmin(user.email) && (
-                <Link href="/admin" className="btn btn-outline !min-h-[44px] !px-4 text-sm">
-                  <ShieldCheck size={16} aria-hidden="true" className="hidden xl:block" /> Quản trị
+                <Link href="/admin" aria-label="Quản trị" title="Quản trị" className="inline-flex items-center justify-center w-11 h-11 rounded-full text-sm font-semibold text-muted-foreground hover:text-ink hover:bg-muted transition-colors">
+                  <ShieldCheck size={18} aria-hidden="true" />
                 </Link>
               )}
-              <Link href="/dashboard" className="btn btn-dark !min-h-[44px] !px-4 text-sm">
+              <Link href="/dashboard" className="btn btn-dark !min-h-0 h-11 !px-4 !rounded-full text-sm">
                 <LayoutDashboard size={16} aria-hidden="true" className="hidden xl:block" /> Khu học tập
               </Link>
-              <Link href="/dashboard#ho-so" className="flex items-center gap-2 min-h-[44px] pl-1 pr-2 rounded-md hover:bg-muted transition-colors" aria-label={`Hồ sơ của ${displayName}`}>
-                {avatar('w-9 h-9')}
-                <span className="hidden xl:inline max-w-[9rem] truncate text-sm font-semibold text-ink">{displayName}</span>
-              </Link>
-              <button onClick={handleLogout} aria-label="Đăng xuất" className="w-11 h-11 rounded-md flex items-center justify-center text-muted-foreground hover:text-ink hover:bg-muted transition-colors">
-                <LogOut size={18} aria-hidden="true" />
-              </button>
+              <span className="flex items-center h-11 rounded-full border border-line bg-card p-1 gap-0.5">
+                <Link href="/dashboard#ho-so" className="flex items-center gap-2 h-full pr-1 xl:pr-2.5 rounded-full hover:bg-muted transition-colors" aria-label={`Hồ sơ của ${displayName}`} title={displayName}>
+                  {avatar('w-9 h-9')}
+                  <span className="hidden xl:inline max-w-[8rem] truncate text-sm font-semibold text-ink">{displayName}</span>
+                </Link>
+                <span aria-hidden="true" className="w-px h-5 bg-line" />
+                <button onClick={handleLogout} aria-label="Đăng xuất" title="Đăng xuất" className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-ink hover:bg-muted transition-colors">
+                  <LogOut size={16} aria-hidden="true" />
+                </button>
+              </span>
             </>
           ) : (
             <>
-              <Link href="/auth" className="px-4 py-2.5 text-[15px] font-medium text-muted-foreground hover:text-ink transition-colors">Đăng nhập</Link>
-              <Link href="/courses" className="btn btn-gold !min-h-[44px] text-sm">Bắt đầu học <ArrowRight size={16} aria-hidden="true" /></Link>
+              <Link href="/auth" className="inline-flex items-center h-11 px-3 rounded-full text-sm font-semibold text-muted-foreground hover:text-ink hover:bg-muted transition-colors">Đăng nhập</Link>
+              <Link href="/courses" className="btn btn-gold !min-h-0 h-11 !rounded-full text-sm">Bắt đầu học <ArrowRight size={16} aria-hidden="true" /></Link>
             </>
           )}
         </div>
