@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import ChamVideoTool from './ChamVideoTool';
+import JsonLd from '@/components/JsonLd';
+import { ORG_ID } from '@/lib/brand-entity';
+import { SITE_URL } from '@/lib/site-url';
 
 export const metadata: Metadata = {
   title: 'Chấm video miễn phí bằng AI',
@@ -10,6 +13,19 @@ export const metadata: Metadata = {
 export default function ChamVideoPage() {
   return (
     <main className="section pt-28 md:pt-32">
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'Chấm video bằng AI',
+        url: `${SITE_URL}/cham-video`,
+        description: metadata.description,
+        applicationCategory: 'MultimediaApplication',
+        operatingSystem: 'Web',
+        inLanguage: 'vi',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: 0, priceCurrency: 'VND', description: 'Miễn phí 3 lượt mỗi ngày' },
+        creator: { '@id': ORG_ID },
+      }} />
       <div className="container-lux max-w-3xl">
         <span className="badge">Miễn phí · 3 lượt mỗi ngày</span>
         <h1 className="mt-4 text-4xl md:text-5xl">Chấm video của bạn trong 1 phút</h1>

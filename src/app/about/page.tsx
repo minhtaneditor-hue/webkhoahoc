@@ -3,6 +3,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
+import JsonLd from '@/components/JsonLd';
+import { ORGANIZATION, PERSON } from '@/lib/brand-entity';
+import { SITE_URL } from '@/lib/site-url';
 
 export const metadata: Metadata = {
   title: 'Về Minh Tấn',
@@ -58,6 +61,14 @@ const values = [
 export default function AboutPage() {
   return (
     <main>
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@graph': [
+          { '@type': 'AboutPage', url: `${SITE_URL}/about`, name: 'Về Minh Tấn', inLanguage: 'vi', mainEntity: { '@id': PERSON['@id'] } },
+          PERSON,
+          ORGANIZATION,
+        ],
+      }} />
       <section className="container-lux py-12 md:py-20 grid gap-12 lg:grid-cols-2 items-center">
         <div>
           <SectionHeading

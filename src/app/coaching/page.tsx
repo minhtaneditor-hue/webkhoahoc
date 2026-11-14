@@ -6,6 +6,9 @@ import { Reveal } from '@/components/motion/Motion';
 import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
 import ConsultBox from '@/components/ConsultBox';
+import JsonLd from '@/components/JsonLd';
+import { ORG_ID, PERSON_ID } from '@/lib/brand-entity';
+import { SITE_URL } from '@/lib/site-url';
 
 export const metadata: Metadata = {
   title: 'Coaching',
@@ -74,6 +77,24 @@ export default async function CoachingPage() {
   const CONTACT = contactFrom(await getSiteSettings());
   return (
     <main>
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: 'Coaching 1:1 làm video cùng Minh Tấn',
+        serviceType: 'Coaching quay và dựng video',
+        description: metadata.description,
+        url: `${SITE_URL}/coaching`,
+        inLanguage: 'vi',
+        areaServed: { '@type': 'Country', name: 'Việt Nam' },
+        provider: { '@id': PERSON_ID },
+        brand: { '@id': ORG_ID },
+        hasOfferCatalog: {
+          '@type': 'OfferCatalog',
+          name: 'Các gói coaching',
+          // "10.000.000đ" → 10000000; "Miễn phí" → 0
+          itemListElement: packages.map((p) => ({ '@type': 'Offer', name: p.name, description: p.duration, price: Number(p.price.replace(/\D/g, '')) || 0, priceCurrency: 'VND', url: `${SITE_URL}/coaching` })),
+        },
+      }} />
       {/* Hero */}
       <section className="surface-dark">
         <div className="container-lux py-16 md:py-24 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">

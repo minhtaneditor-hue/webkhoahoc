@@ -194,7 +194,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
               <ChevronLeft size={16} aria-hidden="true" /> Tất cả khóa học
             </Link>
             <h1 className="mt-4 text-white">{course.title}</h1>
-            <p className="mt-3 text-gold-light font-semibold">{comingSoon ? 'Coming soon · Giá chưa tiết lộ' : `Khóa học online · ${lessons.length} bài học · truy cập trọn đời`}</p>
+            <p className="mt-3 text-gold-light font-semibold">{comingSoon ? 'Updating · Giá chưa tiết lộ' : `Khóa học online · ${lessons.length} bài học · truy cập trọn đời`}</p>
             <p className="mt-5 text-lg text-stone-300 leading-relaxed max-w-xl">
               {course.description || 'Hành trình thực chiến biến chiếc smartphone của bạn thành công cụ tạo ra thu nhập.'}
             </p>
@@ -235,7 +235,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
       {comingSoon ? (
       <section id="dat-truoc" aria-labelledby="preorder-title" className="container-lux section scroll-mt-24">
         <div className="card p-6 md:p-10 max-w-2xl mx-auto shadow-[var(--shadow-lift)]">
-          <p className="eyebrow">Coming soon</p>
+          <p className="eyebrow">Updating</p>
           <h2 id="preorder-title" className="mt-3 text-4xl">Đặt trước để nhận giá ưu đãi</h2>
           <p className="mt-3 text-muted-foreground">Khóa học đang được chuẩn bị, giá chưa tiết lộ. Đăng ký đặt trước ngay hôm nay để được giá tốt hơn khi mở bán.</p>
           <ul className="mt-6 space-y-3">
