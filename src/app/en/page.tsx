@@ -58,6 +58,7 @@ const outcomes = [
 
 const faqs = [
   { q: 'Do I need a professional camera?', a: 'No. Everything is taught on a smartphone, filming and editing alike. If you already have a camera you can bring it, but you won’t need it.' },
+  { q: 'What language are the sessions in?', a: 'Sessions are taught in Vietnamese. Most of our students abroad are overseas Vietnamese in the US, Canada, Australia and Singapore.' },
   { q: 'How do sessions work across time zones?', a: 'Sessions are 1:1 online calls of 2 hours. We schedule them in your time zone, whether you are in the US, Canada, Australia, Singapore or elsewhere.' },
   { q: 'How do I pay?', a: 'There is no checkout on this site. Message us on Messenger to book, and we’ll send you a PayPal or Wise payment link.' },
   { q: 'Can I try before buying a program?', a: 'Yes. Start with the free 30-minute audit, or book a single 2-hour session for $99.' },
@@ -215,7 +216,7 @@ export default async function HomeEn() {
             </div>
             <p className="mt-2 text-stone-400">{featured.duration}</p>
             <ul className="mt-8 space-y-3 text-stone-300 text-lg">
-              {['Filming and editing with Minh Tấn, then Facebook and TikTok ads with a partner expert', 'Sessions scheduled in your time zone', 'Questions by message between sessions', 'Pay by PayPal or Wise'].map((x) => (
+              {['Filming and editing with Minh Tấn, then Facebook and TikTok ads with a partner expert', 'Taught in Vietnamese', 'Sessions scheduled in your time zone', 'Questions by message between sessions', 'Pay by PayPal or Wise'].map((x) => (
                 <li key={x} className="flex gap-3"><Check size={20} className="text-gold-light shrink-0 mt-1" aria-hidden="true" /> {x}</li>
               ))}
             </ul>
