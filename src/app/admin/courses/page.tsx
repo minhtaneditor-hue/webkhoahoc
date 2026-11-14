@@ -104,6 +104,8 @@ export default function CourseManagement() {
       content: lessonForm.content || null,
       is_free: !!lessonForm.is_free,
       chapter_id: lessonForm.chapter_id || null,
+      // Only sent once the field exists (migration 034), so saving works before it is run
+      ...('summary' in lessonForm ? { summary: lessonForm.summary?.trim() || null } : {}),
     };
     const { error } = lessonForm.id
       ? await supabase.from('lessons').update(payload).eq('id', lessonForm.id)
@@ -268,7 +270,10 @@ export default function CourseManagement() {
             <Field id="l-video" label="Video" hint="Link YouTube/Vimeo, hoặc drm:MÃ-VIDEO cho video bảo vệ bằng DRM.">
               <input id="l-video" className="input" value={lessonForm.video_url || ''} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} />
             </Field>
-            <Field id="l-content" label="Nội dung / ghi chú bài học">
+            <Field id="l-summary" label="Bạn sẽ học (hiện công khai trên trang khóa học)" hint="1–2 câu nói rõ bài dạy gì, ví dụ: chọn cỡ cảnh, đặt chủ thể theo bố cục. Chỉ ghi đúng những gì có trong video.">
+              <textarea id="l-summary" className="input min-h-[72px]" maxLength={280} value={lessonForm.summary || ''} onChange={(e) => setLessonForm({ ...lessonForm, summary: e.target.value })} />
+            </Field>
+            <Field id="l-content" label="Nội dung / ghi chú bài học (chỉ học viên đã mua thấy)">
               <textarea id="l-content" className="input min-h-[120px]" value={lessonForm.content || ''} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
             </Field>
             <label className="flex items-center gap-3 min-h-[44px]">

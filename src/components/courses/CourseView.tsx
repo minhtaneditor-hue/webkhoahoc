@@ -10,7 +10,8 @@ import GuardedYouTube, { youTubeId } from '@/components/video/GuardedYouTube';
 import { formatVND, savingPercent } from '@/lib/supabase-public';
 import { groupByChapter, isComingSoon, lessonsInOrder, type Chapter } from '@/lib/curriculum';
 import ConsultBox from '@/components/ConsultBox';
-import CourseReviews from '@/components/CourseReviews';
+import CourseReviews, { type Review } from '@/components/CourseReviews';
+import CourseFit from '@/components/courses/CourseFit';
 import PainPoints from '@/components/PainPoints';
 import SignInPrompt from '@/components/courses/SignInPrompt';
 import { useMembership } from '@/components/membership/useMembership';
@@ -50,11 +51,12 @@ const preorderPerks = [
 
 // The server page passes the course in, so its content is in the first HTML for search engines.
 // Without it (e.g. an unpublished course an admin previews) the course is fetched as the signed-in user.
-export default function CourseView({ id, initialCourse, initialLessons, initialChapters }: {
+export default function CourseView({ id, initialCourse, initialLessons, initialChapters, initialReviews }: {
   id: string;
   initialCourse: any;
   initialLessons: any[];
   initialChapters: Chapter[];
+  initialReviews?: Review[];
 }) {
   const router = useRouter();
 
@@ -265,6 +267,9 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
             </dl>
           </section>
 
+          {/* Who it is for, and how lessons follow students' needs: written for the 21 Ngày course */}
+          {/21 Ngày/i.test(course.title) && <CourseFit />}
+
           {/* Curriculum */}
           <section aria-labelledby="curriculum-title" id="curriculum">
             <h2 id="curriculum-title" className="text-4xl">Lộ trình khóa học</h2>
@@ -287,6 +292,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
                     <span className="font-display text-2xl text-muted-foreground w-8 shrink-0 text-center">{idx + 1}</span>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-ink">{lesson.title}</p>
+                      {lesson.summary && <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{lesson.summary}</p>}
                       {lesson.is_free && <span className="badge mt-1">Học thử miễn phí</span>}
                     </div>
                     {canWatch ? (
@@ -308,7 +314,7 @@ export default function CourseView({ id, initialCourse, initialLessons, initialC
             </div>
           </section>
 
-          <CourseReviews courseId={course.id} user={user} enrolled={enrolled} />
+          <CourseReviews courseId={course.id} user={user} enrolled={enrolled} initialReviews={initialReviews} />
         </div>
 
         {/* Pricing card */}
