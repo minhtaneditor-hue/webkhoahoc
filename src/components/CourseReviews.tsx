@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Star, Loader2, CheckCircle2, MessageSquare } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 
-type Review = { id: number; author_name: string; rating: number; comment: string | null; created_at: string; updated_at: string };
+export type Review = { id: number; author_name: string; rating: number; comment: string | null; created_at: string; updated_at: string };
 
 const LABELS = ['', 'Chưa hài lòng', 'Tạm được', 'Ổn', 'Tốt', 'Tuyệt vời'];
 const PAGE = 6;
@@ -24,8 +24,9 @@ function Stars({ value, size = 16 }: { value: number; size?: number }) {
  * Ratings and comments under a course (migration 019). Everyone sees the visible reviews;
  * enrolled students rate 1–5 stars and comment, once per course (posting again edits it).
  */
-export default function CourseReviews({ courseId, user, enrolled }: { courseId: string; user: any; enrolled: boolean }) {
-  const [reviews, setReviews] = useState<Review[] | null>(null);
+export default function CourseReviews({ courseId, user, enrolled, initialReviews }: { courseId: string; user: any; enrolled: boolean; initialReviews?: Review[] }) {
+  // The server page passes the reviews in, so they are in the first HTML for search engines and AI crawlers
+  const [reviews, setReviews] = useState<Review[] | null>(initialReviews ?? null);
   const [shown, setShown] = useState(PAGE);
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -35,10 +36,11 @@ export default function CourseReviews({ courseId, user, enrolled }: { courseId: 
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (initialReviews) return;
     supabase.from('course_reviews').select('id, author_name, rating, comment, created_at, updated_at')
       .eq('course_id', courseId).order('created_at', { ascending: false })
       .then(({ data }) => setReviews((data as Review[]) || []));
-  }, [courseId]);
+  }, [courseId, initialReviews]);
 
   useEffect(() => {
     if (!user || !enrolled) return;
@@ -72,7 +74,7 @@ export default function CourseReviews({ courseId, user, enrolled }: { courseId: 
     setState('saved');
   };
 
-  const fmt = (d: string) => new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const fmt = (d: string) => new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
 
   return (
     <section aria-labelledby="reviews-title" id="danh-gia" className="scroll-mt-24">
