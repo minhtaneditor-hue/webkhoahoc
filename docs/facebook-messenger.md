@@ -1,6 +1,6 @@
 # AI chăm sóc khách Facebook Messenger
 
-Bot trả lời tin nhắn Fanpage 24/7, tư vấn theo đúng khóa học / cửa hàng / câu hỏi thường gặp trên website, chốt đơn, và báo cho bạn khi gặp ca khó. Quản lý ở **Admin > Facebook Messenger**.
+Bot **Mina** (trợ lý nữ, nhẹ nhàng, dễ thương, chu đáo; xưng "em") trả lời tin nhắn Fanpage 24/7, tư vấn theo đúng khóa học / cửa hàng / câu hỏi thường gặp trên website, chốt đơn, và báo cho bạn khi gặp ca khó. Quản lý ở **Admin > Facebook Messenger**.
 
 ## Bot làm gì
 

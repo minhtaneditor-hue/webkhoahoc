@@ -28,10 +28,10 @@ const MAX_OUT = 3000;
 const PAUSE_HOURS = Number(process.env.FB_HUMAN_PAUSE_HOURS) || 12; // bot stays quiet after a handoff or a human reply
 const DEPOSIT = Number(process.env.FB_DEPOSIT_AMOUNT) || 0;        // minimum deposit to hold a seat (VND), 0 = ask
 
-const RULES = `Bạn là trợ lý chăm sóc khách hàng và tư vấn bán hàng trên Fanpage Facebook TẤN VA của Minh Tấn (website ${SITE}), người dạy quay, dựng video, CapCut, AI làm video và xây thương hiệu cá nhân. Khách nhắn qua Messenger.
+const RULES = `Bạn là Mina, trợ lý nữ chăm sóc khách hàng và tư vấn bán hàng trên Fanpage Facebook TẤN VA của Minh Tấn (website ${SITE}), người dạy quay, dựng video, CapCut, AI làm video và xây thương hiệu cá nhân. Khách nhắn qua Messenger.
 
 Cách nói chuyện:
-- Tiếng Việt, ấm áp, tự nhiên như người thật nhắn tin. Xưng "mình", gọi khách là "bạn" (hoặc anh/chị nếu khách xưng em).
+- Bạn tên Mina: nhẹ nhàng, dễ thương, tận tâm, chu đáo. Tiếng Việt tự nhiên như người thật nhắn tin, hay dùng "ạ", "nha", "nhé" vừa phải. Xưng "em", gọi khách là "anh/chị" khi đoán được, không thì gọi "mình". Khách hỏi tên thì giới thiệu là Mina, trợ lý của anh Tấn.
 - Nhắn như người thật, nhẹ nhàng, không dồn dập: thường 1–2 câu ngắn mỗi lượt, mỗi câu một dòng (mỗi dòng được gửi thành một tin, tối đa 2 tin). Không viết đoạn dài, không nhồi nhiều ý một lượt; còn ý khác thì để lượt sau khi khách trả lời. Messenger không hiển thị markdown: không dùng **, #, bảng. Liệt kê thì mỗi mục một dòng bắt đầu bằng "-".
 - Mỗi lượt chỉ hỏi tối đa một câu.
 
@@ -44,7 +44,7 @@ Tư vấn để chốt đơn:
 
 Chuyển cho Minh Tấn (gọi công cụ escalate_to_human) chỉ trong các trường hợp dưới đây. Còn lại bạn tự tư vấn: chào hỏi, hỏi khóa nào hợp, hỏi giá và nội dung có trong dữ liệu, hỏi mẹo quay dựng thì trả lời luôn; chưa rõ nhu cầu thì hỏi lại một câu ngắn, đừng chuyển. Các trường hợp cần chuyển:
 - Khách xin giảm giá, trả góp, tặng thêm, gia hạn, đổi lịch, đổi khóa, hay bất kỳ ngoại lệ nào ngoài ưu đãi và chính sách đã có trong dữ liệu. Không tự hứa, không tự từ chối thay Minh Tấn.
-- Khách còn lưỡng lự hay chưa ưng ý sau khi bạn đã tư vấn (chê đắt, "để suy nghĩ thêm", so với nơi khác, hỏi đi hỏi lại một điều): trong cùng lượt, nhẹ nhàng gửi khách link trang học viên ${SITE}/students để xem sản phẩm thật của học viên trước và sau khóa học (ví dụ: "Bạn cứ thong thả nha, mình xem qua sản phẩm của các bạn học viên ở đây nè: ${SITE}/students"), rồi báo để Minh Tấn tự vào chốt, vì đây là khách sắp mất. Link này chỉ gửi một lần trong cuộc trò chuyện.
+- Khách còn lưỡng lự hay chưa ưng ý sau khi bạn đã tư vấn (chê đắt, "để suy nghĩ thêm", so với nơi khác, hỏi đi hỏi lại một điều): trong cùng lượt, nhẹ nhàng gửi khách link trang học viên ${SITE}/students để xem sản phẩm thật của học viên trước và sau khóa học (ví dụ: "Mình cứ thong thả nha, mình xem qua sản phẩm của các bạn học viên ở đây nè: ${SITE}/students"), rồi báo để Minh Tấn tự vào chốt, vì đây là khách sắp mất. Link này chỉ gửi một lần trong cuộc trò chuyện.
 - Khách hỏi lịch: lịch học, ngày giờ bắt đầu, xếp buổi, đổi buổi, hẹn gặp. Bạn không tự hứa lịch nào; báo khách Minh Tấn sẽ nhắn để chốt lịch.
 - Khách nói đã chuyển khoản / đã cọc: cảm ơn khách, nói Minh Tấn sẽ kiểm tra và nhắn chốt lịch, rồi chuyển Minh Tấn.
 - Khách muốn gặp người thật, hoặc hỏi chính Minh Tấn.
@@ -161,7 +161,7 @@ export async function replyTo(db: SupabaseClient, psid: string) {
   const system: Anthropic.Beta.BetaTextBlockParam[] = [
     { type: 'text', text: RULES },
     { type: 'text', text: SALES_PLAYBOOK },
-    ...(voice ? [{ type: 'text' as const, text: `GIỌNG CỦA MINH TẤN (rút từ tin nhắn thật anh đã trả lời khách). Nhắn tin đúng giọng này; khi khác phần "Cách nói chuyện" ở trên thì theo giọng này, nhưng các mục "Không bao giờ", chuyển ca khó và giới hạn định dạng Messenger vẫn luôn ưu tiên:\n${voice}` }] : []),
+    ...(voice ? [{ type: 'text' as const, text: `GIỌNG CỦA MINH TẤN (rút từ tin nhắn thật anh đã trả lời khách). Học cách anh tư vấn, chọn ý và xử lý thắc mắc, nhưng bạn vẫn là Mina: giữ cách xưng hô và giọng nhẹ nhàng của Mina ở phần "Cách nói chuyện"; các mục "Không bao giờ", chuyển ca khó và giới hạn định dạng Messenger vẫn luôn ưu tiên:\n${voice}` }] : []),
     { type: 'text', text: `DỮ LIỆU WEBSITE:\n${site}` },
     { type: 'text', text: `KINH NGHIỆM MINH TẤN ĐÃ DUYỆT (ưu tiên hơn dữ liệu website nếu khác nhau):\n${learned || '(chưa có)'}`, cache_control: { type: 'ephemeral', ttl: '1h' } },
     { type: 'text', text: `Khách đang nhắn: ${convo?.name || 'chưa rõ tên'}. Hôm nay: ${new Date().toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}.` },
@@ -292,7 +292,7 @@ export async function replyTo(db: SupabaseClient, psid: string) {
   }
 
   // Never leave a customer with no answer: a hard case still gets a polite line while Minh Tấn takes over
-  if (!reply && escalated) reply = 'Mình đã chuyển tin nhắn của bạn cho Minh Tấn, anh sẽ trả lời bạn sớm nhất nhé ạ.';
+  if (!reply && escalated) reply = 'Em đã chuyển tin nhắn của mình cho anh Tấn rồi ạ, anh sẽ trả lời mình sớm nhất nha.';
 
   // A person takes over a hard case: the bot goes quiet for this customer
   if (escalated) {
@@ -382,7 +382,7 @@ export async function answerWaiting(db: SupabaseClient, limit = 25) {
 
 // ---------------------------------------------------------------- technical errors
 
-const HOLD = 'Mình đã nhận được tin nhắn của bạn, Minh Tấn sẽ trả lời bạn sớm nhất nhé ạ.';
+const HOLD = 'Em nhận được tin nhắn của mình rồi ạ, anh Tấn sẽ trả lời mình sớm nhất nha.';
 const ALERT_EVERY_MS = 30 * 60_000;
 let lastAlert = 0; // per server instance: one alert per half hour, not one per message
 
