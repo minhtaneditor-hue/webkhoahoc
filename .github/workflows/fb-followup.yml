@@ -1,0 +1,20 @@
+# Hourly clock for Mina's Messenger follow-up reminder (src/app/api/cron/fb-followup).
+# Vercel Hobby only allows daily crons, so GitHub calls the endpoint instead; the work runs on Vercel.
+# Needs repo secret CRON_SECRET (same value as on Vercel).
+name: fb-followup
+on:
+  schedule:
+    - cron: '5 * * * *'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call follow-up endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -sS --fail-with-body --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://www.minhtanacademy.com/api/cron/fb-followup
