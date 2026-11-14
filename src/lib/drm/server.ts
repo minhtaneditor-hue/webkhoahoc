@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { AwsClient } from 'aws4fetch';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { isAdmin } from '@/lib/admin';
+import { clientIp } from '@/lib/client-ip';
 
 // tVNDRM running inside the website: Supabase holds sessions + keys, Cloudflare R2 holds
 // the encrypted HLS files. Same policy as the old VPS server (DRM STACK/server).
@@ -55,8 +56,7 @@ export function verifyPlayback(token: string | null): PlaybackClaims | null {
   }
 }
 
-export const clientIp = (req: Request) =>
-  (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || req.headers.get('x-real-ip') || '';
+export { clientIp };
 
 /* ---------- Cloudflare R2 (S3 API) ---------- */
 

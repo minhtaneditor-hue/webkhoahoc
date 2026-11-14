@@ -3,6 +3,7 @@ import { RUBRIC } from '@/lib/cham-video/rubric';
 import { CRITERIA, ratingFor, type Scorecard } from '@/lib/cham-video/criteria';
 import { logToolEvent } from '@/lib/tool-events';
 
+import { clientIp } from '@/lib/client-ip';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
   const mucTieu = str(body.muc_tieu, 80) || 'không nói rõ';
   const nenTang = str(body.nen_tang, 40) || 'TikTok / Reels';
 
-  const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const ip = clientIp(req) || 'unknown';
   if (!allow(ip)) {
     return Response.json({ error: `Hôm nay bạn đã chấm ${DAILY_LIMIT} video rồi. Mai bạn quay lại nhé, hoặc nhắn Zalo để được góp ý trực tiếp.` }, { status: 429 });
   }

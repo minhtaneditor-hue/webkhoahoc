@@ -1,3 +1,4 @@
+import { clientIp } from '@/lib/client-ip';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
   if (audio.byteLength < 2000) return Response.json({ text: '' }); // silent or no sound track
   if (audio.byteLength > MAX_BYTES) return Response.json({ error: 'Phần tiếng dài quá.' }, { status: 413 });
 
-  const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const ip = clientIp(req) || 'unknown';
   if (!allow(ip)) return Response.json({ error: 'Hôm nay bạn đã lấy lời thoại nhiều lần rồi. Bạn dán lời nói vào ô bên dưới nhé.' }, { status: 429 });
 
   const headers = { 'xi-api-key': key };

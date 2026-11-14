@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createHash } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 
+import { clientIp, clientCountry } from '@/lib/client-ip';
 export const dynamic = 'force-dynamic';
 
 const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|headless|lighthouse|vercel-screenshot/i;
@@ -25,12 +26,12 @@ export async function POST(req: NextRequest) {
     } catch { /* not a URL */ }
   }
 
-  const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim();
+  const ip = clientIp(req);
   const day = new Date().toISOString().slice(0, 10);
   const salt = process.env.TRACK_SALT || process.env.DRM_SECRET || 'tanva';
   const visitor = createHash('sha256').update(`${ip}|${ua}|${day}|${salt}`).digest('hex').slice(0, 16);
   const device = /ipad|tablet/i.test(ua) ? 'tablet' : /mobi|android|iphone/i.test(ua) ? 'mobile' : 'desktop';
-  const country = req.headers.get('x-vercel-ip-country') || null;
+  const country = clientCountry(req);
 
   const supabase = getSupabaseAdmin();
   if (supabase) await supabase.from('page_views').insert({ path, referrer, country, device, visitor });

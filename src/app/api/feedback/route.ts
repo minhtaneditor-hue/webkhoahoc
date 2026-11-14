@@ -1,6 +1,7 @@
 import { getSessionUser } from '@/lib/supabase-server';
 import { logToolEvent } from '@/lib/tool-events';
 
+import { clientIp } from '@/lib/client-ip';
 export const dynamic = 'force-dynamic';
 
 /**
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
   const comment = clean(body.comment, 1000);
   if (!tool || (!rating && !comment)) return Response.json({ error: 'Thiếu nội dung góp ý.' }, { status: 400 });
 
-  const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const ip = clientIp(req) || 'unknown';
   if (!allow(ip)) return Response.json({ error: 'Bạn đã gửi nhiều góp ý hôm nay rồi, cảm ơn bạn!' }, { status: 429 });
 
   // Small context only (which format/framework, the score), never the user's content.

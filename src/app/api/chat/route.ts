@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { siteKnowledge } from '@/lib/site-knowledge';
 
+import { clientIp } from '@/lib/client-ip';
 export const dynamic = 'force-dynamic';
 
 /**
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
   while (messages[0]?.role === 'assistant') messages.shift(); // first turn must be the visitor's
   if (messages.at(-1)?.role !== 'user') return Response.json({ error: 'Bạn nhập câu hỏi nhé.' }, { status: 400 });
 
-  const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const ip = clientIp(req) || 'unknown';
   if (!allow(ip)) {
     return Response.json({ error: `Hôm nay bạn đã hỏi ${DAILY_LIMIT} câu rồi. Bạn nhắn Zalo để được tư vấn tiếp nhé.` }, { status: 429 });
   }

@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import { after } from 'next/server';
 import { getSiteSettings } from './content';
 
+import { clientIp } from '@/lib/client-ip';
 // Meta Conversions API: the server-side copy of the Pixel events. It still counts when an ad
 // blocker stops the Pixel or the buyer closes the page before the transfer is confirmed.
 // The pixel id comes from Admin > Nội dung & liên hệ, the token from META_CAPI_ACCESS_TOKEN;
@@ -35,7 +36,7 @@ export function metaContext(req: Request): MetaContext {
   return {
     fbp: cookie('_fbp'),
     fbc: cookie('_fbc'),
-    ip: (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || undefined,
+    ip: clientIp(req) || undefined,
     ua: req.headers.get('user-agent') || undefined,
     url: req.headers.get('referer') || undefined,
   };
