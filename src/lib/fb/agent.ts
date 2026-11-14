@@ -233,14 +233,8 @@ export async function replyTo(db: SupabaseClient, psid: string) {
             continue;
           }
           const { error } = await db.from('fb_orders').insert(order);
-          results.push({ type: 'tool_result', tool_use_id: block.id, is_error: !!error, content: error ? 'Chưa lưu được đơn, hãy chuyển cho Minh Tấn.' : 'Đã ghi đơn và báo Minh Tấn.' });
-          if (!error) {
-            await notifyAdmin({
-              title: `Đơn mới: ${order.product}`,
-              psid,
-              lines: [['Khách', order.customer_name], ['Zalo / SĐT', order.phone], ['Email', order.email || '—'], ['Giá', order.price || '—'], ['Ghi chú', order.note || '—']],
-            });
-          }
+          // No alert for a new order: Minh Tấn is told only when money actually arrives (pay.ts)
+          results.push({ type: 'tool_result', tool_use_id: block.id, is_error: !!error, content: error ? 'Chưa lưu được đơn, hãy chuyển cho Minh Tấn.' : 'Đã ghi đơn (xem trong Admin).' });
         } else if (block.name === 'send_payment_qr') {
           const amount = Math.round(Number(input.amount));
           const kind = input.kind === 'full' ? 'full' : 'deposit';
