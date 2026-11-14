@@ -10,7 +10,7 @@ import { getSiteSettings } from '@/lib/content';
 import { contactFrom } from '@/lib/site-settings';
 import { resendKind, resendTitle } from '@/lib/email-resend';
 import { assetPricing } from '@/lib/shop';
-import { DEFAULT_STUDENT_PASSWORD, FROM, SITE, assetPurchased, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, repoBirthdaySale, tokenSkillOffer, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
+import { DEFAULT_STUDENT_PASSWORD, FROM, SITE, assetPurchased, freeDownloadEmail, getFeaturedCourse, preorderAiCourses, remarketingDiscount, repoBirthdaySale, tokenSkillOffer, birthdayAccountOffer, unsubscribeHeaders, welcomeCourse } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -26,6 +26,9 @@ const CAMPAIGN = {
 const REMARKETING = { ref: 'remarketing-giam10-2026-11', label: 'Giảm 10% cho người chưa mua', code: 'GIAM10' };
 
 // Birthday-month offer to people who took the free 75-repo list, sent in small test batches.
+// Accounts that never bought: the birthday 50% code (same code and course as REPO_SALE)
+const BIRTHDAY_ACCOUNTS = { ref: 'birthday-accounts-2026-11' };
+
 // The Tiết Kiệm Token skill to the same 75-repo list: first people who opened or clicked, then everyone.
 const TOKEN_SALE = { ref: 'token-skill-2026-11', productId: '192e5a88-0af3-4cac-8ba4-76f0bc98c006' };
 
@@ -534,6 +537,47 @@ async function tokenSale(db: SupabaseClient, resend: Resend, adminEmail: string,
   return result;
 }
 
+/**
+ * POST { action: 'birthday-accounts', test?, dryRun? }: the birthday 50% code to accounts with no course and no paid order.
+ * Each account gets it once; opt-outs and undeliverable addresses are skipped.
+ */
+async function birthdayAccounts(db: SupabaseClient, resend: Resend, adminEmail: string, test: boolean, dryRun: boolean) {
+  const made = await repoSaleOffer(db);
+  if ('error' in made) return { error: made.error };
+  const { course, offer } = made;
+  if (test) {
+    const mail = birthdayAccountOffer({ name: null, email: adminEmail }, course, offer);
+    const { error } = await resend.emails.send({ from: FROM, to: adminEmail, subject: `[Gửi thử] ${mail.subject}`, html: mail.html });
+    return error ? { error: error.message } : { test: adminEmail };
+  }
+  const [people, { data: optouts }, { data: sent }] = await Promise.all([
+    remarketingAudience(db),
+    db.from('email_optouts').select('email'),
+    db.from('email_log').select('email').eq('kind', 'campaign').eq('ref', BIRTHDAY_ACCOUNTS.ref),
+  ]);
+  const skip = new Set([...(optouts || []).map((o) => low(o.email)), ...(sent || []).map((s) => low(s.email))]);
+  const pool = [...people].filter(([email]) => !skip.has(email));
+  const result = { audience: people.size, pool: pool.length, alreadySent: (sent || []).length, sent: 0, rejected: 0, failed: 0, remaining: 0 };
+  if (dryRun) return result;
+  const started = Date.now();
+  for (const [email, name] of pool) {
+    if (Date.now() - started > 50_000) { result.remaining++; continue; }
+    if (!(await checkEmail(email)).ok) { result.rejected++; continue; }
+    const { error: claim } = await db.from('email_log').insert({ email, kind: 'campaign', ref: BIRTHDAY_ACCOUNTS.ref });
+    if (claim) { result.failed++; continue; }
+    const { error } = await resend.emails.send({ from: FROM, to: email, headers: unsubscribeHeaders(email), ...birthdayAccountOffer({ name, email }, course, offer) });
+    if (error) {
+      console.error(`Campaign ${BIRTHDAY_ACCOUNTS.ref} to ${email} failed`, error);
+      await db.from('email_log').delete().match({ email, kind: 'campaign', ref: BIRTHDAY_ACCOUNTS.ref });
+      result.failed++;
+      continue;
+    }
+    result.sent++;
+    await sleep(550);
+  }
+  return result;
+}
+
 /** POST { action: 'test' } sends one copy to the admin, unlogged. POST { action: 'send' } sends to people who have not had it. { campaign: 'remarketing' } picks the discount email. */
 export async function POST(req: Request) {
   const auth = await requireAdmin();
@@ -544,6 +588,11 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const { action, campaign, batch, items, total, exclude, dryRun, onlyOpened, onlyClicked, emailId } = body;
+  if (action === 'birthday-accounts') {
+    const result = await birthdayAccounts(db, resend, adminEmail, body.test === true, dryRun === true);
+    if ('error' in result) return NextResponse.json({ error: result.error }, { status: 500 });
+    return NextResponse.json({ ok: true, ...result });
+  }
   if (action === 'token-sale') {
     const { group, test } = body;
     if (group !== 'opened' && group !== 'all' && test !== true) return NextResponse.json({ error: 'Chọn nhóm opened hoặc all.' }, { status: 400 });

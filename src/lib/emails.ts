@@ -565,6 +565,35 @@ export function tokenSkillOffer(d: { name?: string | null; email: string }, o: {
   };
 }
 
+/** To accounts that never bought: Minh Tấn's birthday-month 50% code on the featured course. `until` is the code's real expiry. */
+export function birthdayAccountOffer(d: { name?: string | null; email: string }, c: FeaturedCourse, offer: { code: string; price: number; discount: number; until: string }): Mail {
+  const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
+  const now = vnd(offer.price - offer.discount);
+  return {
+    subject: `Tháng sinh nhật mình: mã giảm 50% khóa ${c.title}`,
+    html: layout({
+      preheader: `Nhập mã ${offer.code}: còn ${now} thay vì ${vnd(offer.price)}, đến hết ${offer.until}.`,
+      unsubscribeFor: d.email,
+      body: `
+        ${eyebrow('Ưu đãi tháng sinh nhật')}
+        ${h1(`Mã giảm 50% dành cho ${esc(firstName(d.name))}`)}
+        ${p(`Chào ${esc(firstName(d.name))}, cảm ơn bạn đã tạo tài khoản TẤN VA. Tháng 11 này là tháng sinh nhật của mình, nên mình muốn gửi bạn một món quà: <strong>giảm 50% khóa ${esc(c.title)}</strong>.`)}
+        ${p('Khóa học dạy bạn tự quay, tự dựng và bán hàng bằng video, chỉ với chiếc điện thoại của bạn.')}
+        ${box(`Mã giảm giá tháng sinh nhật<br>
+          <strong style="font-size:24px;letter-spacing:0.08em;color:${C.ink};">${esc(offer.code)}</strong><br>
+          Học phí còn <strong style="color:${C.ink};">${now}</strong> thay vì ${vnd(offer.price)}. Mã dùng được đến hết ngày ${esc(offer.until)}, số lượt có giới hạn.`)}
+        ${steps([
+          ['Mở trang khóa học', 'Bấm nút bên dưới. Bạn có thể học thử trước khi quyết định.'],
+          ['Nhập mã', `Gõ ${esc(offer.code)} vào ô Mã giảm giá rồi bấm Áp dụng.`],
+          ['Thanh toán', 'Khóa học mở ngay sau khi thanh toán thành công.'],
+        ])}
+        ${button(`${courseUrl(c)}#dang-ky`, 'Dùng mã giảm 50%')}
+        ${p('Bạn còn phân vân điều gì về khóa học? Trả lời email này cho mình biết nhé.')}
+        ${signature}`,
+    }),
+  };
+}
+
 /** To people who took the free 75-repo list: Minh Tấn's birthday-month offer on the featured course. `until` is the code's real expiry. */
 export function repoBirthdaySale(d: { name?: string | null; email: string }, c: FeaturedCourse, offer: { code: string; price: number; discount: number; until: string }): Mail {
   const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
