@@ -1,6 +1,7 @@
 import { after } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
-import { answerWaiting } from '@/lib/fb/agent';
+import { answerWaiting, healthCheck } from '@/lib/fb/agent';
+import { fbConfigured, subscribePage, tokenInfo } from '@/lib/fb/graph';
 import { botEnabled, lockedOff, setBotEnabled } from '@/lib/fb/switch';
 import { sendTelegram, validTelegramSecret } from '@/lib/fb/telegram';
 
@@ -13,6 +14,7 @@ export const maxDuration = 60;
  *   /bat (/on)           bot replies again
  *   /trangthai (/status) on or off, and how many customers are waiting for him
  *   /tralo               the bot answers every customer still waiting (paused ones too)
+ *   /kiemtra             health check: switch, AI, Facebook token + webhook fields, last 24 h counts
  * Only TELEGRAM_CHAT_ID is obeyed; the secret header proves the call comes from Telegram.
  * Connected from Admin > Facebook Messenger > "Kết nối Telegram".
  */
@@ -25,6 +27,7 @@ function command(text: string) {
   if (/^\/?(bat|on|bat bot)$/.test(t)) return 'on';
   if (/^\/?(trangthai|trang thai|status|start)$/.test(t)) return 'status';
   if (/^\/?(tralo|tra loi|tra loi het|tra loi tat ca)$/.test(t)) return 'answer';
+  if (/^\/?(kiemtra|kiem tra|check)$/.test(t)) return 'check';
   return null;
 }
 
@@ -40,7 +43,28 @@ export async function POST(req: Request) {
 
   try {
     if (!cmd) {
-      await sendTelegram(msg.chat.id, 'Lệnh: /tralo để bot trả lời hết khách đang chờ, /tat để tắt bot, /bat để bật lại, /trangthai để xem tình trạng.');
+      await sendTelegram(msg.chat.id, 'Lệnh: /kiemtra để bot tự kiểm tra, /tralo để bot trả lời hết khách đang chờ, /tat để tắt bot, /bat để bật lại, /trangthai để xem tình trạng.');
+      return new Response('ok');
+    }
+    if (cmd === 'check') {
+      const lines = [(await botEnabled(db)) ? '🟢 Công tắc: BẬT' : '🔴 Công tắc: TẮT'];
+      if (!fbConfigured()) lines.push('❌ Thiếu FB_PAGE_ACCESS_TOKEN trên Vercel');
+      else {
+        try {
+          const t = await tokenInfo();
+          lines.push(`✅ Facebook token của Trang: ${t.name}`);
+          const need = ['messages', 'message_echoes'].filter((f) => !t.fields.includes(f));
+          if (need.length) {
+            // the Page stopped sending messages to the app: subscribe it again right away
+            const fields = await subscribePage(t.id).catch((e) => { lines.push(`❌ Đăng ký lại webhook lỗi: ${e instanceof Error ? e.message : e}`); return null; });
+            if (fields) lines.push(`🔧 Trang chưa gửi ${need.join(', ')} cho app, đã đăng ký lại: ${fields.join(', ')}`);
+          } else lines.push(`✅ Webhook nhận: ${t.fields.join(', ')}`);
+        } catch (err) {
+          lines.push(`❌ Facebook từ chối token: ${(err instanceof Error ? err.message : String(err)).slice(0, 300)}`);
+        }
+      }
+      lines.push(...(await healthCheck(db)));
+      await sendTelegram(msg.chat.id, lines.join('\n'));
       return new Response('ok');
     }
     if (cmd === 'answer') {
