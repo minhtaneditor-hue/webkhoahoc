@@ -39,7 +39,7 @@ TELEGRAM_CHAT_ID=...
 ```
 
 Telegram: nhắn @BotFather lệnh `/newbot` để lấy token, nhắn cho bot vừa tạo một tin bất kỳ, rồi mở `https://api.telegram.org/bot<token>/getUpdates` để đọc số `chat.id`.
-Email báo ca khó gửi tới `FB_NOTIFY_EMAIL`, nếu trống thì tới email liên hệ trong Admin > Nội dung & liên hệ.
+Khi đã cài Telegram, mọi thông báo chỉ gửi qua Telegram. Chỉ khi chưa cài Telegram, email báo ca khó mới gửi tới `FB_NOTIFY_EMAIL`, nếu trống thì tới email liên hệ trong Admin > Nội dung & liên hệ.
 
 Deploy lại sau khi thêm biến.
 
